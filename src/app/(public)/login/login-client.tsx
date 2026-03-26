@@ -24,6 +24,7 @@ export function LoginClient() {
   const [cooldownSeconds, setCooldownSeconds] = useState(0);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(initialError);
+  const [confirmationEmail, setConfirmationEmail] = useState<string | null>(null);
   const formErrorId = "login-form-error";
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
 
@@ -47,6 +48,14 @@ export function LoginClient() {
     setCooldownSeconds(60);
   }
 
+  function formatAuthErrorMessage(rawMessage: string) {
+    if (/email.*not.*confirm/i.test(rawMessage) || /confirm.*your email/i.test(rawMessage)) {
+      return "Your email is not confirmed yet. Please use the confirmation link we sent, then sign in.";
+    }
+
+    return rawMessage;
+  }
+
   async function handleForgotPasswordClick() {
     setError(null);
     setMessage(null);
@@ -67,7 +76,7 @@ export function LoginClient() {
       );
 
       if (resetError) {
-        setError(resetError.message);
+        setError(formatAuthErrorMessage(resetError.message));
         return;
       }
 
@@ -106,17 +115,24 @@ export function LoginClient() {
         });
 
         if (signInError) {
-          setError(signInError.message);
+          setError(formatAuthErrorMessage(signInError.message));
           return;
         }
       } else {
-        const { error: signUpError } = await supabase.auth.signUp({
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email: trimmedEmail,
           password,
         });
 
         if (signUpError) {
-          setError(signUpError.message);
+          setError(formatAuthErrorMessage(signUpError.message));
+          return;
+        }
+
+        if (!signUpData.session) {
+          setConfirmationEmail(trimmedEmail);
+          setAuthMode("sign_in");
+          setPassword("");
           return;
         }
       }
@@ -232,6 +248,42 @@ export function LoginClient() {
     setCode(value.replace(/\D/g, "").slice(0, 8));
     setError(null);
     setMessage(null);
+  }
+
+  if (confirmationEmail) {
+    return (
+      <section className="mx-auto max-w-md py-10 sm:py-16">
+        <div className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm sm:p-6">
+          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Check your email</h1>
+          <p className="mt-3 text-sm text-zinc-600">
+            We&apos;ve sent a confirmation link to <span className="font-medium text-zinc-900">{confirmationEmail}</span>.
+          </p>
+          <p className="mt-2 text-sm text-zinc-600">
+            Confirm your email, then come back and sign in.
+          </p>
+          <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+            <button
+              type="button"
+              onClick={() => {
+                setConfirmationEmail(null);
+                setError(null);
+                setMessage(null);
+                setAuthMode("sign_in");
+              }}
+              className="inline-flex min-h-11 items-center justify-center rounded-md bg-zinc-800 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+            >
+              Back to sign in
+            </button>
+            <Link
+              href="/"
+              className="inline-flex min-h-11 items-center justify-center rounded-md border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+            >
+              Back to home
+            </Link>
+          </div>
+        </div>
+      </section>
+    );
   }
 
   return (

@@ -282,7 +282,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
           <p className="mt-2 text-2xl font-semibold text-zinc-900">{avgConfidence}</p>
         </div>
         <div className="rounded-lg border border-zinc-200 bg-white p-4">
-          <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Average effort</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Average student effort</p>
           <p className="mt-2 text-2xl font-semibold text-zinc-900">{avgEffort}</p>
         </div>
         <ProgressSignalCard
@@ -319,7 +319,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
               <div className="mt-4 rounded-md border border-dashed border-zinc-300 bg-zinc-50 p-4">
                 <p className="text-sm font-medium text-zinc-900">No prep notes yet.</p>
                 <p className="mt-2 text-sm text-zinc-600">
-                  Once you log a lesson, the latest next step, homework, and recent topics will show here.
+                  Once you log a lesson, the latest area to improve, homework, and recent topics will show here.
                 </p>
               </div>
             )}
@@ -335,7 +335,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
             <h2 className="text-lg font-medium text-zinc-900">Trends</h2>
             <div className="mt-4 grid gap-3 lg:grid-cols-2">
               <StudentTrendChart title="Confidence over time" points={confidenceTrendPoints} />
-              <StudentTrendChart title="Effort over time" points={effortTrendPoints} />
+              <StudentTrendChart title="Student effort over time" points={effortTrendPoints} />
             </div>
           </div>
         </section>

@@ -11,7 +11,7 @@ export default function HomePage() {
           Log lessons, update parents, and track payments — all in one place.
         </h1>
         <p className="mx-auto mt-4 max-w-2xl text-sm leading-6 text-zinc-600 sm:text-base">
-          A simple tool for independent tutors to log lessons, update parents, and track payments — all in one place.
+          A simple tool for independent tutors to stay organised and save time after every lesson.
         </p>
         <div className="mt-6">
           <Link
@@ -27,11 +27,14 @@ export default function HomePage() {
         <h2 className="text-lg font-medium text-zinc-900">
           Everything you need after each lesson — in one place
         </h2>
+        <p className="mt-1 text-sm text-zinc-600">
+          Keep the details, follow-up, and payment status together in one clear workflow.
+        </p>
         <div className="mt-4 rounded-lg border border-zinc-200 bg-zinc-50 p-4">
           <div className="border-b border-zinc-200 pb-3">
             <div>
               <p className="text-sm font-medium text-zinc-900">Today&apos;s lesson flow</p>
-              <p className="text-sm text-zinc-600">Student notes, parent updates, and payment status in one view.</p>
+              <p className="text-sm text-zinc-600">Student notes, follow-up, and payment status in one view.</p>
             </div>
           </div>
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
@@ -53,6 +56,7 @@ export default function HomePage() {
 
       <section className="rounded-lg border border-zinc-200 bg-white p-4">
         <h2 className="text-lg font-medium text-zinc-900">How it works</h2>
+        <p className="mt-1 text-sm text-zinc-600">A simple routine you can repeat after each lesson.</p>
         <div className="mt-3 grid gap-3 sm:grid-cols-3">
           <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-3">
             <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Step 1</p>

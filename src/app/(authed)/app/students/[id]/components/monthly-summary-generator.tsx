@@ -261,11 +261,11 @@ ${toBulletSection(topicsSection)}
 Overall
 - Lessons completed: ${lessonsForMonth.length}
 - Average confidence: ${avgConfidence}/5
-- Average effort: ${avgEffort}/5
+- Average student effort: ${avgEffort}/5
 
 ${buildSummarySection("What’s going well", summaryInputs.whatWentWell)}
 
-${buildSummarySection("Next steps", summaryInputs.nextFocus)}
+${buildSummarySection("Area to improve", summaryInputs.nextFocus)}
 
 ${buildSummarySection("Homework / follow-up", summaryInputs.homework)}`;
 
@@ -282,7 +282,7 @@ ${buildSummarySection("Homework / follow-up", summaryInputs.homework)}`;
       await navigator.clipboard.writeText(summary);
       setCopied(true);
     } catch {
-      setStatus("Could not copy summary. Please copy it manually.");
+      setStatus("We couldn’t copy the summary. Please copy it manually.");
     }
   }
 

@@ -64,14 +64,14 @@ function formatParentUpdate(studentName: string, lesson: SavedLessonState) {
   }
 
   if (lesson.improve) {
-    lines.push(`• Next step: ${lesson.improve}`);
+    lines.push(`• Area to improve: ${lesson.improve}`);
   }
 
   if (lesson.homework) {
     lines.push(`• Homework: ${lesson.homework}`);
   }
 
-  lines.push(`• Effort: ${lesson.effort}/5 | Confidence: ${lesson.confidence}/5`);
+  lines.push(`• Student effort: ${lesson.effort}/5 | Confidence: ${lesson.confidence}/5`);
 
   return lines.join("\n");
 }
@@ -121,13 +121,13 @@ export function NewLessonForm({
     }
 
     if (!trimmedTopics) {
-      setError("Topics is required.");
+      setError("What you covered is required.");
       return;
     }
 
     const effortValue = Number(effort);
     if (!Number.isInteger(effortValue) || effortValue < 1 || effortValue > 5) {
-      setError("Effort must be a whole number between 1 and 5.");
+      setError("Student effort must be a whole number between 1 and 5.");
       return;
     }
 
@@ -173,7 +173,7 @@ export function NewLessonForm({
     setIsSubmitting(false);
 
     if (submitError) {
-      setError(submitError.message);
+      setError(submitError.message || "We couldn’t save this lesson. Please try again.");
       return;
     }
 
@@ -199,7 +199,7 @@ export function NewLessonForm({
       await navigator.clipboard.writeText(message);
       setCopied(true);
     } catch {
-      setError("Could not copy message. Please copy manually.");
+      setError("We couldn’t copy the update. Please copy it manually.");
     }
   }
 
@@ -316,7 +316,7 @@ export function NewLessonForm({
 
         <div className="sm:col-span-2">
           <label htmlFor="improve" className="block text-sm font-medium text-zinc-700">
-            Next step
+            Area to improve
           </label>
           <textarea
             id="improve"
@@ -346,8 +346,11 @@ export function NewLessonForm({
 
         <div>
           <label htmlFor="effort" className="block text-sm font-medium text-zinc-700">
-            Effort
+            Student effort
           </label>
+          <p className="mt-1 text-xs text-zinc-500">
+            How engaged and focused was the student in this lesson?
+          </p>
           <div className="mt-1 flex items-center justify-between text-xs text-zinc-500">
             <span>1</span>
             <span>5</span>

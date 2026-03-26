@@ -35,17 +35,14 @@ export default function NewStudentPage() {
     } = await supabase.auth.getUser();
 
     if (userError) {
-      setError(userError.message);
+      setError("We couldn’t confirm your session. Please sign in again and try once more.");
       return;
     }
 
     if (!user) {
-      console.log("Insert students: user is null");
       setError("You are not signed in. Please sign in again.");
       return;
     }
-
-    console.log("Insert students user id:", user.id);
 
     setIsSubmitting(true);
 
@@ -59,7 +56,7 @@ export default function NewStudentPage() {
     setIsSubmitting(false);
 
     if (insertError) {
-      setError(insertError.message);
+      setError(insertError.message || "We couldn’t save this student. Please try again.");
       return;
     }
 
