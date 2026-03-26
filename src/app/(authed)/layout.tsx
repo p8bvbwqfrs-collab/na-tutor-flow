@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AuthedNav } from "./components/authed-nav";
 import { LogoutButton } from "./components/logout-button";
 
 export default function AuthedLayout({
@@ -25,20 +26,7 @@ export default function AuthedLayout({
               </Link>
               <LogoutButton />
             </div>
-            <nav className="flex flex-wrap items-center gap-2">
-              <Link
-                href="/app/dashboard"
-                className="rounded-md px-3 py-2 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-              >
-                Dashboard
-              </Link>
-              <Link
-                href="/app/students"
-                className="rounded-md px-3 py-2 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-              >
-                Students
-              </Link>
-            </nav>
+            <AuthedNav />
           </div>
         </div>
       </header>

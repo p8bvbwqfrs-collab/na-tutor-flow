@@ -4,6 +4,7 @@ import { unstable_noStore as noStore } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { LessonPaidToggle } from "./components/lesson-paid-toggle";
 import { MonthlySummaryGenerator } from "./components/monthly-summary-generator";
+import { PlannedLessonStatusButton } from "./components/planned-lesson-status-button";
 import { ProgressSignalCard } from "./components/progress-signal-card";
 import { StudentArchiveToggle } from "./components/student-archive-toggle";
 import { StudentTrendChart } from "./components/student-trend-chart";
@@ -28,6 +29,7 @@ type Lesson = {
   paid: boolean;
   confidence: number;
   effort: number;
+  status: "planned" | "completed" | "cancelled" | null;
 };
 
 const dateFormatter = new Intl.DateTimeFormat("en-GB", {
@@ -104,7 +106,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
     supabase
       .from("lessons")
       .select(
-        "id, lesson_at, topics, topic_tags, went_well, improve, homework, fee_pence, paid, confidence, effort",
+        "id, lesson_at, topics, topic_tags, went_well, improve, homework, fee_pence, paid, confidence, effort, status",
       )
       .eq("student_id", id)
       .order("lesson_at", { ascending: false });
@@ -112,7 +114,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
   const fallbackLessonsQuery = () =>
     supabase
       .from("lessons")
-      .select("id, lesson_at, topics, went_well, improve, homework, fee_pence, paid, confidence, effort")
+      .select("id, lesson_at, topics, went_well, improve, homework, fee_pence, paid, confidence, effort, status")
       .eq("student_id", id)
       .order("lesson_at", { ascending: false });
 
@@ -143,21 +145,30 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
   }
 
   const lessons: Lesson[] = lessonsData ?? [];
+  const now = Date.now();
+  const completedLessons = lessons.filter(
+    (lesson) => lesson.status === "completed" || lesson.status === null,
+  );
+  const plannedLessons = [...lessons]
+    .filter((lesson) => lesson.status === "planned" && new Date(lesson.lesson_at).getTime() >= now)
+    .sort((a, b) => new Date(a.lesson_at).getTime() - new Date(b.lesson_at).getTime());
   const isArchived = Boolean(student.archived_at);
-  const totalLessons = lessons.length;
-  const outstandingAmountPence = lessons
+  const totalLessons = completedLessons.length;
+  const outstandingAmountPence = completedLessons
     .filter((lesson) => !lesson.paid)
     .reduce((sum, lesson) => sum + lesson.fee_pence, 0);
   const latestLessonDate =
-    totalLessons > 0 ? dateFormatter.format(new Date(lessons[0].lesson_at)) : "No lessons yet";
+    totalLessons > 0 ? dateFormatter.format(new Date(completedLessons[0].lesson_at)) : "No lessons yet";
   const avgConfidence =
     totalLessons > 0
-      ? (lessons.reduce((sum, lesson) => sum + lesson.confidence, 0) / totalLessons).toFixed(1)
+      ? (completedLessons.reduce((sum, lesson) => sum + lesson.confidence, 0) / totalLessons).toFixed(1)
       : "-";
   const avgEffort =
-    totalLessons > 0 ? (lessons.reduce((sum, lesson) => sum + lesson.effort, 0) / totalLessons).toFixed(1) : "-";
-  const latestConfidenceLessons = lessons.slice(0, 3);
-  const previousConfidenceLessons = lessons.slice(3, 6);
+    totalLessons > 0
+      ? (completedLessons.reduce((sum, lesson) => sum + lesson.effort, 0) / totalLessons).toFixed(1)
+      : "-";
+  const latestConfidenceLessons = completedLessons.slice(0, 3);
+  const previousConfidenceLessons = completedLessons.slice(3, 6);
   const latestConfidenceAverage =
     latestConfidenceLessons.length > 0
       ? latestConfidenceLessons.reduce((sum, lesson) => sum + lesson.confidence, 0) /
@@ -211,7 +222,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
           ? "stable"
           : "neutral";
 
-  const chronologicalLessons = [...lessons].reverse();
+  const chronologicalLessons = [...completedLessons].reverse();
   const confidenceTrendPoints = chronologicalLessons.map((lesson) => ({
     label: new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short" }).format(
       new Date(lesson.lesson_at),
@@ -224,10 +235,10 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
     ),
     value: lesson.effort,
   }));
-  const nextFocusPrep = findLatestNonEmptyValue(lessons, (lesson) => lesson.improve);
-  const homeworkPrep = findLatestNonEmptyValue(lessons, (lesson) => lesson.homework);
-  const recentTopicTags = findLatestNonEmptyValue(lessons, (lesson) => lesson.topic_tags);
-  const recentTopicText = findLatestNonEmptyValue(lessons, (lesson) => lesson.topics);
+  const nextFocusPrep = findLatestNonEmptyValue(completedLessons, (lesson) => lesson.improve);
+  const homeworkPrep = findLatestNonEmptyValue(completedLessons, (lesson) => lesson.homework);
+  const recentTopicTags = findLatestNonEmptyValue(completedLessons, (lesson) => lesson.topic_tags);
+  const recentTopicText = findLatestNonEmptyValue(completedLessons, (lesson) => lesson.topics);
   const recentTopicPrep = Array.isArray(recentTopicTags)
     ? recentTopicTags.join(", ")
     : recentTopicText;
@@ -243,6 +254,12 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
           className="rounded-md bg-zinc-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
         >
           Log lesson
+        </Link>
+        <Link
+          href={`/app/students/${student.id}/schedule-lesson`}
+          className="rounded-md border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 transition-colors hover:bg-zinc-50 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+        >
+          Schedule lesson
         </Link>
         <Link
           href={`/app/students/${student.id}/edit`}
@@ -294,11 +311,66 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
       </div>
 
       <div className="mt-6 space-y-6">
+        {plannedLessons.length > 0 ? (
+          <section>
+            <div className="rounded-lg border border-zinc-200 bg-white p-4">
+              <h2 className="text-lg font-medium text-zinc-900">Upcoming lessons</h2>
+              <p className="mt-1 text-sm text-zinc-600">
+                Scheduled lessons you can complete when the session is done.
+              </p>
+              <div className="mt-4 space-y-3">
+                {plannedLessons.map((lesson) => {
+                  const plannedTopic =
+                    lesson.topics && lesson.topics !== "Planned lesson" ? cleanLessonText(lesson.topics) : null;
+
+                  return (
+                    <div
+                      key={lesson.id}
+                      className="rounded-lg border border-zinc-200 bg-zinc-50 p-4"
+                    >
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-zinc-900">
+                            {lessonDateFormatter.format(new Date(lesson.lesson_at))} at{" "}
+                            {lessonTimeFormatter.format(new Date(lesson.lesson_at))}
+                          </p>
+                          <p className="mt-1 text-sm text-zinc-600">
+                            {plannedTopic || "No planned topic or note yet."}
+                          </p>
+                        </div>
+                        <div className="flex flex-wrap items-start gap-2">
+                          <Link
+                            href={`/app/students/${student.id}/lessons/${lesson.id}?mode=complete`}
+                            className="rounded-md bg-zinc-800 px-3 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                          >
+                            Complete lesson
+                          </Link>
+                          <Link
+                            href={`/app/students/${student.id}/lessons/${lesson.id}`}
+                            className="rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 transition-colors hover:bg-zinc-50 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                          >
+                            Edit
+                          </Link>
+                          <PlannedLessonStatusButton
+                            lessonId={lesson.id}
+                            nextStatus="cancelled"
+                            label="Cancel"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
+        ) : null}
+
         <section>
           <div className="rounded-lg border border-zinc-200 bg-white p-4">
             <h2 className="text-lg font-medium text-zinc-900">Next lesson prep</h2>
             <p className="mt-1 text-sm text-zinc-600">What to pick up next time, based on recent lessons.</p>
-            {lessons.length > 0 ? (
+            {completedLessons.length > 0 ? (
               <div className="mt-4 grid gap-3 sm:grid-cols-3">
                 <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
                   <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Next session reminder</p>
@@ -319,7 +391,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
               <div className="mt-4 rounded-md border border-dashed border-zinc-300 bg-zinc-50 p-4">
                 <p className="text-sm font-medium text-zinc-900">No prep notes yet.</p>
                 <p className="mt-2 text-sm text-zinc-600">
-                  Once you log a lesson, the latest area to improve, homework, and recent topics will show here.
+                  Once you log a completed lesson, the latest area to improve, homework, and recent topics will show here.
                 </p>
               </div>
             )}
@@ -327,7 +399,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
         </section>
 
         <section>
-          <MonthlySummaryGenerator studentName={student.student_name} lessons={lessons} />
+          <MonthlySummaryGenerator studentName={student.student_name} lessons={completedLessons} />
         </section>
 
         <section>
@@ -347,7 +419,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
               <p className="mt-4 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">
                 Could not load lessons.
               </p>
-            ) : lessons.length === 0 ? (
+            ) : completedLessons.length === 0 ? (
               <div className="mt-4 rounded-md border border-dashed border-zinc-300 bg-zinc-50 p-4">
                 <p className="text-sm font-medium text-zinc-900">No lessons yet.</p>
                 <p className="mt-2 text-sm text-zinc-600">
@@ -373,7 +445,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
                     </tr>
                   </thead>
                   <tbody>
-                    {lessons.map((lesson) => (
+                    {completedLessons.map((lesson) => (
                       <tr key={lesson.id} className="border-t border-zinc-200 text-zinc-900 hover:bg-zinc-50">
                         <td className="whitespace-nowrap px-3 py-3 align-top text-zinc-900">
                           <Link

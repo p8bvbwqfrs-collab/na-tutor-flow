@@ -2,13 +2,16 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { NewLessonForm } from "../../new-lesson/new-lesson-form";
+import { ScheduleLessonForm } from "../../schedule-lesson/schedule-lesson-form";
 
 type EditLessonPageProps = {
   params: Promise<{ id: string; lessonId: string }>;
+  searchParams: Promise<{ mode?: string }>;
 };
 
-export default async function EditLessonPage({ params }: EditLessonPageProps) {
+export default async function EditLessonPage({ params, searchParams }: EditLessonPageProps) {
   const { id, lessonId } = await params;
+  const { mode } = await searchParams;
   const supabase = await createSupabaseServerClient();
 
   const [{ data: student, error: studentError }, { data: lesson, error: lessonError }] =
@@ -20,7 +23,7 @@ export default async function EditLessonPage({ params }: EditLessonPageProps) {
         .maybeSingle(),
       supabase
         .from("lessons")
-        .select("id, student_id, lesson_at, topics, topic_tags, went_well, improve, homework, effort, confidence, fee_pence, paid")
+        .select("id, student_id, lesson_at, topics, topic_tags, went_well, improve, homework, effort, confidence, fee_pence, paid, status")
         .eq("id", lessonId)
         .eq("student_id", id)
         .maybeSingle(),
@@ -30,12 +33,26 @@ export default async function EditLessonPage({ params }: EditLessonPageProps) {
     notFound();
   }
 
+  const lessonStatus = lesson.status ?? "completed";
+  const isPlannedLesson = lessonStatus === "planned";
+  const isCompletingPlannedLesson = isPlannedLesson && mode === "complete";
+  const plannedTopics = lesson.topics === "Planned lesson" ? "" : lesson.topics;
+
   return (
     <section className="max-w-3xl">
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-zinc-900">Edit lesson</h1>
-          <p className="mt-1 text-sm text-zinc-600">{student.student_name}</p>
+          <h1 className="text-xl font-semibold text-zinc-900">
+            {isCompletingPlannedLesson
+              ? "Complete lesson"
+              : isPlannedLesson
+                ? "Edit scheduled lesson"
+                : "Edit lesson"}
+          </h1>
+          <p className="mt-1 text-sm text-zinc-600">
+            {student.student_name}
+            {isPlannedLesson && !isCompletingPlannedLesson ? " · Planned lesson" : ""}
+          </p>
         </div>
         <Link
           href={`/app/students/${student.id}`}
@@ -45,24 +62,39 @@ export default async function EditLessonPage({ params }: EditLessonPageProps) {
         </Link>
       </div>
 
-      <NewLessonForm
-        mode="edit"
-        lessonId={lesson.id}
-        studentId={student.id}
-        studentName={student.student_name}
-        initialLesson={{
-          lessonAt: lesson.lesson_at,
-          topics: lesson.topics,
-          topicTags: lesson.topic_tags ?? [],
-          wentWell: lesson.went_well ?? "",
-          improve: lesson.improve ?? "",
-          homework: lesson.homework ?? "",
-          effort: lesson.effort,
-          confidence: lesson.confidence,
-          feeGbp: (lesson.fee_pence / 100).toFixed(2),
-          paid: lesson.paid,
-        }}
-      />
+      {isPlannedLesson && !isCompletingPlannedLesson ? (
+        <ScheduleLessonForm
+          mode="edit"
+          lessonId={lesson.id}
+          studentId={student.id}
+          studentName={student.student_name}
+          initialLesson={{
+            lessonAt: lesson.lesson_at,
+            topics: plannedTopics,
+          }}
+        />
+      ) : (
+        <NewLessonForm
+          mode="edit"
+          lessonId={lesson.id}
+          studentId={student.id}
+          studentName={student.student_name}
+          saveStatus="completed"
+          completionMode={isCompletingPlannedLesson}
+          initialLesson={{
+            lessonAt: lesson.lesson_at,
+            topics: plannedTopics,
+            topicTags: lesson.topic_tags ?? [],
+            wentWell: lesson.went_well ?? "",
+            improve: lesson.improve ?? "",
+            homework: lesson.homework ?? "",
+            effort: lesson.effort,
+            confidence: lesson.confidence,
+            feeGbp: (lesson.fee_pence / 100).toFixed(2),
+            paid: lesson.paid,
+          }}
+        />
+      )}
     </section>
   );
 }

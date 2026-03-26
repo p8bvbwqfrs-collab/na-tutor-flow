@@ -10,18 +10,22 @@ type LessonRow = {
   fee_pence: number;
   paid: boolean;
   student_id: string;
+  status: "planned" | "completed" | "cancelled" | null;
   student: { student_name: string } | { student_name: string }[] | null;
 };
 
-type RecentStudentLessonRow = {
+type DashboardLessonOverviewRow = {
+  id: string;
   student_id: string;
   lesson_at: string;
+  status: "planned" | "completed" | "cancelled" | null;
   student: { student_name: string } | { student_name: string }[] | null;
 };
 
 type ChartLessonRow = {
   lesson_at: string;
   fee_pence: number;
+  status: "planned" | "completed" | "cancelled" | null;
 };
 
 const currencyFormatter = new Intl.NumberFormat("en-GB", {
@@ -98,7 +102,8 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const fixedRangeStart = fixedMonthStarts[0] ?? monthStart;
   const chartLessonsQuery = supabase
     .from("lessons")
-    .select("lesson_at, fee_pence")
+    .select("lesson_at, fee_pence, status")
+    .or("status.eq.completed,status.is.null")
     .lt("lesson_at", monthEnd.toISOString());
 
   const [
@@ -110,48 +115,67 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     paidLessonsCountResult,
     chartLessonsResult,
     oldestLessonResult,
-    recentStudentLessonsResult,
+    recentLessonsResult,
+    upcomingLessonsResult,
   ] = await Promise.all([
     supabase
       .from("students")
       .select("id", { count: "exact", head: true })
       .is("archived_at", null),
-    supabase.from("lessons").select("fee_pence").eq("paid", false),
     supabase
       .from("lessons")
       .select("fee_pence")
+      .eq("paid", false)
+      .or("status.eq.completed,status.is.null"),
+    supabase
+      .from("lessons")
+      .select("fee_pence")
+      .or("status.eq.completed,status.is.null")
       .gte("lesson_at", monthStart.toISOString())
       .lt("lesson_at", monthEnd.toISOString()),
     supabase
       .from("lessons")
       .select(
-        "id, lesson_at, fee_pence, paid, student_id, student:students!lessons_student_id_fkey(student_name)",
+        "id, lesson_at, fee_pence, paid, student_id, status, student:students!lessons_student_id_fkey(student_name)",
       )
       .eq("paid", false)
+      .or("status.eq.completed,status.is.null")
       .order("lesson_at", { ascending: false })
       .limit(20),
     supabase
       .from("lessons")
       .select("id", { count: "exact", head: true })
-      .eq("paid", false),
+      .eq("paid", false)
+      .or("status.eq.completed,status.is.null"),
     supabase
       .from("lessons")
       .select("id", { count: "exact", head: true })
-      .eq("paid", true),
+      .eq("paid", true)
+      .or("status.eq.completed,status.is.null"),
     selectedRange === "all"
       ? chartLessonsQuery
       : chartLessonsQuery.gte("lesson_at", fixedRangeStart.toISOString()),
     supabase
       .from("lessons")
       .select("lesson_at")
+      .or("status.eq.completed,status.is.null")
       .order("lesson_at", { ascending: true })
       .limit(1)
       .maybeSingle(),
     supabase
       .from("lessons")
-      .select("student_id, lesson_at, student:students!lessons_student_id_fkey(student_name)")
+      .select("id, student_id, lesson_at, status, student:students!lessons_student_id_fkey(student_name)")
+      .lte("lesson_at", now.toISOString())
+      .or("status.eq.completed,status.is.null")
       .order("lesson_at", { ascending: false })
-      .limit(50),
+      .limit(3),
+    supabase
+      .from("lessons")
+      .select("id, student_id, lesson_at, status, student:students!lessons_student_id_fkey(student_name)")
+      .eq("status", "planned")
+      .gt("lesson_at", now.toISOString())
+      .order("lesson_at", { ascending: true })
+      .limit(3),
   ]);
 
   const unpaidTotalPence = (unpaidTotalsResult.data ?? []).reduce(
@@ -173,19 +197,8 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     : null;
   const hasAnyLessons = Boolean(oldestLessonAt);
   const showDashboardOnboarding = activeStudentsCount === 0 && !hasAnyLessons;
-  const recentStudentLessons = (recentStudentLessonsResult.data ?? []) as RecentStudentLessonRow[];
-  const recentStudents = Array.from(
-    new Map(
-      recentStudentLessons.map((lesson) => [
-        lesson.student_id,
-        {
-          studentId: lesson.student_id,
-          studentName: getStudentName(lesson.student) ?? "Unknown student",
-          lessonAt: lesson.lesson_at,
-        },
-      ]),
-    ).values(),
-  ).slice(0, 5);
+  const recentLessons = (recentLessonsResult.data ?? []) as DashboardLessonOverviewRow[];
+  const upcomingLessons = (upcomingLessonsResult.data ?? []) as DashboardLessonOverviewRow[];
 
   const monthStarts =
     selectedRange === "all"
@@ -287,34 +300,77 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         </div>
       </div>
 
-      {recentStudents.length > 0 ? (
-        <section className="mt-6 rounded-lg border border-zinc-200 bg-white p-4">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-medium text-zinc-900">Recent students</h2>
-              <p className="mt-1 text-sm text-zinc-600">
-                Jump back into the students you&apos;ve worked with most recently.
-              </p>
+      <div className="mt-6 grid gap-4 lg:grid-cols-2">
+        <section className="rounded-lg border border-zinc-200 bg-white p-4">
+          <h2 className="text-lg font-medium text-zinc-900">Recent lessons</h2>
+          <p className="mt-1 text-sm text-zinc-600">The latest lessons you&apos;ve logged.</p>
+
+          {recentLessonsResult.error ? (
+            <p
+              role="alert"
+              className="mt-4 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-900"
+            >
+              Could not load recent lessons.
+            </p>
+          ) : recentLessons.length === 0 ? (
+            <p className="mt-4 rounded-md border border-dashed border-zinc-300 bg-zinc-50 px-3 py-2 text-sm text-zinc-700">
+              No recent lessons yet.
+            </p>
+          ) : (
+            <div className="mt-4 space-y-3">
+              {recentLessons.map((lesson) => (
+                <Link
+                  key={lesson.id}
+                  href={`/app/students/${lesson.student_id}/lessons/${lesson.id}`}
+                  className="block rounded-lg border border-zinc-200 bg-zinc-50 p-3 transition-colors hover:border-zinc-300 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                >
+                  <p className="text-sm font-medium text-zinc-900">
+                    {getStudentName(lesson.student) ?? "Unknown student"}
+                  </p>
+                  <p className="mt-1 text-sm text-zinc-600">
+                    {dateFormatter.format(new Date(lesson.lesson_at))}
+                  </p>
+                </Link>
+              ))}
             </div>
-          </div>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-            {recentStudents.map((student) => (
-              <Link
-                key={student.studentId}
-                href={`/app/students/${student.studentId}`}
-                className="rounded-lg border border-zinc-200 bg-white p-4 transition-colors hover:border-zinc-300 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-              >
-                <p className="text-sm font-medium text-zinc-900 underline-offset-4 hover:underline">
-                  {student.studentName}
-                </p>
-                <p className="mt-2 text-sm text-zinc-600">
-                  Last lesson {dateFormatter.format(new Date(student.lessonAt))}
-                </p>
-              </Link>
-            ))}
-          </div>
+          )}
         </section>
-      ) : null}
+
+        <section className="rounded-lg border border-zinc-200 bg-white p-4">
+          <h2 className="text-lg font-medium text-zinc-900">Upcoming lessons</h2>
+          <p className="mt-1 text-sm text-zinc-600">Any lessons already dated in the future.</p>
+
+          {upcomingLessonsResult.error ? (
+            <p
+              role="alert"
+              className="mt-4 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-900"
+            >
+              Could not load upcoming lessons.
+            </p>
+          ) : upcomingLessons.length === 0 ? (
+            <p className="mt-4 rounded-md border border-dashed border-zinc-300 bg-zinc-50 px-3 py-2 text-sm text-zinc-700">
+              No upcoming lessons yet.
+            </p>
+          ) : (
+            <div className="mt-4 space-y-3">
+              {upcomingLessons.map((lesson) => (
+                <Link
+                  key={lesson.id}
+                  href={`/app/students/${lesson.student_id}/lessons/${lesson.id}`}
+                  className="block rounded-lg border border-zinc-200 bg-zinc-50 p-3 transition-colors hover:border-zinc-300 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                >
+                  <p className="text-sm font-medium text-zinc-900">
+                    {getStudentName(lesson.student) ?? "Unknown student"}
+                  </p>
+                  <p className="mt-1 text-sm text-zinc-600">
+                    {dateFormatter.format(new Date(lesson.lesson_at))}
+                  </p>
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
 
       <div className="mt-6 grid gap-4 lg:grid-cols-3">
         <div className="rounded-lg border border-zinc-200 bg-white p-4 lg:col-span-2">

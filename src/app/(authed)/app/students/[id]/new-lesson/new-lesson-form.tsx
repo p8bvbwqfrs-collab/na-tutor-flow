@@ -9,6 +9,8 @@ type LessonFormProps = {
   studentName: string;
   mode?: "create" | "edit";
   lessonId?: string;
+  saveStatus?: "completed" | "planned" | "cancelled";
+  completionMode?: boolean;
   initialLesson?: {
     lessonAt: string;
     topics: string;
@@ -81,6 +83,8 @@ export function NewLessonForm({
   studentName,
   mode = "create",
   lessonId,
+  saveStatus = "completed",
+  completionMode = false,
   initialLesson,
 }: LessonFormProps) {
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
@@ -164,6 +168,7 @@ export function NewLessonForm({
       confidence: confidenceValue,
       fee_pence: feePence,
       paid,
+      status: saveStatus,
     };
 
     const { error: submitError } = isEditMode
@@ -204,8 +209,10 @@ export function NewLessonForm({
   }
 
   const parentUpdate = savedLesson ? formatParentUpdate(studentName, savedLesson) : "";
-  const successTitle = isEditMode ? "Lesson updated" : "Lesson saved";
-  const successCopy = isEditMode
+  const successTitle = completionMode ? "Lesson completed" : isEditMode ? "Lesson updated" : "Lesson saved";
+  const successCopy = completionMode
+    ? "Copy the parent update now while the lesson details are fresh."
+    : isEditMode
     ? "Copy the refreshed parent update before you head back to the student page."
     : "Copy the parent update now while the lesson is still fresh.";
 

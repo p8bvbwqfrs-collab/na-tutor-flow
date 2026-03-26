@@ -21,6 +21,7 @@ export default async function NewLessonPage({ params }: NewLessonPageProps) {
       .from("lessons")
       .select("fee_pence")
       .eq("student_id", id)
+      .or("status.eq.completed,status.is.null")
       .order("lesson_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
