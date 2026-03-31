@@ -259,7 +259,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       !chartLessonsResult.error &&
       !oldestLessonResult.error ? (
         <div className="mt-6 rounded-lg border border-zinc-200 bg-white p-4">
-          <p className="text-lg font-medium text-zinc-900">Welcome to NA&apos;s Tutor Flow</p>
+          <p className="text-lg font-medium text-zinc-900">Get started by adding your first student</p>
           <p className="mt-2 text-sm text-zinc-600">
             Start with one student and one lesson, and the rest of the workflow will fall into place.
           </p>
@@ -272,7 +272,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             href="/app/students/new"
             className="mt-5 inline-flex min-h-11 items-center justify-center rounded-md bg-zinc-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
           >
-            Add your first student
+            Add student
           </Link>
         </div>
       ) : null}

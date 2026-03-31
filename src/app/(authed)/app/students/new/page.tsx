@@ -46,12 +46,16 @@ export default function NewStudentPage() {
 
     setIsSubmitting(true);
 
-    const { error: insertError } = await supabase.from("students").insert({
-      student_name: trimmedStudentName,
-      parent_name: parentName.trim() || null,
-      parent_contact: trimmedParentContact || null,
-      notes: notes.trim() || null,
-    });
+    const { data: createdStudent, error: insertError } = await supabase
+      .from("students")
+      .insert({
+        student_name: trimmedStudentName,
+        parent_name: parentName.trim() || null,
+        parent_contact: trimmedParentContact || null,
+        notes: notes.trim() || null,
+      })
+      .select("id")
+      .single();
 
     setIsSubmitting(false);
 
@@ -60,7 +64,7 @@ export default function NewStudentPage() {
       return;
     }
 
-    router.push("/app/students");
+    router.push(`/app/students/${createdStudent.id}`);
     router.refresh();
   }
 

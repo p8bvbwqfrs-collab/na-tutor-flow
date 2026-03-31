@@ -8,10 +8,10 @@ export default function HomePage() {
           NA&apos;s Tutor Flow
         </p>
         <h1 className="mt-3 text-3xl font-semibold tracking-tight text-zinc-900 sm:text-4xl">
-          Log lessons, update parents, and track payments — all in one place.
+          Run your tutoring — lessons, scheduling, and parent updates in one place
         </h1>
         <p className="mx-auto mt-4 max-w-2xl text-sm leading-6 text-zinc-600 sm:text-base">
-          A simple tool for independent tutors to stay organised and save time after every lesson.
+          A simple tool for tutors to log lessons, schedule sessions, track progress, and send clear parent updates — all in one place.
         </p>
         <div className="mt-6">
           <Link
@@ -21,6 +21,7 @@ export default function HomePage() {
             Get started
           </Link>
         </div>
+        <p className="mt-3 text-sm text-zinc-500">Built for independent tutors</p>
       </div>
 
       <section className="rounded-lg border border-zinc-200 bg-white p-4">
@@ -34,23 +35,30 @@ export default function HomePage() {
           <div className="border-b border-zinc-200 pb-3">
             <div>
               <p className="text-sm font-medium text-zinc-900">Today&apos;s lesson flow</p>
-              <p className="text-sm text-zinc-600">Student notes, follow-up, and payment status in one view.</p>
+              <p className="text-sm text-zinc-600">Lesson notes, scheduling, progress, and parent follow-up in one view.</p>
             </div>
           </div>
-          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div className="rounded-lg border border-zinc-200 bg-white p-4">
               <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Students</p>
-              <p className="mt-2 text-sm text-zinc-600">Quick access to each student.</p>
+              <p className="mt-2 text-sm text-zinc-600">Quick access to each student and their progress.</p>
             </div>
             <div className="rounded-lg border border-zinc-200 bg-white p-4">
               <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Lessons</p>
-              <p className="mt-2 text-sm text-zinc-600">Log outcomes in under a minute.</p>
+              <p className="mt-2 text-sm text-zinc-600">Log and schedule lessons in seconds.</p>
             </div>
             <div className="rounded-lg border border-zinc-200 bg-white p-4">
-              <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Payments</p>
-              <p className="mt-2 text-sm text-zinc-600">Track paid and unpaid lessons clearly.</p>
+              <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Calendar</p>
+              <p className="mt-2 text-sm text-zinc-600">See your lessons over time and stay organised.</p>
+            </div>
+            <div className="rounded-lg border border-zinc-200 bg-white p-4">
+              <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Parent updates</p>
+              <p className="mt-2 text-sm text-zinc-600">Generate clear summaries parents understand.</p>
             </div>
           </div>
+          <p className="mt-4 text-sm text-zinc-600">
+            Works with your calendar so your lessons are always where you need them.
+          </p>
         </div>
       </section>
 

@@ -109,8 +109,18 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
 
   return (
     <section>
-      <h1 className="text-xl font-semibold text-zinc-900">Calendar</h1>
-      <p className="mt-1 text-sm text-zinc-600">View your lessons over time</p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-xl font-semibold text-zinc-900">Calendar</h1>
+          <p className="mt-1 text-sm text-zinc-600">View your lessons over time</p>
+        </div>
+        <Link
+          href="/app/settings"
+          className="inline-flex min-h-10 w-fit items-center justify-center rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+        >
+          Sync calendar
+        </Link>
+      </div>
 
       <div className="mt-6 rounded-lg border border-zinc-200 bg-white p-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -243,21 +253,6 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
           </>
         )}
       </div>
-
-      <section className="mt-6 rounded-lg border border-zinc-200 bg-white p-4">
-        <h2 className="text-lg font-medium text-zinc-900">Sync with your calendar</h2>
-        <p className="mt-1 text-sm text-zinc-600">
-          View your tutoring lessons in your calendar app.
-        </p>
-        <div className="mt-3">
-          <Link
-            href="/app/settings"
-            className="inline-flex min-h-10 items-center justify-center rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-          >
-            Set up calendar sync
-          </Link>
-        </div>
-      </section>
     </section>
   );
 }

@@ -104,7 +104,7 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
             <>
               <p className="text-sm font-medium text-zinc-900">No students yet.</p>
               <p className="mt-2 text-sm text-zinc-600">
-                Add your first student to start logging lessons and tracking updates.
+                Add your first student to start logging lessons and tracking progress.
               </p>
             </>
           )}

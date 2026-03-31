@@ -240,6 +240,14 @@ export function NewLessonForm({
             >
               Back to student
             </Link>
+            {!isEditMode ? (
+              <Link
+                href="/app/calendar"
+                className="inline-flex min-h-11 items-center justify-center rounded-md border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+              >
+                View your lessons in the calendar
+              </Link>
+            ) : null}
             {copied ? <p className="text-sm font-medium text-emerald-700">Copied.</p> : null}
           </div>
         </div>
