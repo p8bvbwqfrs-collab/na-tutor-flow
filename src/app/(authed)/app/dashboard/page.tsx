@@ -169,7 +169,6 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     supabase
       .from("lessons")
       .select("id, student_id, lesson_at, status, student:students!lessons_student_id_fkey(student_name)")
-      .lte("lesson_at", now.toISOString())
       .or("status.eq.completed,status.is.null")
       .order("lesson_at", { ascending: false })
       .limit(3),
@@ -177,7 +176,6 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       .from("lessons")
       .select("id, student_id, lesson_at, status, student:students!lessons_student_id_fkey(student_name)")
       .eq("status", "planned")
-      .gt("lesson_at", now.toISOString())
       .order("lesson_at", { ascending: true })
       .limit(3),
   ]);
@@ -205,7 +203,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     isCompletedLessonStatus(lesson.status),
   );
   const upcomingLessons = ((upcomingLessonsResult.data ?? []) as DashboardLessonOverviewRow[]).filter(
-    (lesson) => lesson.status === "planned" && new Date(lesson.lesson_at).getTime() >= now.getTime(),
+    (lesson) => lesson.status === "planned",
   );
 
   const monthStarts =

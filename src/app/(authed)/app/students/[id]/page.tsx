@@ -149,10 +149,9 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
   }
 
   const lessons: Lesson[] = lessonsData ?? [];
-  const now = Date.now();
   const completedLessons = lessons.filter((lesson) => isCompletedLessonStatus(lesson.status));
   const plannedLessons = [...lessons]
-    .filter((lesson) => lesson.status === "planned" && new Date(lesson.lesson_at).getTime() >= now)
+    .filter((lesson) => lesson.status === "planned")
     .sort((a, b) => new Date(a.lesson_at).getTime() - new Date(b.lesson_at).getTime());
   const isArchived = Boolean(student.archived_at);
   const totalLessons = completedLessons.length;
