@@ -78,6 +78,8 @@ function getMonthGrid(monthStart: Date) {
 export default async function CalendarPage({ searchParams }: CalendarPageProps) {
   const { month } = await searchParams;
   const now = new Date();
+  const todayKey = now.toISOString().slice(0, 10);
+  const currentMonthKey = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}`;
   const monthStart = parseMonthParam(month) ?? new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
   const nextMonthStart = new Date(Date.UTC(monthStart.getUTCFullYear(), monthStart.getUTCMonth() + 1, 1));
   const prevMonthStart = new Date(Date.UTC(monthStart.getUTCFullYear(), monthStart.getUTCMonth() - 1, 1));
@@ -107,14 +109,8 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
 
   return (
     <section>
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-semibold text-zinc-900">Calendar</h1>
-          <p className="mt-1 text-sm text-zinc-600">
-            A simple month view of recent and upcoming lessons.
-          </p>
-        </div>
-      </div>
+      <h1 className="text-xl font-semibold text-zinc-900">Calendar</h1>
+      <p className="mt-1 text-sm text-zinc-600">View your lessons over time</p>
 
       <div className="mt-6 rounded-lg border border-zinc-200 bg-white p-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -132,6 +128,12 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
               className="rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
             >
               Previous
+            </Link>
+            <Link
+              href={`/app/calendar?month=${currentMonthKey}`}
+              className="rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+            >
+              Today
             </Link>
             <Link
               href={`/app/calendar?month=${nextMonthStart.toISOString().slice(0, 7)}`}
@@ -163,17 +165,28 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
               {monthCells.map(({ date, inMonth }) => {
                 const key = date.toISOString().slice(0, 10);
                 const dayLessons = lessonsByDate.get(key) ?? [];
+                const isToday = key === todayKey;
 
                 return (
                   <div
                     key={key}
                     className={`min-h-24 rounded-lg border p-2 sm:min-h-28 ${
-                      inMonth
-                        ? "border-zinc-200 bg-zinc-50"
-                        : "border-zinc-100 bg-white text-zinc-400"
+                      isToday
+                        ? "border-zinc-400 bg-zinc-100"
+                        : inMonth
+                          ? "border-zinc-200 bg-zinc-50"
+                          : "border-zinc-100 bg-white text-zinc-400"
                     }`}
                   >
-                    <p className={`text-xs font-medium ${inMonth ? "text-zinc-700" : "text-zinc-400"}`}>
+                    <p
+                      className={`text-xs font-medium ${
+                        isToday
+                          ? "text-zinc-900"
+                          : inMonth
+                            ? "text-zinc-700"
+                            : "text-zinc-400"
+                      }`}
+                    >
                       {dayNumberFormatter.format(date)}
                     </p>
                     <div className="mt-2 space-y-1.5">
@@ -230,6 +243,21 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
           </>
         )}
       </div>
+
+      <section className="mt-6 rounded-lg border border-zinc-200 bg-white p-4">
+        <h2 className="text-lg font-medium text-zinc-900">Sync with your calendar</h2>
+        <p className="mt-1 text-sm text-zinc-600">
+          View your tutoring lessons in your calendar app.
+        </p>
+        <div className="mt-3">
+          <Link
+            href="/app/settings"
+            className="inline-flex min-h-10 items-center justify-center rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+          >
+            Set up calendar sync
+          </Link>
+        </div>
+      </section>
     </section>
   );
 }
