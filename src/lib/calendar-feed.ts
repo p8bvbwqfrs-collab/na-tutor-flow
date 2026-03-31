@@ -1,6 +1,6 @@
 import { createHmac, timingSafeEqual } from "crypto";
 
-export type CalendarFeedType = "upcoming" | "completed";
+export type CalendarFeedType = "tutoring";
 
 type CalendarEvent = {
   id: string;

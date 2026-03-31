@@ -14,14 +14,16 @@ export default async function SettingsPage() {
   const protocol = headerStore.get("x-forwarded-proto") ?? "https";
   const baseUrl = host ? `${protocol}://${host}` : "";
   const feedsAvailable = Boolean(user?.id && baseUrl && canUseCalendarFeeds());
-  const upcomingFeedUrl =
+  const tutoringFeedUrl =
     feedsAvailable && user?.id
-      ? `${baseUrl}/api/calendar/upcoming?token=${generateCalendarFeedToken(user.id, "upcoming")}`
+      ? `${baseUrl}/api/calendar/tutoring?token=${generateCalendarFeedToken(user.id, "tutoring")}`
       : "";
-  const completedFeedUrl =
-    feedsAvailable && user?.id
-      ? `${baseUrl}/api/calendar/completed?token=${generateCalendarFeedToken(user.id, "completed")}`
-      : "";
+  const tutoringWebcalUrl = tutoringFeedUrl.replace(/^https?:\/\//, "webcal://");
+  const isLocalHost =
+    baseUrl.startsWith("http://localhost") ||
+    baseUrl.startsWith("http://127.0.0.1") ||
+    baseUrl.startsWith("http://0.0.0.0");
+  const addToCalendarUrl = isLocalHost ? tutoringFeedUrl : tutoringWebcalUrl;
 
   return (
     <section>
@@ -54,40 +56,37 @@ export default async function SettingsPage() {
             Subscribe to your tutoring calendar in Apple Calendar or another calendar app.
           </p>
 
-          <div className="mt-4 space-y-3">
+          <div className="mt-4">
             <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
               <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
-                Upcoming lessons calendar feed
+                Tutoring calendar
               </p>
               <p className="mt-2 text-sm text-zinc-600">
-                Subscribe to planned future lessons in Apple Calendar or another iCal-compatible app.
+                See upcoming lessons and completed lesson history in your calendar app.
               </p>
-              <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <p className="text-xs break-all text-zinc-500">
-                  {feedsAvailable ? upcomingFeedUrl : "Calendar feeds are not configured yet."}
-                </p>
-                <CopyFeedLinkButton url={upcomingFeedUrl} unavailable={!feedsAvailable} />
+              <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                <a
+                  href={feedsAvailable ? addToCalendarUrl : "#"}
+                  className="inline-flex min-h-10 items-center justify-center rounded-md bg-zinc-800 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 aria-disabled:pointer-events-none aria-disabled:cursor-not-allowed aria-disabled:bg-zinc-300"
+                  aria-disabled={!feedsAvailable}
+                >
+                  Add to calendar
+                </a>
+                <CopyFeedLinkButton
+                  url={tutoringFeedUrl}
+                  label="Copy link"
+                  unavailable={!feedsAvailable}
+                />
               </div>
-            </div>
-
-            <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
-              <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
-                Completed lessons calendar feed
-              </p>
-              <p className="mt-2 text-sm text-zinc-600">
-                Subscribe to completed lessons for a read-only history of tutoring activity.
-              </p>
-              <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <p className="text-xs break-all text-zinc-500">
-                  {feedsAvailable ? completedFeedUrl : "Calendar feeds are not configured yet."}
+              <details className="mt-3 text-sm text-zinc-600">
+                <summary className="cursor-pointer select-none text-sm font-medium text-zinc-700 hover:text-zinc-900">
+                  How this works
+                </summary>
+                <p className="mt-2 text-sm text-zinc-600">
+                  Subscribe once to keep your tutoring lessons updated in your calendar app. Upcoming lessons and completed lesson history will appear in one place. Updates may not appear instantly depending on your calendar provider.
                 </p>
-                <CopyFeedLinkButton url={completedFeedUrl} unavailable={!feedsAvailable} />
-              </div>
+              </details>
             </div>
-
-            <p className="text-sm text-zinc-600">
-              Subscribed calendar feeds may not refresh instantly depending on your calendar app.
-            </p>
           </div>
         </section>
       </div>
