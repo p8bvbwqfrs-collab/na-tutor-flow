@@ -167,7 +167,7 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
                 return (
                   <div
                     key={key}
-                    className={`min-h-28 rounded-lg border p-2 sm:min-h-32 ${
+                    className={`min-h-24 rounded-lg border p-2 sm:min-h-28 ${
                       inMonth
                         ? "border-zinc-200 bg-zinc-50"
                         : "border-zinc-100 bg-white text-zinc-400"
@@ -177,32 +177,40 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
                       {dayNumberFormatter.format(date)}
                     </p>
                     <div className="mt-2 space-y-1.5">
-                      {dayLessons.slice(0, 3).map((lesson) => (
+                      {dayLessons.slice(0, 2).map((lesson) => (
                         <Link
                           key={lesson.id}
                           href={`/app/students/${lesson.student_id}/lessons/${lesson.id}`}
-                          className={`block rounded-md border px-2 py-1.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 ${
+                          className={`block rounded-md border px-2 py-1 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 ${
                             lesson.status === "planned"
-                              ? "border-zinc-200 bg-zinc-50 hover:border-zinc-300 hover:bg-white"
+                              ? "border-sky-100 bg-sky-50/70 hover:border-sky-200 hover:bg-sky-50"
                               : "border-zinc-200 bg-white hover:border-zinc-300 hover:bg-zinc-50"
                           }`}
                         >
-                          <p className="truncate text-xs font-medium text-zinc-900">
+                          <p
+                            className={`truncate text-xs font-medium ${
+                              lesson.status === "planned" ? "text-sky-900" : "text-zinc-900"
+                            }`}
+                          >
                             {getStudentName(lesson.student)}
                           </p>
-                          <p className="mt-0.5 text-xs text-zinc-600">
+                          <p
+                            className={`mt-0.5 text-xs ${
+                              lesson.status === "planned" ? "text-sky-800" : "text-zinc-600"
+                            }`}
+                          >
                             {timeFormatter.format(new Date(lesson.lesson_at))}
                           </p>
                           {lesson.status === "planned" ? (
-                            <p className="mt-0.5 text-xs text-zinc-500">
+                            <p className="mt-0.5 text-xs text-sky-700">
                               {lesson.topics && lesson.topics !== "Planned lesson" ? lesson.topics : "Planned lesson"}
                             </p>
                           ) : null}
                         </Link>
                       ))}
-                      {dayLessons.length > 3 ? (
+                      {dayLessons.length > 2 ? (
                         <p className="px-1 text-xs text-zinc-500">
-                          +{dayLessons.length - 3} more
+                          +{dayLessons.length - 2} more
                         </p>
                       ) : null}
                     </div>

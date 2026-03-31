@@ -265,7 +265,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
           href={`/app/students/${student.id}/edit`}
           className="rounded-md border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 transition-colors hover:bg-zinc-50 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
         >
-          Edit
+          Edit student
         </Link>
         <StudentArchiveToggle studentId={student.id} isArchived={isArchived} />
       </div>
@@ -341,20 +341,21 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
                         <div className="flex flex-wrap items-start gap-2">
                           <Link
                             href={`/app/students/${student.id}/lessons/${lesson.id}?mode=complete`}
-                            className="rounded-md bg-zinc-800 px-3 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                            className="inline-flex min-h-10 items-center justify-center rounded-md bg-zinc-800 px-3 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
                           >
                             Complete lesson
                           </Link>
                           <Link
                             href={`/app/students/${student.id}/lessons/${lesson.id}`}
-                            className="rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 transition-colors hover:bg-zinc-50 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                            className="inline-flex min-h-10 items-center justify-center rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 transition-colors hover:bg-zinc-50 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
                           >
                             Edit
                           </Link>
                           <PlannedLessonStatusButton
                             lessonId={lesson.id}
                             nextStatus="cancelled"
-                            label="Cancel"
+                            label="Cancel lesson"
+                            className="min-h-10 border-rose-200 bg-white text-rose-700 hover:bg-rose-50 hover:text-rose-800"
                           />
                         </div>
                       </div>

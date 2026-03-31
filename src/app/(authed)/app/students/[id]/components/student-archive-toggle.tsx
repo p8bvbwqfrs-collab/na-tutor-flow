@@ -45,7 +45,7 @@ export function StudentArchiveToggle({ studentId, isArchived }: StudentArchiveTo
         disabled={isSubmitting}
         className="rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-zinc-100 disabled:text-zinc-500"
       >
-        {isSubmitting ? "Saving..." : isArchived ? "Restore" : "Archive"}
+        {isSubmitting ? "Saving..." : isArchived ? "Restore student" : "Archive student"}
       </button>
       {error ? (
         <p role="alert" className="text-xs text-rose-900">

@@ -8,12 +8,14 @@ type PlannedLessonStatusButtonProps = {
   lessonId: string;
   nextStatus: "cancelled" | "planned";
   label: string;
+  className?: string;
 };
 
 export function PlannedLessonStatusButton({
   lessonId,
   nextStatus,
   label,
+  className,
 }: PlannedLessonStatusButtonProps) {
   const router = useRouter();
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
@@ -45,7 +47,10 @@ export function PlannedLessonStatusButton({
         type="button"
         onClick={onClick}
         disabled={isUpdating}
-        className="rounded-md border border-zinc-300 px-2.5 py-1.5 text-xs font-medium text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 disabled:cursor-not-allowed disabled:text-zinc-400"
+        className={`rounded-md border px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:text-zinc-400 ${
+          className ??
+          "border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900"
+        }`}
       >
         {isUpdating ? "Saving..." : label}
       </button>
