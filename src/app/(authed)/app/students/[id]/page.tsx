@@ -87,6 +87,10 @@ function findLatestNonEmptyValue<T>(lessons: Lesson[], getValue: (lesson: Lesson
   return null;
 }
 
+function isCompletedLessonStatus(status: "planned" | "completed" | "cancelled" | null) {
+  return status === "completed" || status === null;
+}
+
 export default async function StudentDetailPage({ params, searchParams }: StudentPageProps) {
   noStore();
 
@@ -146,9 +150,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
 
   const lessons: Lesson[] = lessonsData ?? [];
   const now = Date.now();
-  const completedLessons = lessons.filter(
-    (lesson) => lesson.status === "completed" || lesson.status === null,
-  );
+  const completedLessons = lessons.filter((lesson) => isCompletedLessonStatus(lesson.status));
   const plannedLessons = [...lessons]
     .filter((lesson) => lesson.status === "planned" && new Date(lesson.lesson_at).getTime() >= now)
     .sort((a, b) => new Date(a.lesson_at).getTime() - new Date(b.lesson_at).getTime());

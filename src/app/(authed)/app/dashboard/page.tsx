@@ -85,6 +85,10 @@ function getStudentName(
   return student.student_name ?? null;
 }
 
+function isCompletedLessonStatus(status: "planned" | "completed" | "cancelled" | null) {
+  return status === "completed" || status === null;
+}
+
 type DashboardPageProps = {
   searchParams: Promise<{ range?: string }>;
 };
@@ -197,8 +201,12 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     : null;
   const hasAnyLessons = Boolean(oldestLessonAt);
   const showDashboardOnboarding = activeStudentsCount === 0 && !hasAnyLessons;
-  const recentLessons = (recentLessonsResult.data ?? []) as DashboardLessonOverviewRow[];
-  const upcomingLessons = (upcomingLessonsResult.data ?? []) as DashboardLessonOverviewRow[];
+  const recentLessons = ((recentLessonsResult.data ?? []) as DashboardLessonOverviewRow[]).filter((lesson) =>
+    isCompletedLessonStatus(lesson.status),
+  );
+  const upcomingLessons = ((upcomingLessonsResult.data ?? []) as DashboardLessonOverviewRow[]).filter(
+    (lesson) => lesson.status === "planned" && new Date(lesson.lesson_at).getTime() >= now.getTime(),
+  );
 
   const monthStarts =
     selectedRange === "all"
