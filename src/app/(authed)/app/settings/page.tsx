@@ -64,10 +64,10 @@ export default async function SettingsPage() {
               <p className="mt-2 text-sm text-zinc-600">
                 See upcoming lessons and completed lesson history in your calendar app.
               </p>
-              <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+              <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-start sm:gap-3">
                 <a
                   href={feedsAvailable ? addToCalendarUrl : "#"}
-                  className="inline-flex min-h-10 items-center justify-center rounded-md bg-zinc-800 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 aria-disabled:pointer-events-none aria-disabled:cursor-not-allowed aria-disabled:bg-zinc-300"
+                  className="inline-flex min-h-10 min-w-[8.5rem] items-center justify-center rounded-md bg-zinc-800 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 aria-disabled:pointer-events-none aria-disabled:cursor-not-allowed aria-disabled:bg-zinc-300"
                   aria-disabled={!feedsAvailable}
                 >
                   Add to calendar
