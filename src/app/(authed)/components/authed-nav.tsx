@@ -7,6 +7,7 @@ const navItems = [
   { href: "/app/dashboard", label: "Dashboard" },
   { href: "/app/students", label: "Students" },
   { href: "/app/calendar", label: "Calendar" },
+  { href: "/app/settings", label: "Settings" },
 ];
 
 function isActivePath(pathname: string, href: string) {
