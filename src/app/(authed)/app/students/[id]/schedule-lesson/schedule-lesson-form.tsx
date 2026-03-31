@@ -21,6 +21,14 @@ function toDatetimeLocalValue(date: Date) {
   return local.toISOString().slice(0, 16);
 }
 
+function getDateValue(date: Date) {
+  return toDatetimeLocalValue(date).slice(0, 10);
+}
+
+function getTimeValue(date: Date) {
+  return toDatetimeLocalValue(date).slice(11, 16);
+}
+
 export function ScheduleLessonForm({
   studentId,
   studentName,
@@ -31,11 +39,9 @@ export function ScheduleLessonForm({
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const isEditMode = mode === "edit";
   const formErrorId = "schedule-lesson-form-error";
-  const [lessonAt, setLessonAt] = useState(
-    initialLesson?.lessonAt
-      ? toDatetimeLocalValue(new Date(initialLesson.lessonAt))
-      : toDatetimeLocalValue(new Date()),
-  );
+  const initialDate = initialLesson?.lessonAt ? new Date(initialLesson.lessonAt) : new Date();
+  const [lessonDate, setLessonDate] = useState(getDateValue(initialDate));
+  const [lessonTime, setLessonTime] = useState(getTimeValue(initialDate));
   const [topics, setTopics] = useState(initialLesson?.topics ?? "");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,7 +51,7 @@ export function ScheduleLessonForm({
     event.preventDefault();
     setError(null);
 
-    if (!lessonAt) {
+    if (!lessonDate || !lessonTime) {
       setError("Lesson date and time is required.");
       return;
     }
@@ -53,9 +59,11 @@ export function ScheduleLessonForm({
     setIsSubmitting(true);
 
     const trimmedTopics = topics.trim();
+    const lessonAt = new Date(`${lessonDate}T${lessonTime}`);
+
     const payload = {
       student_id: studentId,
-      lesson_at: new Date(lessonAt).toISOString(),
+      lesson_at: lessonAt.toISOString(),
       topics: trimmedTopics || "Planned lesson",
       effort: 3,
       confidence: 3,
@@ -111,20 +119,38 @@ export function ScheduleLessonForm({
 
   return (
     <form onSubmit={onSubmit} className="space-y-4 rounded-lg border border-zinc-200 bg-white p-4">
-      <div>
-        <label htmlFor="lesson_at" className="block text-sm font-medium text-zinc-700">
-          Lesson date and time
-        </label>
-        <input
-          id="lesson_at"
-          type="datetime-local"
-          required
-          aria-invalid={Boolean(error)}
-          aria-describedby={error ? formErrorId : undefined}
-          value={lessonAt}
-          onChange={(event) => setLessonAt(event.target.value)}
-          className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-500 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 disabled:bg-zinc-100 disabled:text-zinc-600"
-        />
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label htmlFor="lesson_date" className="block text-sm font-medium text-zinc-700">
+            Lesson date
+          </label>
+          <input
+            id="lesson_date"
+            type="date"
+            required
+            aria-invalid={Boolean(error)}
+            aria-describedby={error ? formErrorId : undefined}
+            value={lessonDate}
+            onChange={(event) => setLessonDate(event.target.value)}
+            className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-500 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 disabled:bg-zinc-100 disabled:text-zinc-600"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="lesson_time" className="block text-sm font-medium text-zinc-700">
+            Lesson time
+          </label>
+          <input
+            id="lesson_time"
+            type="time"
+            required
+            aria-invalid={Boolean(error)}
+            aria-describedby={error ? formErrorId : undefined}
+            value={lessonTime}
+            onChange={(event) => setLessonTime(event.target.value)}
+            className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-500 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 disabled:bg-zinc-100 disabled:text-zinc-600"
+          />
+        </div>
       </div>
 
       <div>
