@@ -14,10 +14,37 @@ type CalendarLessonRow = {
   student: { student_name: string } | { student_name: string }[] | null;
 };
 
-const weekdayFormatter = new Intl.DateTimeFormat("en-GB", { weekday: "short" });
-const monthHeadingFormatter = new Intl.DateTimeFormat("en-GB", { month: "long", year: "numeric" });
-const dayNumberFormatter = new Intl.DateTimeFormat("en-GB", { day: "numeric" });
-const timeFormatter = new Intl.DateTimeFormat("en-GB", { hour: "numeric", minute: "2-digit" });
+const CALENDAR_TIME_ZONE = "Europe/London";
+
+const weekdayFormatter = new Intl.DateTimeFormat("en-GB", {
+  weekday: "short",
+  timeZone: CALENDAR_TIME_ZONE,
+});
+const monthHeadingFormatter = new Intl.DateTimeFormat("en-GB", {
+  month: "long",
+  year: "numeric",
+  timeZone: CALENDAR_TIME_ZONE,
+});
+const dayNumberFormatter = new Intl.DateTimeFormat("en-GB", {
+  day: "numeric",
+  timeZone: CALENDAR_TIME_ZONE,
+});
+const timeFormatter = new Intl.DateTimeFormat("en-GB", {
+  hour: "numeric",
+  minute: "2-digit",
+  timeZone: CALENDAR_TIME_ZONE,
+});
+const dateKeyFormatter = new Intl.DateTimeFormat("en-CA", {
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  timeZone: CALENDAR_TIME_ZONE,
+});
+const monthKeyFormatter = new Intl.DateTimeFormat("en-CA", {
+  year: "numeric",
+  month: "2-digit",
+  timeZone: CALENDAR_TIME_ZONE,
+});
 
 function getStudentName(
   student: { student_name: string } | { student_name: string }[] | null | undefined,
@@ -49,6 +76,14 @@ function parseMonthParam(input: string | undefined) {
   return new Date(Date.UTC(year, monthIndex, 1));
 }
 
+function formatDateKey(date: Date) {
+  return dateKeyFormatter.format(date);
+}
+
+function formatMonthKey(date: Date) {
+  return monthKeyFormatter.format(date);
+}
+
 function getMonthGrid(monthStart: Date) {
   const start = new Date(monthStart);
   const end = new Date(Date.UTC(monthStart.getUTCFullYear(), monthStart.getUTCMonth() + 1, 0));
@@ -78,8 +113,8 @@ function getMonthGrid(monthStart: Date) {
 export default async function CalendarPage({ searchParams }: CalendarPageProps) {
   const { month } = await searchParams;
   const now = new Date();
-  const todayKey = now.toISOString().slice(0, 10);
-  const currentMonthKey = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}`;
+  const todayKey = formatDateKey(now);
+  const currentMonthKey = formatMonthKey(now);
   const monthStart = parseMonthParam(month) ?? new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
   const nextMonthStart = new Date(Date.UTC(monthStart.getUTCFullYear(), monthStart.getUTCMonth() + 1, 1));
   const prevMonthStart = new Date(Date.UTC(monthStart.getUTCFullYear(), monthStart.getUTCMonth() - 1, 1));
@@ -96,7 +131,7 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
   const lessonsByDate = new Map<string, CalendarLessonRow[]>();
 
   lessons.forEach((lesson) => {
-    const key = lesson.lesson_at.slice(0, 10);
+    const key = formatDateKey(new Date(lesson.lesson_at));
     const bucket = lessonsByDate.get(key) ?? [];
     bucket.push(lesson);
     lessonsByDate.set(key, bucket);
@@ -173,7 +208,7 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
 
             <div className="mt-2 grid grid-cols-7 gap-2">
               {monthCells.map(({ date, inMonth }) => {
-                const key = date.toISOString().slice(0, 10);
+                const key = formatDateKey(date);
                 const dayLessons = lessonsByDate.get(key) ?? [];
                 const isToday = key === todayKey;
 

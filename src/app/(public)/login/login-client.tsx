@@ -21,6 +21,7 @@ export function LoginClient() {
   const [isCodeSent, setIsCodeSent] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [isResendingConfirmation, setIsResendingConfirmation] = useState(false);
   const [cooldownSeconds, setCooldownSeconds] = useState(0);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(initialError);
@@ -85,6 +86,34 @@ export function LoginClient() {
       setError("Unable to send reset email. Please try again.");
     } finally {
       setIsResetSending(false);
+    }
+  }
+
+  async function handleResendConfirmationEmail() {
+    if (!confirmationEmail) {
+      return;
+    }
+
+    setError(null);
+    setMessage(null);
+    setIsResendingConfirmation(true);
+
+    try {
+      const { error: resendError } = await supabase.auth.resend({
+        type: "signup",
+        email: confirmationEmail,
+      });
+
+      if (resendError) {
+        setError(formatAuthErrorMessage(resendError.message));
+        return;
+      }
+
+      setMessage("Confirmation email sent again. If it doesn’t arrive within a minute, check your junk or spam folder.");
+    } catch {
+      setError("Unable to resend the confirmation email. Please try again.");
+    } finally {
+      setIsResendingConfirmation(false);
     }
   }
 
@@ -253,15 +282,53 @@ export function LoginClient() {
   if (confirmationEmail) {
     return (
       <section className="mx-auto max-w-md py-10 sm:py-16">
-        <div className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm sm:p-6">
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Check your email</h1>
+        <div className="rounded-lg border border-zinc-200 bg-white p-5 text-center shadow-sm sm:p-6">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-zinc-200 bg-zinc-50 text-zinc-700">
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              className="h-5 w-5"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 7.5h16.5v9a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 16.5v-9Z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 8.25 6.97 5.229a.9.9 0 0 0 1.06 0L19.5 8.25" />
+            </svg>
+          </div>
+          <h1 className="mt-4 text-2xl font-semibold tracking-tight text-zinc-900">Account created</h1>
           <p className="mt-3 text-sm text-zinc-600">
-            We&apos;ve sent a confirmation link to <span className="font-medium text-zinc-900">{confirmationEmail}</span>.
+            Check your email to confirm your account.
           </p>
           <p className="mt-2 text-sm text-zinc-600">
-            Confirm your email, then come back and sign in.
+            We&apos;ve sent a confirmation link to{" "}
+            <span className="font-medium text-zinc-900">{confirmationEmail}</span>.
           </p>
-          <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+          <p className="mt-2 text-sm text-zinc-600">
+            If it doesn&apos;t arrive within a minute, check your junk or spam folder.
+          </p>
+          <p className="mt-2 text-sm text-zinc-600">
+            Once confirmed, you can sign in and get started straight away.
+          </p>
+          {message ? (
+            <p className="mt-4 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
+              {message}
+            </p>
+          ) : null}
+          {error ? (
+            <p className="mt-4 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-900">
+              {error}
+            </p>
+          ) : null}
+          <div className="mt-5 flex flex-col justify-center gap-3 sm:flex-row sm:items-center sm:justify-center">
+            <button
+              type="button"
+              onClick={handleResendConfirmationEmail}
+              disabled={isResendingConfirmation}
+              className="inline-flex min-h-11 w-full items-center justify-center rounded-md bg-zinc-800 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
+            >
+              {isResendingConfirmation ? "Sending..." : "Resend email"}
+            </button>
             <button
               type="button"
               onClick={() => {
@@ -270,16 +337,10 @@ export function LoginClient() {
                 setMessage(null);
                 setAuthMode("sign_in");
               }}
-              className="inline-flex min-h-11 items-center justify-center rounded-md bg-zinc-800 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+              className="inline-flex min-h-11 w-full items-center justify-center rounded-md border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
             >
               Back to sign in
             </button>
-            <Link
-              href="/"
-              className="inline-flex min-h-11 items-center justify-center rounded-md border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-            >
-              Back to home
-            </Link>
           </div>
         </div>
       </section>

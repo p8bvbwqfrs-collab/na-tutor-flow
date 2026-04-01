@@ -35,6 +35,14 @@ type SavedLessonState = {
   confidence: number;
 };
 
+function splitIntoBulletPoints(input: string) {
+  return input
+    .split(/\n+/)
+    .flatMap((line) => line.split(/\s*;\s*/))
+    .map((line) => line.replace(/^[-•*]\s*/, "").trim())
+    .filter(Boolean);
+}
+
 function parseTopicTags(input: string) {
   return Array.from(
     new Set(
@@ -59,21 +67,29 @@ function formatParentUpdate(studentName: string, lesson: SavedLessonState) {
     month: "short",
   }).format(lessonDate);
 
-  const lines = [`${studentName} – lesson update (${dateText})`, `• Focus today: ${lesson.topics}`];
+  const focusPoints = splitIntoBulletPoints(lesson.topics);
+  const wentWellPoints = splitIntoBulletPoints(lesson.wentWell);
+  const improvePoints = splitIntoBulletPoints(lesson.improve);
+  const homeworkPoints = splitIntoBulletPoints(lesson.homework);
+  const lines = [`${studentName} – lesson update (${dateText})`];
 
-  if (lesson.wentWell) {
-    lines.push(`• What went well: ${lesson.wentWell}`);
+  if (focusPoints.length > 0) {
+    lines.push("", "Focus today", ...focusPoints.map((point) => `• ${point}`));
   }
 
-  if (lesson.improve) {
-    lines.push(`• Area to improve: ${lesson.improve}`);
+  if (wentWellPoints.length > 0) {
+    lines.push("", "What went well", ...wentWellPoints.map((point) => `• ${point}`));
   }
 
-  if (lesson.homework) {
-    lines.push(`• Homework: ${lesson.homework}`);
+  if (improvePoints.length > 0) {
+    lines.push("", "Area to improve", ...improvePoints.map((point) => `• ${point}`));
   }
 
-  lines.push(`• Student effort: ${lesson.effort}/5 | Confidence: ${lesson.confidence}/5`);
+  if (homeworkPoints.length > 0) {
+    lines.push("", "Homework", ...homeworkPoints.map((point) => `• ${point}`));
+  }
+
+  lines.push("", `Student effort: ${lesson.effort}/5`, `Confidence: ${lesson.confidence}/5`);
 
   return lines.join("\n");
 }
@@ -107,11 +123,13 @@ export function NewLessonForm({
   const [error, setError] = useState<string | null>(null);
   const [savedLesson, setSavedLesson] = useState<SavedLessonState | null>(null);
   const [copied, setCopied] = useState(false);
+  const [shared, setShared] = useState(false);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
     setCopied(false);
+    setShared(false);
 
     const trimmedTopics = topics.trim();
     const topicTags = parseTopicTags(topicTagsInput);
@@ -203,18 +221,47 @@ export function NewLessonForm({
     try {
       await navigator.clipboard.writeText(message);
       setCopied(true);
+      setShared(false);
     } catch {
       setError("We couldn’t copy the update. Please copy it manually.");
+    }
+  }
+
+  async function onShareUpdate() {
+    if (!savedLesson) {
+      return;
+    }
+
+    const message = formatParentUpdate(studentName, savedLesson);
+
+    if (typeof navigator === "undefined" || !navigator.share) {
+      setError("Sharing isn’t available on this device. Please copy the update instead.");
+      return;
+    }
+
+    try {
+      await navigator.share({
+        title: `${studentName} lesson update`,
+        text: message,
+      });
+      setShared(true);
+      setCopied(false);
+    } catch (shareError) {
+      if (shareError instanceof DOMException && shareError.name === "AbortError") {
+        return;
+      }
+
+      setError("We couldn’t open the share sheet. Please copy the update instead.");
     }
   }
 
   const parentUpdate = savedLesson ? formatParentUpdate(studentName, savedLesson) : "";
   const successTitle = completionMode ? "Lesson completed" : isEditMode ? "Lesson updated" : "Lesson saved";
   const successCopy = completionMode
-    ? "Copy the parent update now while the lesson details are fresh."
+    ? "Share or copy the parent update while the lesson details are still fresh."
     : isEditMode
-    ? "Copy the refreshed parent update before you head back to the student page."
-    : "Copy the parent update now while the lesson is still fresh.";
+    ? "Share or copy the refreshed parent update before you head back to the student page."
+    : "Share or copy the parent update while the lesson is still fresh.";
 
   if (savedLesson) {
     return (
@@ -232,7 +279,14 @@ export function NewLessonForm({
               onClick={onCopyWhatsApp}
               className="inline-flex min-h-11 items-center justify-center rounded-md bg-zinc-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
             >
-              Copy update for parent
+              Copy update
+            </button>
+            <button
+              type="button"
+              onClick={onShareUpdate}
+              className="inline-flex min-h-11 items-center justify-center rounded-md border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+            >
+              Share update
             </button>
             <Link
               href={`/app/students/${studentId}`}
@@ -248,7 +302,10 @@ export function NewLessonForm({
                 View your lessons in the calendar
               </Link>
             ) : null}
+          </div>
+          <div className="mt-2 h-5">
             {copied ? <p className="text-sm font-medium text-emerald-700">Copied.</p> : null}
+            {!copied && shared ? <p className="text-sm font-medium text-emerald-700">Shared.</p> : null}
           </div>
         </div>
 
