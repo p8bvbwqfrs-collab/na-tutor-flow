@@ -2,7 +2,6 @@ import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { StudentsList } from "./components/students-list";
-import { MobileLogLessonFab } from "./components/mobile-log-lesson-fab";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -123,14 +122,6 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
         </div>
       )}
 
-      {!showArchived ? (
-        <MobileLogLessonFab
-          students={students.map((student) => ({
-            id: student.id,
-            student_name: student.student_name,
-          }))}
-        />
-      ) : null}
     </section>
   );
 }

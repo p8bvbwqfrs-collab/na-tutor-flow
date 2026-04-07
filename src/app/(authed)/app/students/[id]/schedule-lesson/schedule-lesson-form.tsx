@@ -88,7 +88,7 @@ export function ScheduleLessonForm({
 
   if (saved) {
     return (
-      <div className="space-y-4 rounded-lg border border-zinc-200 bg-white p-4">
+      <div className="w-full min-w-0 space-y-4 rounded-lg border border-zinc-200 bg-white p-4">
         <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
           <p role="status" className="text-base font-semibold text-emerald-900">
             {isEditMode ? "Scheduled lesson updated" : "Lesson scheduled"}
@@ -98,16 +98,16 @@ export function ScheduleLessonForm({
               ? "The lesson details have been updated."
               : "The lesson now appears in the calendar and upcoming lessons."}
           </p>
-          <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+          <div className="mt-3 grid min-w-0 gap-2 sm:grid-cols-2">
             <Link
               href={`/app/students/${studentId}`}
-              className="inline-flex min-h-11 items-center justify-center rounded-md bg-zinc-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+              className="inline-flex min-h-11 w-full min-w-0 items-center justify-center rounded-md bg-zinc-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
             >
               Back to student
             </Link>
             <Link
               href="/app/calendar"
-              className="inline-flex min-h-11 items-center justify-center rounded-md border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+              className="inline-flex min-h-11 w-full min-w-0 items-center justify-center rounded-md border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
             >
               View calendar
             </Link>
@@ -118,9 +118,12 @@ export function ScheduleLessonForm({
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4 rounded-lg border border-zinc-200 bg-white p-4">
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div>
+    <form
+      onSubmit={onSubmit}
+      className="w-full min-w-0 max-w-full space-y-4 overflow-hidden rounded-lg border border-zinc-200 bg-white p-4"
+    >
+      <div className="grid min-w-0 gap-4 sm:grid-cols-2">
+        <div className="min-w-0">
           <label htmlFor="lesson_date" className="block text-sm font-medium text-zinc-700">
             Lesson date
           </label>
@@ -136,7 +139,7 @@ export function ScheduleLessonForm({
           />
         </div>
 
-        <div>
+        <div className="min-w-0">
           <label htmlFor="lesson_time" className="block text-sm font-medium text-zinc-700">
             Lesson time
           </label>
@@ -153,7 +156,7 @@ export function ScheduleLessonForm({
         </div>
       </div>
 
-      <div>
+      <div className="min-w-0">
         <label htmlFor="topics" className="block text-sm font-medium text-zinc-700">
           Planned topic or note (optional)
         </label>
@@ -179,11 +182,11 @@ export function ScheduleLessonForm({
         </p>
       ) : null}
 
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="grid min-w-0 gap-3 sm:grid-cols-3">
         {isEditMode && lessonId ? (
           <Link
             href={`/app/students/${studentId}/lessons/${lessonId}?mode=complete`}
-            className="inline-flex min-h-11 items-center justify-center rounded-md bg-zinc-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+            className="inline-flex min-h-11 w-full min-w-0 items-center justify-center rounded-md bg-zinc-800 px-4 py-2 text-center text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
           >
             Complete lesson
           </Link>
@@ -191,13 +194,13 @@ export function ScheduleLessonForm({
         <button
           type="submit"
           disabled={isSubmitting}
-          className="inline-flex min-h-11 items-center justify-center rounded-md border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:border-zinc-200 disabled:bg-zinc-100 disabled:text-zinc-500"
+          className="inline-flex min-h-11 w-full min-w-0 items-center justify-center rounded-md border border-zinc-200 bg-white px-4 py-2 text-center text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:border-zinc-200 disabled:bg-zinc-100 disabled:text-zinc-500"
         >
           {isSubmitting ? "Saving..." : isEditMode ? "Update scheduled lesson" : "Schedule lesson"}
         </button>
         <Link
           href={`/app/students/${studentId}`}
-          className="inline-flex min-h-11 items-center justify-center rounded-md border border-rose-200 bg-white px-4 py-2 text-sm text-rose-700 transition-colors hover:bg-rose-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+          className="inline-flex min-h-11 w-full min-w-0 items-center justify-center rounded-md border border-rose-200 bg-white px-4 py-2 text-center text-sm text-rose-700 transition-colors hover:bg-rose-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
         >
           Cancel lesson
         </Link>

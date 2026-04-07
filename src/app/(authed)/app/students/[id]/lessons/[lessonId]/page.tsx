@@ -39,9 +39,9 @@ export default async function EditLessonPage({ params, searchParams }: EditLesso
   const plannedTopics = lesson.topics === "Planned lesson" ? "" : lesson.topics;
 
   return (
-    <section className="max-w-3xl">
+    <section className="w-full min-w-0 max-w-3xl">
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
+        <div className="min-w-0">
           <h1 className="text-xl font-semibold text-zinc-900">
             {isCompletingPlannedLesson
               ? "Complete lesson"
@@ -56,7 +56,7 @@ export default async function EditLessonPage({ params, searchParams }: EditLesso
         </div>
         <Link
           href={`/app/students/${student.id}`}
-          className="inline-flex w-fit rounded-md border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-700 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+          className="inline-flex w-full items-center justify-center rounded-md border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-700 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-fit"
         >
           Back to student
         </Link>
