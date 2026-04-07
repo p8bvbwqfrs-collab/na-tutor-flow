@@ -31,12 +31,6 @@ function getStatusLabel(status: CalendarGridLesson["status"]) {
   return status === "planned" ? "Planned" : "Completed";
 }
 
-function getCompactMobileLabel(lesson: CalendarGridLesson) {
-  const firstName = lesson.studentName.split(" ")[0] ?? lesson.studentName;
-  const initial = firstName.charAt(0).toUpperCase();
-  return initial ? `${formatTimeLocal(lesson.lessonAt)} • ${initial}` : formatTimeLocal(lesson.lessonAt);
-}
-
 export function CalendarGrid({
   monthCells,
   weekdayLabels,
@@ -60,6 +54,7 @@ export function CalendarGrid({
 
     return buckets;
   }, [lessons]);
+  const selectedLessonsByKey = useMemo(() => lessonsByDate, [lessonsByDate]);
 
   const firstInMonthKey = monthCells.find((cell) => cell.inMonth)?.key ?? monthCells[0]?.key ?? "";
   const initialSelectedDayKey = monthCells.some((cell) => cell.key === todayKey && cell.inMonth)
@@ -71,7 +66,7 @@ export function CalendarGrid({
     monthCells.find((cell) => cell.key === selectedDayKey) ??
     monthCells.find((cell) => cell.inMonth) ??
     null;
-  const selectedLessons = selectedCell ? lessonsByDate.get(selectedCell.key) ?? [] : [];
+  const selectedLessons = selectedCell ? selectedLessonsByKey.get(selectedCell.key) ?? [] : [];
 
   return (
     <>
@@ -124,27 +119,22 @@ export function CalendarGrid({
                 >
                   {cell.dayNumber}
                 </span>
-                <div className="mt-1 space-y-1">
-                  {mobileVisibleLessons.map((lesson) => (
+                <div className="mt-2 flex min-h-4 items-center gap-1">
+                  {hasLessons ? (
                     <span
-                      key={lesson.id}
-                      className={`block rounded-md border px-1.5 py-0.5 text-left ${
-                        lesson.status === "planned"
-                          ? "border-sky-100 bg-sky-50/70"
-                          : "border-zinc-200 bg-white"
+                      className={`h-1.5 w-1.5 rounded-full ${
+                        isSelected
+                          ? "bg-zinc-700"
+                          : dayLessons.some((lesson) => lesson.status === "planned")
+                            ? "bg-sky-500/70"
+                            : "bg-zinc-400"
                       }`}
-                    >
-                      <span
-                        className={`block truncate text-[11px] font-medium ${
-                          lesson.status === "planned" ? "text-sky-900" : "text-zinc-900"
-                        }`}
-                      >
-                        {getCompactMobileLabel(lesson)}
-                      </span>
+                    />
+                  ) : null}
+                  {dayLessons.length > 0 ? (
+                    <span className="text-[11px] font-medium text-zinc-500">
+                      {dayLessons.length === 1 ? "1" : `+${dayLessons.length}`}
                     </span>
-                  ))}
-                  {dayLessons.length > 1 ? (
-                    <p className="px-0.5 text-[11px] font-medium text-zinc-500">+{dayLessons.length - 1}</p>
                   ) : null}
                 </div>
               </button>
