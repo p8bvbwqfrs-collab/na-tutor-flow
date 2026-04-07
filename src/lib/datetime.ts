@@ -28,6 +28,12 @@ const shortDateFormatter = createFormatter({
   month: "short",
 });
 
+const dayHeadingFormatter = createFormatter({
+  weekday: "short",
+  day: "numeric",
+  month: "long",
+});
+
 const dayNumberFormatter = createFormatter({
   day: "numeric",
 });
@@ -77,6 +83,10 @@ export function formatDateLocal(value: string | Date) {
 
 export function formatShortDateLocal(value: string | Date) {
   return shortDateFormatter.format(toDate(value));
+}
+
+export function formatDayHeadingLocal(value: string | Date) {
+  return dayHeadingFormatter.format(toDate(value));
 }
 
 export function formatDayNumberLocal(value: string | Date) {

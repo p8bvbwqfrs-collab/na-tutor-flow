@@ -2,12 +2,12 @@ import Link from "next/link";
 import {
   formatDayNumberLocal,
   formatMonthLocal,
-  formatTimeLocal,
   formatWeekdayShortLocal,
   getDateKeyLocal,
   getMonthKeyLocal,
 } from "@/lib/datetime";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { CalendarGrid } from "./calendar-grid";
 
 type CalendarPageProps = {
   searchParams: Promise<{ month?: string }>;
@@ -96,19 +96,24 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
     .order("lesson_at", { ascending: true });
 
   const lessons = ((data ?? []) as CalendarLessonRow[]).filter((lesson) => lesson.status !== "cancelled");
-  const lessonsByDate = new Map<string, CalendarLessonRow[]>();
-
-  lessons.forEach((lesson) => {
-    const key = getDateKeyLocal(lesson.lesson_at);
-    const bucket = lessonsByDate.get(key) ?? [];
-    bucket.push(lesson);
-    lessonsByDate.set(key, bucket);
-  });
-
   const monthCells = getMonthGrid(monthStart);
   const weekdayLabels = Array.from({ length: 7 }, (_, index) =>
     formatWeekdayShortLocal(new Date(Date.UTC(2026, 2, index + 2))),
   );
+  const calendarLessons = lessons.map((lesson) => ({
+    id: lesson.id,
+    studentId: lesson.student_id,
+    lessonAt: lesson.lesson_at,
+    topics: lesson.topics,
+    status: lesson.status,
+    studentName: getStudentName(lesson.student),
+  }));
+  const calendarCells = monthCells.map((cell) => ({
+    key: getDateKeyLocal(cell.date),
+    dateIso: cell.date.toISOString(),
+    inMonth: cell.inMonth,
+    dayNumber: formatDayNumberLocal(cell.date),
+  }));
 
   return (
     <section>
@@ -166,110 +171,12 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
           </p>
         ) : (
           <>
-            <div className="mt-4 grid grid-cols-7 gap-2 text-center">
-              {weekdayLabels.map((label) => (
-                <div key={label} className="text-xs font-medium uppercase tracking-wide text-zinc-500">
-                  {label}
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-2 grid grid-cols-7 gap-2">
-              {monthCells.map(({ date, inMonth }) => {
-                const key = getDateKeyLocal(date);
-                const dayLessons = lessonsByDate.get(key) ?? [];
-                const isToday = key === todayKey;
-                const mobileVisibleLessons = dayLessons.slice(0, 1);
-                const desktopVisibleLessons = dayLessons.slice(0, 2);
-
-                return (
-                  <div
-                    key={key}
-                    className={`min-h-20 rounded-lg border p-1.5 sm:min-h-28 sm:p-2 ${
-                      isToday
-                        ? "border-zinc-400 bg-zinc-100"
-                        : inMonth
-                          ? "border-zinc-200 bg-zinc-50"
-                          : "border-zinc-100 bg-white text-zinc-400"
-                    }`}
-                  >
-                    <p
-                      className={`text-xs font-medium ${
-                        isToday
-                          ? "text-zinc-900"
-                          : inMonth
-                            ? "text-zinc-700"
-                            : "text-zinc-400"
-                      }`}
-                    >
-                      {formatDayNumberLocal(date)}
-                    </p>
-                    <div className="mt-1.5 space-y-1 sm:mt-2 sm:space-y-1.5">
-                      {mobileVisibleLessons.map((lesson) => (
-                        <Link
-                          key={lesson.id}
-                          href={`/app/students/${lesson.student_id}/lessons/${lesson.id}`}
-                          className={`block rounded-md border px-1.5 py-1 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:hidden ${
-                            lesson.status === "planned"
-                              ? "border-sky-100 bg-sky-50/70 hover:border-sky-200 hover:bg-sky-50"
-                              : "border-zinc-200 bg-white hover:border-zinc-300 hover:bg-zinc-50"
-                          }`}
-                        >
-                          <p
-                            className={`truncate text-xs font-medium ${
-                              lesson.status === "planned" ? "text-sky-900" : "text-zinc-900"
-                            }`}
-                          >
-                            {getStudentName(lesson.student)}
-                          </p>
-                        </Link>
-                      ))}
-                      {desktopVisibleLessons.map((lesson) => (
-                        <Link
-                          key={lesson.id}
-                          href={`/app/students/${lesson.student_id}/lessons/${lesson.id}`}
-                          className={`hidden rounded-md border px-2 py-1 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:block ${
-                            lesson.status === "planned"
-                              ? "border-sky-100 bg-sky-50/70 hover:border-sky-200 hover:bg-sky-50"
-                              : "border-zinc-200 bg-white hover:border-zinc-300 hover:bg-zinc-50"
-                          }`}
-                        >
-                          <p
-                            className={`truncate text-xs font-medium ${
-                              lesson.status === "planned" ? "text-sky-900" : "text-zinc-900"
-                            }`}
-                          >
-                            {getStudentName(lesson.student)}
-                          </p>
-                          <p
-                            className={`mt-0.5 text-xs ${
-                              lesson.status === "planned" ? "text-sky-800" : "text-zinc-600"
-                            }`}
-                          >
-                            {formatTimeLocal(lesson.lesson_at)}
-                          </p>
-                          {lesson.status === "planned" ? (
-                            <p className="mt-0.5 text-xs text-sky-700">
-                              {lesson.topics && lesson.topics !== "Planned lesson" ? lesson.topics : "Planned lesson"}
-                            </p>
-                          ) : null}
-                        </Link>
-                      ))}
-                      {dayLessons.length > 1 ? (
-                        <p className="px-0.5 text-[11px] text-zinc-500 sm:hidden">
-                          +{dayLessons.length - 1}
-                        </p>
-                      ) : null}
-                      {dayLessons.length > 2 ? (
-                        <p className="hidden px-1 text-xs text-zinc-500 sm:block">
-                          +{dayLessons.length - 2} more
-                        </p>
-                      ) : null}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            <CalendarGrid
+              monthCells={calendarCells}
+              weekdayLabels={weekdayLabels}
+              lessons={calendarLessons}
+              todayKey={todayKey}
+            />
 
             {lessons.length === 0 ? (
               <div className="mt-4 rounded-md border border-dashed border-zinc-300 bg-zinc-50 p-4">
