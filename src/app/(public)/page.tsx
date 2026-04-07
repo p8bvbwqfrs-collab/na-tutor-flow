@@ -63,6 +63,43 @@ export default function HomePage() {
       </section>
 
       <section className="rounded-lg border border-zinc-200 bg-white p-4">
+        <h2 className="text-lg font-medium text-zinc-900">What parents receive</h2>
+        <p className="mt-1 text-sm text-zinc-600">
+          After each lesson, you can send a clear update like this:
+        </p>
+        <details className="mt-4 rounded-lg border border-zinc-200 bg-zinc-50 p-4" open>
+          <summary className="cursor-pointer text-sm font-medium text-zinc-900 marker:text-zinc-500">
+            See example update
+          </summary>
+          <div className="mt-4 rounded-lg border border-zinc-200 bg-white p-4">
+            <pre className="whitespace-pre-wrap text-sm leading-6 text-zinc-800">
+{`Ava Johnson – lesson update (07 Apr)
+
+Ava stayed positive today and was much quicker to settle into the harder questions.
+
+Today we worked on
+• Fractions with different denominators
+• Multi-step word problems
+
+Strong work on
+• Explaining her method more clearly
+• Checking answers before moving on
+
+Next focus
+• Slowing down on the final step of longer questions
+
+Homework
+• Complete questions 4-8 from the worksheet
+• Review fraction shortcuts before next lesson
+
+Effort: 4/5
+Confidence: 4/5`}
+            </pre>
+          </div>
+        </details>
+      </section>
+
+      <section className="rounded-lg border border-zinc-200 bg-white p-4">
         <h2 className="text-lg font-medium text-zinc-900">How it works</h2>
         <p className="mt-1 text-sm text-zinc-600">A simple routine you can repeat after each lesson.</p>
         <div className="mt-3 grid gap-3 sm:grid-cols-3">
