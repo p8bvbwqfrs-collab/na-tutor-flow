@@ -1,4 +1,9 @@
 import Link from "next/link";
+import {
+  formatDateTimeLocal,
+  formatMonthShortLocal,
+  getMonthKeyLocal,
+} from "@/lib/datetime";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { MarkPaidButton } from "./components/mark-paid-button";
 import { MonthlyEarningsChart } from "./components/monthly-earnings-chart";
@@ -31,15 +36,6 @@ type ChartLessonRow = {
 const currencyFormatter = new Intl.NumberFormat("en-GB", {
   style: "currency",
   currency: "GBP",
-});
-
-const monthShortFormatter = new Intl.DateTimeFormat("en-GB", {
-  month: "short",
-});
-
-const dateFormatter = new Intl.DateTimeFormat("en-GB", {
-  dateStyle: "medium",
-  timeStyle: "short",
 });
 
 function getRangeFromSearchParam(range: string | undefined): ChartRange {
@@ -217,13 +213,12 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
   const chartMap = new Map<string, number>();
   monthStarts.forEach((start) => {
-    const key = `${start.getUTCFullYear()}-${String(start.getUTCMonth() + 1).padStart(2, "0")}`;
+    const key = getMonthKeyLocal(start);
     chartMap.set(key, 0);
   });
 
   filteredChartLessons.forEach((lesson) => {
-    const date = new Date(lesson.lesson_at);
-    const key = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
+    const key = getMonthKeyLocal(lesson.lesson_at);
 
     if (chartMap.has(key)) {
       chartMap.set(key, (chartMap.get(key) ?? 0) + lesson.fee_pence);
@@ -231,9 +226,9 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   });
 
   const monthlyChartData = monthStarts.map((start) => {
-    const key = `${start.getUTCFullYear()}-${String(start.getUTCMonth() + 1).padStart(2, "0")}`;
+    const key = getMonthKeyLocal(start);
     return {
-      month: monthShortFormatter.format(start),
+      month: formatMonthShortLocal(start),
       amountPence: chartMap.get(key) ?? 0,
     };
   });
@@ -334,7 +329,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                     {getStudentName(lesson.student) ?? "Unknown student"}
                   </p>
                   <p className="mt-1 text-sm text-zinc-600">
-                    {dateFormatter.format(new Date(lesson.lesson_at))}
+                    {formatDateTimeLocal(lesson.lesson_at)}
                   </p>
                 </Link>
               ))}
@@ -369,7 +364,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                     {getStudentName(lesson.student) ?? "Unknown student"}
                   </p>
                   <p className="mt-1 text-sm text-zinc-600">
-                    {dateFormatter.format(new Date(lesson.lesson_at))}
+                    {formatDateTimeLocal(lesson.lesson_at)}
                   </p>
                 </Link>
               ))}
@@ -478,7 +473,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                       {getStudentName(lesson.student) ?? "Unknown student"}
                     </td>
                     <td className="whitespace-nowrap px-3 py-3 text-zinc-900">
-                      {dateFormatter.format(new Date(lesson.lesson_at))}
+                      {formatDateTimeLocal(lesson.lesson_at)}
                     </td>
                     <td className="whitespace-nowrap px-3 py-3 text-zinc-900">
                       {currencyFormatter.format(lesson.fee_pence / 100)}

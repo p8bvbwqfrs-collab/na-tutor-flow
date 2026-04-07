@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { formatMonthLocal, getMonthKeyLocal } from "@/lib/datetime";
 
 type SummaryLesson = {
   id: string;
@@ -20,16 +21,9 @@ type MonthlySummaryGeneratorProps = {
   hideHeader?: boolean;
 };
 
-function getMonthKey(date: Date) {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-}
-
 function formatMonthLabel(monthKey: string) {
   const [year, month] = monthKey.split("-").map(Number);
-  return new Intl.DateTimeFormat("en-GB", {
-    month: "long",
-    year: "numeric",
-  }).format(new Date(year, month - 1, 1));
+  return formatMonthLocal(new Date(year, month - 1, 1));
 }
 
 function cleanSummaryPhrase(value: string) {
@@ -183,7 +177,7 @@ export function MonthlySummaryGenerator({
 }: MonthlySummaryGeneratorProps) {
   const availableMonths = useMemo(() => {
     const months = Array.from(
-      new Set(lessons.map((lesson) => getMonthKey(new Date(lesson.lesson_at)))),
+      new Set(lessons.map((lesson) => getMonthKeyLocal(lesson.lesson_at))),
     ).sort((a, b) => b.localeCompare(a));
 
     return months;
@@ -199,7 +193,7 @@ export function MonthlySummaryGenerator({
   );
 
   const defaultMonth = useMemo(() => {
-    const currentMonth = getMonthKey(new Date());
+    const currentMonth = getMonthKeyLocal(new Date());
     if (availableMonths.includes(currentMonth)) {
       return currentMonth;
     }
@@ -213,7 +207,7 @@ export function MonthlySummaryGenerator({
   const [status, setStatus] = useState<string | null>(null);
 
   const lessonsForMonth = useMemo(() => {
-    return lessons.filter((lesson) => getMonthKey(new Date(lesson.lesson_at)) === selectedMonth);
+    return lessons.filter((lesson) => getMonthKeyLocal(lesson.lesson_at) === selectedMonth);
   }, [lessons, selectedMonth]);
 
   const summaryInputs = useMemo(() => {

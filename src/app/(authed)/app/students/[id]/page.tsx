@@ -1,6 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { unstable_noStore as noStore } from "next/cache";
+import {
+  formatDateLocal,
+  formatDateTimeLocal,
+  formatShortDateLocal,
+  formatTimeLocal,
+} from "@/lib/datetime";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { LessonPaidToggle } from "./components/lesson-paid-toggle";
 import { MonthlySummaryGenerator } from "./components/monthly-summary-generator";
@@ -31,22 +37,6 @@ type Lesson = {
   effort: number;
   status: "planned" | "completed" | "cancelled" | null;
 };
-
-const dateFormatter = new Intl.DateTimeFormat("en-GB", {
-  dateStyle: "medium",
-  timeStyle: "short",
-});
-
-const lessonDateFormatter = new Intl.DateTimeFormat("en-GB", {
-  day: "2-digit",
-  month: "short",
-  year: "numeric",
-});
-
-const lessonTimeFormatter = new Intl.DateTimeFormat("en-GB", {
-  hour: "numeric",
-  minute: "2-digit",
-});
 
 const currencyFormatter = new Intl.NumberFormat("en-GB", {
   style: "currency",
@@ -159,7 +149,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
     .filter((lesson) => !lesson.paid)
     .reduce((sum, lesson) => sum + lesson.fee_pence, 0);
   const latestLessonDate =
-    totalLessons > 0 ? dateFormatter.format(new Date(completedLessons[0].lesson_at)) : "No lessons yet";
+    totalLessons > 0 ? formatDateTimeLocal(completedLessons[0].lesson_at) : "No lessons yet";
   const avgConfidence =
     totalLessons > 0
       ? (completedLessons.reduce((sum, lesson) => sum + lesson.confidence, 0) / totalLessons).toFixed(1)
@@ -225,15 +215,11 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
 
   const chronologicalLessons = [...completedLessons].reverse();
   const confidenceTrendPoints = chronologicalLessons.map((lesson) => ({
-    label: new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short" }).format(
-      new Date(lesson.lesson_at),
-    ),
+    label: formatShortDateLocal(lesson.lesson_at),
     value: lesson.confidence,
   }));
   const effortTrendPoints = chronologicalLessons.map((lesson) => ({
-    label: new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short" }).format(
-      new Date(lesson.lesson_at),
-    ),
+    label: formatShortDateLocal(lesson.lesson_at),
     value: lesson.effort,
   }));
   const nextFocusPrep = findLatestNonEmptyValue(completedLessons, (lesson) => lesson.improve);
@@ -332,8 +318,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div>
                           <p className="text-sm font-medium text-zinc-900">
-                            {lessonDateFormatter.format(new Date(lesson.lesson_at))} at{" "}
-                            {lessonTimeFormatter.format(new Date(lesson.lesson_at))}
+                            {formatDateLocal(lesson.lesson_at)} at {formatTimeLocal(lesson.lesson_at)}
                           </p>
                           <p className="mt-1 text-sm text-zinc-600">
                             {plannedTopic || "No planned topic or note yet."}
@@ -463,10 +448,10 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
                             className="block underline-offset-4 hover:underline"
                           >
                             <span className="block font-medium text-zinc-900">
-                              {lessonDateFormatter.format(new Date(lesson.lesson_at))}
+                              {formatDateLocal(lesson.lesson_at)}
                             </span>
                             <span className="mt-1 block text-xs text-zinc-600">
-                              {lessonTimeFormatter.format(new Date(lesson.lesson_at))}
+                              {formatTimeLocal(lesson.lesson_at)}
                             </span>
                           </Link>
                         </td>

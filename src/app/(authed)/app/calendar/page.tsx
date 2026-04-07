@@ -1,4 +1,12 @@
 import Link from "next/link";
+import {
+  formatDayNumberLocal,
+  formatMonthLocal,
+  formatTimeLocal,
+  formatWeekdayShortLocal,
+  getDateKeyLocal,
+  getMonthKeyLocal,
+} from "@/lib/datetime";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 type CalendarPageProps = {
@@ -13,38 +21,6 @@ type CalendarLessonRow = {
   status: "planned" | "completed" | "cancelled" | null;
   student: { student_name: string } | { student_name: string }[] | null;
 };
-
-const CALENDAR_TIME_ZONE = "Europe/London";
-
-const weekdayFormatter = new Intl.DateTimeFormat("en-GB", {
-  weekday: "short",
-  timeZone: CALENDAR_TIME_ZONE,
-});
-const monthHeadingFormatter = new Intl.DateTimeFormat("en-GB", {
-  month: "long",
-  year: "numeric",
-  timeZone: CALENDAR_TIME_ZONE,
-});
-const dayNumberFormatter = new Intl.DateTimeFormat("en-GB", {
-  day: "numeric",
-  timeZone: CALENDAR_TIME_ZONE,
-});
-const timeFormatter = new Intl.DateTimeFormat("en-GB", {
-  hour: "numeric",
-  minute: "2-digit",
-  timeZone: CALENDAR_TIME_ZONE,
-});
-const dateKeyFormatter = new Intl.DateTimeFormat("en-CA", {
-  year: "numeric",
-  month: "2-digit",
-  day: "2-digit",
-  timeZone: CALENDAR_TIME_ZONE,
-});
-const monthKeyFormatter = new Intl.DateTimeFormat("en-CA", {
-  year: "numeric",
-  month: "2-digit",
-  timeZone: CALENDAR_TIME_ZONE,
-});
 
 function getStudentName(
   student: { student_name: string } | { student_name: string }[] | null | undefined,
@@ -76,14 +52,6 @@ function parseMonthParam(input: string | undefined) {
   return new Date(Date.UTC(year, monthIndex, 1));
 }
 
-function formatDateKey(date: Date) {
-  return dateKeyFormatter.format(date);
-}
-
-function formatMonthKey(date: Date) {
-  return monthKeyFormatter.format(date);
-}
-
 function getMonthGrid(monthStart: Date) {
   const start = new Date(monthStart);
   const end = new Date(Date.UTC(monthStart.getUTCFullYear(), monthStart.getUTCMonth() + 1, 0));
@@ -113,8 +81,8 @@ function getMonthGrid(monthStart: Date) {
 export default async function CalendarPage({ searchParams }: CalendarPageProps) {
   const { month } = await searchParams;
   const now = new Date();
-  const todayKey = formatDateKey(now);
-  const currentMonthKey = formatMonthKey(now);
+  const todayKey = getDateKeyLocal(now);
+  const currentMonthKey = getMonthKeyLocal(now);
   const monthStart = parseMonthParam(month) ?? new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
   const nextMonthStart = new Date(Date.UTC(monthStart.getUTCFullYear(), monthStart.getUTCMonth() + 1, 1));
   const prevMonthStart = new Date(Date.UTC(monthStart.getUTCFullYear(), monthStart.getUTCMonth() - 1, 1));
@@ -131,7 +99,7 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
   const lessonsByDate = new Map<string, CalendarLessonRow[]>();
 
   lessons.forEach((lesson) => {
-    const key = formatDateKey(new Date(lesson.lesson_at));
+    const key = getDateKeyLocal(lesson.lesson_at);
     const bucket = lessonsByDate.get(key) ?? [];
     bucket.push(lesson);
     lessonsByDate.set(key, bucket);
@@ -139,7 +107,7 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
 
   const monthCells = getMonthGrid(monthStart);
   const weekdayLabels = Array.from({ length: 7 }, (_, index) =>
-    weekdayFormatter.format(new Date(Date.UTC(2026, 2, index + 2))),
+    formatWeekdayShortLocal(new Date(Date.UTC(2026, 2, index + 2))),
   );
 
   return (
@@ -161,7 +129,7 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-lg font-medium text-zinc-900">
-              {monthHeadingFormatter.format(monthStart)}
+              {formatMonthLocal(monthStart)}
             </h2>
             <p className="mt-1 text-sm text-zinc-600">
               Lessons are shown by the date and time saved on each lesson.
@@ -169,7 +137,7 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
           </div>
           <div className="flex items-center gap-2">
             <Link
-              href={`/app/calendar?month=${prevMonthStart.toISOString().slice(0, 7)}`}
+              href={`/app/calendar?month=${getMonthKeyLocal(prevMonthStart)}`}
               className="rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
             >
               Previous
@@ -181,7 +149,7 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
               Today
             </Link>
             <Link
-              href={`/app/calendar?month=${nextMonthStart.toISOString().slice(0, 7)}`}
+              href={`/app/calendar?month=${getMonthKeyLocal(nextMonthStart)}`}
               className="rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
             >
               Next
@@ -208,7 +176,7 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
 
             <div className="mt-2 grid grid-cols-7 gap-2">
               {monthCells.map(({ date, inMonth }) => {
-                const key = formatDateKey(date);
+                const key = getDateKeyLocal(date);
                 const dayLessons = lessonsByDate.get(key) ?? [];
                 const isToday = key === todayKey;
 
@@ -232,7 +200,7 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
                             : "text-zinc-400"
                       }`}
                     >
-                      {dayNumberFormatter.format(date)}
+                      {formatDayNumberLocal(date)}
                     </p>
                     <div className="mt-2 space-y-1.5">
                       {dayLessons.slice(0, 2).map((lesson) => (
@@ -257,7 +225,7 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
                               lesson.status === "planned" ? "text-sky-800" : "text-zinc-600"
                             }`}
                           >
-                            {timeFormatter.format(new Date(lesson.lesson_at))}
+                            {formatTimeLocal(lesson.lesson_at)}
                           </p>
                           {lesson.status === "planned" ? (
                             <p className="mt-0.5 text-xs text-sky-700">

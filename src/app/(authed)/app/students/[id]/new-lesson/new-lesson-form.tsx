@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, useMemo, useState } from "react";
+import { formatShortDateLocal } from "@/lib/datetime";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 type LessonFormProps = {
@@ -61,11 +62,7 @@ function toDatetimeLocalValue(date: Date) {
 }
 
 function formatParentUpdate(studentName: string, lesson: SavedLessonState) {
-  const lessonDate = new Date(lesson.lessonAt);
-  const dateText = new Intl.DateTimeFormat("en-GB", {
-    day: "2-digit",
-    month: "short",
-  }).format(lessonDate);
+  const dateText = formatShortDateLocal(lesson.lessonAt);
 
   const focusPoints = splitIntoBulletPoints(lesson.topics);
   const wentWellPoints = splitIntoBulletPoints(lesson.wentWell);
