@@ -58,7 +58,12 @@ export function MonthlyEarningsChart({ data }: MonthlyEarningsChartProps) {
   const plotBottom = topPad + plotHeight;
 
   return (
-    <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="h-[200px] w-full" role="img" aria-label="Monthly earnings line chart">
+    <svg
+      viewBox={`0 0 ${chartWidth} ${chartHeight}`}
+      className="h-[160px] w-full sm:h-[180px] lg:h-[200px]"
+      role="img"
+      aria-label="Monthly earnings line chart"
+    >
       {Array.from({ length: yTicks + 1 }, (_, tickIndex) => {
         const tickValue = Math.round((yMax / yTicks) * tickIndex);
         const y = getY(tickValue);

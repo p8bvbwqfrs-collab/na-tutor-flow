@@ -5,9 +5,11 @@ import {
   getMonthKeyLocal,
 } from "@/lib/datetime";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { formatParentUpdate } from "@/lib/parent-update";
 import { MarkPaidButton } from "./components/mark-paid-button";
 import { MonthlyEarningsChart } from "./components/monthly-earnings-chart";
 import { ChartRangeFilter, type ChartRange } from "./components/chart-range-filter";
+import { CopyUpdateButton } from "./components/copy-update-button";
 
 type LessonRow = {
   id: string;
@@ -24,6 +26,13 @@ type DashboardLessonOverviewRow = {
   student_id: string;
   lesson_at: string;
   status: "planned" | "completed" | "cancelled" | null;
+  topics?: string | null;
+  went_well?: string | null;
+  parent_note?: string | null;
+  improve?: string | null;
+  homework?: string | null;
+  effort?: number | null;
+  confidence?: number | null;
   student: { student_name: string } | { student_name: string }[] | null;
 };
 
@@ -164,7 +173,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       .maybeSingle(),
     supabase
       .from("lessons")
-      .select("id, student_id, lesson_at, status, student:students!lessons_student_id_fkey(student_name)")
+      .select("id, student_id, lesson_at, status, topics, went_well, parent_note, improve, homework, effort, confidence, student:students!lessons_student_id_fkey(student_name)")
       .or("status.eq.completed,status.is.null")
       .order("lesson_at", { ascending: false })
       .limit(3),
@@ -278,26 +287,26 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         </div>
       ) : null}
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-lg border border-zinc-200 bg-white p-4">
+      <div className="mt-6 grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
+        <div className="rounded-lg border border-zinc-200 bg-white p-3 sm:p-4">
           <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Active students</p>
-          <p className="mt-2 text-2xl font-semibold text-zinc-900">{activeStudentsCount}</p>
+          <p className="mt-1.5 text-2xl font-semibold text-zinc-900 sm:mt-2">{activeStudentsCount}</p>
         </div>
-        <div className="rounded-lg border border-zinc-200 bg-white p-4">
+        <div className="rounded-lg border border-zinc-200 bg-white p-3 sm:p-4">
           <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">This month earned</p>
-          <p className="mt-2 text-2xl font-semibold text-zinc-900">
+          <p className="mt-1.5 text-2xl font-semibold text-zinc-900 sm:mt-2">
             {currencyFormatter.format(monthEarningsPence / 100)}
           </p>
         </div>
-        <div className="rounded-lg border border-zinc-200 bg-white p-4">
+        <div className="rounded-lg border border-zinc-200 bg-white p-3 sm:p-4">
           <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Unpaid total</p>
-          <p className="mt-2 text-2xl font-semibold text-zinc-900">
+          <p className="mt-1.5 text-2xl font-semibold text-zinc-900 sm:mt-2">
             {currencyFormatter.format(unpaidTotalPence / 100)}
           </p>
         </div>
-        <div className="rounded-lg border border-zinc-200 bg-white p-4">
+        <div className="rounded-lg border border-zinc-200 bg-white p-3 sm:p-4">
           <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Unpaid lessons</p>
-          <p className="mt-2 text-2xl font-semibold text-zinc-900">{unpaidLessonsCount}</p>
+          <p className="mt-1.5 text-2xl font-semibold text-zinc-900 sm:mt-2">{unpaidLessonsCount}</p>
         </div>
       </div>
 
@@ -320,18 +329,41 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           ) : (
             <div className="mt-4 space-y-3">
               {recentLessons.map((lesson) => (
-                <Link
+                <div
                   key={lesson.id}
-                  href={`/app/students/${lesson.student_id}/lessons/${lesson.id}`}
-                  className="block rounded-lg border border-zinc-200 bg-zinc-50 p-3 transition-colors hover:border-zinc-300 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                  className="rounded-lg border border-zinc-200 bg-zinc-50 p-3 transition-colors hover:border-zinc-300 hover:bg-white"
                 >
-                  <p className="text-sm font-medium text-zinc-900">
-                    {getStudentName(lesson.student) ?? "Unknown student"}
-                  </p>
-                  <p className="mt-1 text-sm text-zinc-600">
-                    {formatDateTimeLocal(lesson.lesson_at)}
-                  </p>
-                </Link>
+                  <Link
+                    href={`/app/students/${lesson.student_id}/lessons/${lesson.id}`}
+                    className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                  >
+                    <p className="text-sm font-medium text-zinc-900">
+                      {getStudentName(lesson.student) ?? "Unknown student"}
+                    </p>
+                    <p className="mt-1 text-sm text-zinc-600">
+                      {formatDateTimeLocal(lesson.lesson_at)}
+                    </p>
+                  </Link>
+                  {getStudentName(lesson.student) &&
+                  lesson.topics &&
+                  lesson.effort != null &&
+                  lesson.confidence != null ? (
+                    <div className="mt-2">
+                      <CopyUpdateButton
+                        message={formatParentUpdate(getStudentName(lesson.student)!, {
+                          lessonAt: lesson.lesson_at,
+                          topics: lesson.topics ?? "",
+                          wentWell: lesson.went_well ?? "",
+                          parentNote: lesson.parent_note ?? "",
+                          improve: lesson.improve ?? "",
+                          homework: lesson.homework ?? "",
+                          effort: lesson.effort,
+                          confidence: lesson.confidence,
+                        })}
+                      />
+                    </div>
+                  ) : null}
+                </div>
               ))}
             </div>
           )}
@@ -355,18 +387,30 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           ) : (
             <div className="mt-4 space-y-3">
               {upcomingLessons.map((lesson) => (
-                <Link
+                <div
                   key={lesson.id}
-                  href={`/app/students/${lesson.student_id}/lessons/${lesson.id}`}
-                  className="block rounded-lg border border-zinc-200 bg-zinc-50 p-3 transition-colors hover:border-zinc-300 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                  className="rounded-lg border border-zinc-200 bg-zinc-50 p-3 transition-colors hover:border-zinc-300 hover:bg-white"
                 >
-                  <p className="text-sm font-medium text-zinc-900">
-                    {getStudentName(lesson.student) ?? "Unknown student"}
-                  </p>
-                  <p className="mt-1 text-sm text-zinc-600">
-                    {formatDateTimeLocal(lesson.lesson_at)}
-                  </p>
-                </Link>
+                  <Link
+                    href={`/app/students/${lesson.student_id}/lessons/${lesson.id}`}
+                    className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                  >
+                    <p className="text-sm font-medium text-zinc-900">
+                      {getStudentName(lesson.student) ?? "Unknown student"}
+                    </p>
+                    <p className="mt-1 text-sm text-zinc-600">
+                      {formatDateTimeLocal(lesson.lesson_at)}
+                    </p>
+                  </Link>
+                  <div className="mt-2">
+                    <Link
+                      href={`/app/students/${lesson.student_id}/lessons/${lesson.id}?mode=complete`}
+                      className="inline-flex items-center rounded-md px-2 py-1.5 text-sm font-medium text-zinc-600 underline-offset-4 transition-colors hover:text-zinc-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                    >
+                      Complete lesson
+                    </Link>
+                  </div>
+                </div>
               ))}
             </div>
           )}
@@ -401,7 +445,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
               </p>
             </div>
           ) : (
-            <div className="mt-3">
+            <div className="mt-3 sm:mt-4">
               <MonthlyEarningsChart data={monthlyChartData} />
             </div>
           )}
@@ -441,7 +485,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           </p>
         ) : unpaidLessons.length === 0 ? (
           hasAnyLessons ? (
-            <p className="mt-3 rounded-md border border-dashed border-zinc-300 bg-zinc-50 px-3 py-2 text-sm text-zinc-700">
+            <p className="mt-3 rounded-md border border-dashed border-zinc-300 bg-zinc-50 px-3 py-2 text-sm text-zinc-600">
               No unpaid lessons.
             </p>
           ) : (
