@@ -33,7 +33,8 @@ function getStatusLabel(status: CalendarGridLesson["status"]) {
 
 function getCompactMobileLabel(lesson: CalendarGridLesson) {
   const firstName = lesson.studentName.split(" ")[0] ?? lesson.studentName;
-  return `${formatTimeLocal(lesson.lessonAt)} ${firstName}`.trim();
+  const initial = firstName.charAt(0).toUpperCase();
+  return initial ? `${formatTimeLocal(lesson.lessonAt)} • ${initial}` : formatTimeLocal(lesson.lessonAt);
 }
 
 export function CalendarGrid({
@@ -91,11 +92,11 @@ export function CalendarGrid({
           const desktopVisibleLessons = dayLessons.slice(0, 2);
           const hasLessons = dayLessons.length > 0;
           const containerTone = isSelected
-            ? "border-zinc-400 bg-zinc-100"
+            ? "border-zinc-500 bg-zinc-100"
             : isToday
               ? "border-zinc-400 bg-zinc-100"
               : hasLessons && cell.inMonth
-                ? "border-zinc-300 bg-zinc-50"
+                ? "border-zinc-300 bg-zinc-100/60"
               : cell.inMonth
                 ? "border-zinc-200 bg-zinc-50"
                 : "border-zinc-100 bg-white text-zinc-400";
@@ -108,31 +109,33 @@ export function CalendarGrid({
               <button
                 type="button"
                 onClick={() => setSelectedDayKey(cell.key)}
-                className="block w-full text-left sm:hidden"
+                className="block w-full cursor-pointer text-left sm:hidden"
               >
                 <span
                   className={`block text-xs font-medium ${
-                    isToday || isSelected
-                      ? "text-zinc-900"
-                      : cell.inMonth
-                        ? "text-zinc-700"
-                        : "text-zinc-400"
+                    isSelected
+                      ? "font-semibold text-zinc-900"
+                      : isToday
+                        ? "text-zinc-900"
+                        : cell.inMonth
+                          ? "text-zinc-700"
+                          : "text-zinc-400"
                   }`}
                 >
                   {cell.dayNumber}
                 </span>
-                <div className="mt-1.5 space-y-1">
+                <div className="mt-1 space-y-1">
                   {mobileVisibleLessons.map((lesson) => (
                     <span
                       key={lesson.id}
-                      className={`block rounded-md border px-1.5 py-1 text-left ${
+                      className={`block rounded-md border px-1.5 py-0.5 text-left ${
                         lesson.status === "planned"
                           ? "border-sky-100 bg-sky-50/70"
                           : "border-zinc-200 bg-white"
                       }`}
                     >
                       <span
-                        className={`block truncate text-xs font-medium ${
+                        className={`block truncate text-[11px] font-medium ${
                           lesson.status === "planned" ? "text-sky-900" : "text-zinc-900"
                         }`}
                       >
@@ -141,7 +144,7 @@ export function CalendarGrid({
                     </span>
                   ))}
                   {dayLessons.length > 1 ? (
-                    <p className="px-0.5 text-[11px] text-zinc-500">+{dayLessons.length - 1}</p>
+                    <p className="px-0.5 text-[11px] font-medium text-zinc-500">+{dayLessons.length - 1}</p>
                   ) : null}
                 </div>
               </button>
@@ -149,9 +152,11 @@ export function CalendarGrid({
               <div className="hidden sm:block">
                 <p
                   className={`text-xs font-medium ${
-                    isToday || isSelected
-                      ? "text-zinc-900"
-                      : cell.inMonth
+                    isSelected
+                      ? "font-semibold text-zinc-900"
+                      : isToday
+                        ? "text-zinc-900"
+                        : cell.inMonth
                         ? "text-zinc-700"
                         : "text-zinc-400"
                   }`}
@@ -205,7 +210,7 @@ export function CalendarGrid({
       {selectedCell ? (
         <div className="mt-4 rounded-lg border border-zinc-200 bg-white p-4">
           <h3 className="text-base font-medium text-zinc-900">
-            {formatDayHeadingLocal(selectedCell.dateIso)}
+            Lessons on {formatDayHeadingLocal(selectedCell.dateIso)}
           </h3>
 
           {selectedLessons.length === 0 ? (
@@ -219,15 +224,10 @@ export function CalendarGrid({
                     href={`/app/students/${lesson.studentId}/lessons/${lesson.id}`}
                     className="block rounded-lg border border-zinc-200 bg-zinc-50 p-3 transition-colors hover:border-zinc-300 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
                   >
-                    <div className="flex items-start justify-between gap-3">
-                      <p className="whitespace-nowrap text-sm font-medium text-zinc-900">
-                        {formatTimeLocal(lesson.lessonAt)}
-                      </p>
-                      <p className="min-w-0 text-right text-sm font-medium text-zinc-900">
-                        {lesson.studentName}
-                      </p>
-                    </div>
-                    <p className="mt-2 text-sm text-zinc-600">{getStatusLabel(lesson.status)}</p>
+                    <p className="text-sm font-medium text-zinc-900">
+                      {formatTimeLocal(lesson.lessonAt)} · {lesson.studentName}
+                    </p>
+                    <p className="mt-1 text-sm text-zinc-600">{getStatusLabel(lesson.status)}</p>
                   </Link>
                 );
               })}
