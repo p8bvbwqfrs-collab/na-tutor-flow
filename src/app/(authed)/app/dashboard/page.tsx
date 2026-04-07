@@ -405,7 +405,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                   <div className="mt-2">
                     <Link
                       href={`/app/students/${lesson.student_id}/lessons/${lesson.id}?mode=complete`}
-                      className="inline-flex items-center rounded-md px-2 py-1.5 text-sm font-medium text-zinc-600 underline-offset-4 transition-colors hover:text-zinc-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                      className="inline-flex min-h-9 items-center justify-center rounded-md bg-zinc-800 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
                     >
                       Complete lesson
                     </Link>

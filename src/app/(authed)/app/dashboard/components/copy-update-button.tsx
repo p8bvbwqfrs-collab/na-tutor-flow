@@ -26,7 +26,7 @@ export function CopyUpdateButton({ message }: CopyUpdateButtonProps) {
       <button
         type="button"
         onClick={onCopy}
-        className="inline-flex items-center rounded-md px-2 py-1.5 text-sm font-medium text-zinc-600 underline-offset-4 transition-colors hover:text-zinc-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+        className="inline-flex min-h-9 items-center justify-center rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
       >
         Copy update
       </button>
