@@ -59,6 +59,7 @@ export default async function NewLessonPage({ params }: NewLessonPageProps) {
           topics: "",
           topicTags: [],
           wentWell: "",
+          parentNote: "",
           improve: "",
           homework: "",
           effort: 3,

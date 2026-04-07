@@ -17,6 +17,7 @@ type LessonFormProps = {
     topics: string;
     topicTags: string[];
     wentWell: string;
+    parentNote: string;
     improve: string;
     homework: string;
     effort: number;
@@ -30,6 +31,7 @@ type SavedLessonState = {
   lessonAt: string;
   topics: string;
   wentWell: string;
+  parentNote: string;
   improve: string;
   homework: string;
   effort: number;
@@ -55,6 +57,11 @@ function parseTopicTags(input: string) {
   );
 }
 
+function selectHeadingVariant(options: string[], seed: string) {
+  const total = Array.from(seed).reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  return options[total % options.length];
+}
+
 function toDatetimeLocalValue(date: Date) {
   const offset = date.getTimezoneOffset();
   const local = new Date(date.getTime() - offset * 60_000);
@@ -63,6 +70,7 @@ function toDatetimeLocalValue(date: Date) {
 
 function formatParentUpdate(studentName: string, lesson: SavedLessonState) {
   const dateText = formatShortDateLocal(lesson.lessonAt);
+  const headingSeed = `${studentName}-${lesson.lessonAt}`;
 
   const focusPoints = splitIntoBulletPoints(lesson.topics);
   const wentWellPoints = splitIntoBulletPoints(lesson.wentWell);
@@ -70,23 +78,40 @@ function formatParentUpdate(studentName: string, lesson: SavedLessonState) {
   const homeworkPoints = splitIntoBulletPoints(lesson.homework);
   const lines = [`${studentName} – lesson update (${dateText})`];
 
+  const focusHeading = selectHeadingVariant(
+    ["Focus today", "Today we worked on", "Covered today"],
+    `${headingSeed}-focus`,
+  );
+  const wentWellHeading = selectHeadingVariant(
+    ["What went well", "Good progress on", "Strong work on"],
+    `${headingSeed}-well`,
+  );
+  const improveHeading = selectHeadingVariant(
+    ["Area to improve", "Next focus", "To keep working on"],
+    `${headingSeed}-improve`,
+  );
+
+  if (lesson.parentNote.trim()) {
+    lines.push("", lesson.parentNote.trim());
+  }
+
   if (focusPoints.length > 0) {
-    lines.push("", "Focus today", ...focusPoints.map((point) => `• ${point}`));
+    lines.push("", focusHeading, ...focusPoints.map((point) => `• ${point}`));
   }
 
   if (wentWellPoints.length > 0) {
-    lines.push("", "What went well", ...wentWellPoints.map((point) => `• ${point}`));
+    lines.push("", wentWellHeading, ...wentWellPoints.map((point) => `• ${point}`));
   }
 
   if (improvePoints.length > 0) {
-    lines.push("", "Area to improve", ...improvePoints.map((point) => `• ${point}`));
+    lines.push("", improveHeading, ...improvePoints.map((point) => `• ${point}`));
   }
 
   if (homeworkPoints.length > 0) {
     lines.push("", "Homework", ...homeworkPoints.map((point) => `• ${point}`));
   }
 
-  lines.push("", `Student effort: ${lesson.effort}/5`, `Confidence: ${lesson.confidence}/5`);
+  lines.push("", `Effort: ${lesson.effort}/5`, `Confidence: ${lesson.confidence}/5`);
 
   return lines.join("\n");
 }
@@ -110,6 +135,7 @@ export function NewLessonForm({
   const [topics, setTopics] = useState(initialLesson?.topics ?? "");
   const [topicTagsInput, setTopicTagsInput] = useState(initialLesson?.topicTags.join(", ") ?? "");
   const [wentWell, setWentWell] = useState(initialLesson?.wentWell ?? "");
+  const [parentNote, setParentNote] = useState(initialLesson?.parentNote ?? "");
   const [improve, setImprove] = useState(initialLesson?.improve ?? "");
   const [homework, setHomework] = useState(initialLesson?.homework ?? "");
   const [effort, setEffort] = useState(String(initialLesson?.effort ?? 3));
@@ -131,6 +157,7 @@ export function NewLessonForm({
     const trimmedTopics = topics.trim();
     const topicTags = parseTopicTags(topicTagsInput);
     const trimmedWentWell = wentWell.trim();
+    const trimmedParentNote = parentNote.trim();
     const trimmedImprove = improve.trim();
     const trimmedHomework = homework.trim();
 
@@ -177,6 +204,7 @@ export function NewLessonForm({
       topics: trimmedTopics,
       topic_tags: topicTags.length > 0 ? topicTags : null,
       went_well: trimmedWentWell || null,
+      parent_note: trimmedParentNote || null,
       improve: trimmedImprove || null,
       homework: trimmedHomework || null,
       effort: effortValue,
@@ -201,6 +229,7 @@ export function NewLessonForm({
       lessonAt,
       topics: trimmedTopics,
       wentWell: trimmedWentWell,
+      parentNote: trimmedParentNote,
       improve: trimmedImprove,
       homework: trimmedHomework,
       effort: effortValue,
@@ -380,6 +409,22 @@ export function NewLessonForm({
             value={wentWell}
             onChange={(event) => setWentWell(event.target.value)}
             className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-500 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 disabled:bg-zinc-100 disabled:text-zinc-600"
+          />
+        </div>
+
+        <div className="sm:col-span-2">
+          <label htmlFor="parent_note" className="block text-sm font-medium text-zinc-700">
+            Quick note for parent (optional)
+          </label>
+          <textarea
+            id="parent_note"
+            rows={3}
+            aria-invalid={Boolean(error)}
+            aria-describedby={error ? formErrorId : undefined}
+            value={parentNote}
+            onChange={(event) => setParentNote(event.target.value)}
+            className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-500 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 disabled:bg-zinc-100 disabled:text-zinc-600"
+            placeholder="Anything helpful or encouraging you want the parent to know?"
           />
         </div>
 

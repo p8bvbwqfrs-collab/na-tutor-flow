@@ -21,6 +21,7 @@ create table if not exists public.lessons (
   topics text not null,
   topic_tags text[],
   went_well text,
+  parent_note text,
   improve text,
   homework text,
   effort int not null check (effort between 1 and 5),

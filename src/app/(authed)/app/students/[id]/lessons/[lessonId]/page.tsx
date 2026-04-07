@@ -23,7 +23,7 @@ export default async function EditLessonPage({ params, searchParams }: EditLesso
         .maybeSingle(),
       supabase
         .from("lessons")
-        .select("id, student_id, lesson_at, topics, topic_tags, went_well, improve, homework, effort, confidence, fee_pence, paid, status")
+        .select("id, student_id, lesson_at, topics, topic_tags, went_well, parent_note, improve, homework, effort, confidence, fee_pence, paid, status")
         .eq("id", lessonId)
         .eq("student_id", id)
         .maybeSingle(),
@@ -86,6 +86,7 @@ export default async function EditLessonPage({ params, searchParams }: EditLesso
             topics: plannedTopics,
             topicTags: lesson.topic_tags ?? [],
             wentWell: lesson.went_well ?? "",
+            parentNote: lesson.parent_note ?? "",
             improve: lesson.improve ?? "",
             homework: lesson.homework ?? "",
             effort: lesson.effort,
