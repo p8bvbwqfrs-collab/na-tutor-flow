@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { FormEvent, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { formatShortDateLocal } from "@/lib/datetime";
+import { getCompletedLessonUpdateStorageKey } from "@/lib/lesson-completion";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 type LessonFormProps = {
@@ -106,6 +108,7 @@ export function NewLessonForm({
   completionMode = false,
   initialLesson,
 }: LessonFormProps) {
+  const router = useRouter();
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const formErrorId = "new-lesson-form-error";
   const isEditMode = mode === "edit";
@@ -206,7 +209,7 @@ export function NewLessonForm({
       return;
     }
 
-    setSavedLesson({
+    const nextSavedLesson = {
       lessonAt,
       topics: trimmedTopics,
       wentWell: trimmedWentWell,
@@ -215,7 +218,20 @@ export function NewLessonForm({
       homework: trimmedHomework,
       effort: effortValue,
       confidence: confidenceValue,
-    });
+    };
+
+    if (completionMode) {
+      const parentUpdateMessage = formatParentUpdate(studentName, nextSavedLesson);
+      window.sessionStorage.setItem(
+        getCompletedLessonUpdateStorageKey(studentId),
+        parentUpdateMessage,
+      );
+      router.push(`/app/students/${studentId}?lessonCompleted=1`);
+      router.refresh();
+      return;
+    }
+
+    setSavedLesson(nextSavedLesson);
   }
 
   async function onCopyWhatsApp() {

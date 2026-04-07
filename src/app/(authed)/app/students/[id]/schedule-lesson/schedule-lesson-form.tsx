@@ -199,7 +199,7 @@ export function ScheduleLessonForm({
           href={`/app/students/${studentId}`}
           className="inline-flex min-h-11 items-center justify-center rounded-md border border-rose-200 bg-white px-4 py-2 text-sm text-rose-700 transition-colors hover:bg-rose-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
         >
-          Cancel
+          Cancel lesson
         </Link>
       </div>
     </form>

@@ -9,6 +9,7 @@ import {
 } from "@/lib/datetime";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { LessonPaidToggle } from "./components/lesson-paid-toggle";
+import { CompletedLessonUpdateBanner } from "./components/completed-lesson-update-banner";
 import { MonthlySummaryGenerator } from "./components/monthly-summary-generator";
 import { PlannedLessonStatusButton } from "./components/planned-lesson-status-button";
 import { ProgressSignalCard } from "./components/progress-signal-card";
@@ -20,7 +21,7 @@ export const revalidate = 0;
 
 type StudentPageProps = {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ lessonUpdated?: string }>;
+  searchParams: Promise<{ lessonUpdated?: string; lessonCompleted?: string }>;
 };
 
 type Lesson = {
@@ -85,7 +86,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
   noStore();
 
   const { id } = await params;
-  const { lessonUpdated } = await searchParams;
+  const { lessonUpdated, lessonCompleted } = await searchParams;
   const supabase = await createSupabaseServerClient();
 
   const studentQuery = supabase
@@ -264,6 +265,10 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
         >
           Lesson updated
         </p>
+      ) : null}
+
+      {lessonCompleted === "1" ? (
+        <CompletedLessonUpdateBanner studentId={student.id} />
       ) : null}
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
