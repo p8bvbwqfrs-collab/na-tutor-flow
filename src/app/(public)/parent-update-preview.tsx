@@ -21,21 +21,31 @@ const exampleSections = [
   },
 ] as const;
 
-export function ParentUpdatePreview() {
-  const [isOpen, setIsOpen] = useState(false);
+type ParentUpdatePreviewProps = {
+  defaultOpen?: boolean;
+  hideToggle?: boolean;
+};
+
+export function ParentUpdatePreview({
+  defaultOpen = false,
+  hideToggle = false,
+}: ParentUpdatePreviewProps) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
     <div className="mt-4">
-      <button
-        type="button"
-        onClick={() => setIsOpen((open) => !open)}
-        className="text-sm font-medium text-zinc-900 underline-offset-4 transition-colors hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-      >
-        {isOpen ? "▼ Hide example" : "▶ See example update"}
-      </button>
+      {!hideToggle ? (
+        <button
+          type="button"
+          onClick={() => setIsOpen((open) => !open)}
+          className="text-sm font-medium text-zinc-900 underline-offset-4 transition-colors hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+        >
+          {isOpen ? "▼ Hide example" : "▶ See example update"}
+        </button>
+      ) : null}
 
       {isOpen ? (
-        <div className="mt-4">
+        <div className={hideToggle ? undefined : "mt-4"}>
           <div className="mx-auto max-w-md rounded-lg border border-zinc-200 bg-slate-50 p-4">
             <div className="rounded-lg border border-zinc-200 bg-white p-4 text-sm leading-relaxed text-zinc-800">
               <p className="font-medium text-zinc-900">Ava Johnson – lesson update (07 Apr)</p>
@@ -66,7 +76,7 @@ export function ParentUpdatePreview() {
               </div>
             </div>
             <p className="mt-3 text-xs text-zinc-500">
-              Takes ~30–60 seconds to create after each lesson
+              Takes ~30–60 seconds after each lesson
             </p>
           </div>
         </div>

@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { unstable_noStore as noStore } from "next/cache";
+import { formatCurrencyFromMinorUnits } from "@/lib/currency";
 import {
   formatDateLocal,
   formatDateTimeLocal,
   formatShortDateLocal,
   formatTimeLocal,
 } from "@/lib/datetime";
+import { getUserCurrencyCode } from "@/lib/user-settings";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { LessonPaidToggle } from "./components/lesson-paid-toggle";
 import { CompletedLessonUpdateBanner } from "./components/completed-lesson-update-banner";
@@ -38,11 +40,6 @@ type Lesson = {
   effort: number;
   status: "planned" | "completed" | "cancelled" | null;
 };
-
-const currencyFormatter = new Intl.NumberFormat("en-GB", {
-  style: "currency",
-  currency: "GBP",
-});
 
 function cleanLessonText(value: string) {
   return value
@@ -113,9 +110,10 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
       .eq("student_id", id)
       .order("lesson_at", { ascending: false });
 
-  const [{ data: student, error: studentError }, initialLessonsResult] = await Promise.all([
+  const [{ data: student, error: studentError }, initialLessonsResult, currencyCode] = await Promise.all([
     studentQuery,
     lessonsQuery(),
+    getUserCurrencyCode(supabase),
   ]);
 
   let lessonsData = initialLessonsResult.data;
@@ -283,7 +281,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
         <div className="rounded-lg border border-zinc-200 bg-white p-4">
           <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Outstanding amount</p>
           <p className="mt-2 text-2xl font-semibold text-zinc-900">
-            {currencyFormatter.format(outstandingAmountPence / 100)}
+            {formatCurrencyFromMinorUnits(outstandingAmountPence, currencyCode)}
           </p>
         </div>
         <div className="rounded-lg border border-zinc-200 bg-white p-4">
@@ -487,7 +485,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
                             href={`/app/students/${student.id}/lessons/${lesson.id}`}
                             className="block text-zinc-900 underline-offset-4 hover:underline"
                           >
-                            {currencyFormatter.format(lesson.fee_pence / 100)}
+                            {formatCurrencyFromMinorUnits(lesson.fee_pence, currencyCode)}
                           </Link>
                         </td>
                         <td className="px-3 py-3 align-top">

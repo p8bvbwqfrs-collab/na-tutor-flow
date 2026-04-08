@@ -1,6 +1,7 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getUserCurrencyCode } from "@/lib/user-settings";
+import { LessonPageHeader } from "../../components/lesson-page-header";
 import { NewLessonForm } from "../../new-lesson/new-lesson-form";
 import { ScheduleLessonForm } from "../../schedule-lesson/schedule-lesson-form";
 
@@ -14,24 +15,30 @@ export default async function EditLessonPage({ params, searchParams }: EditLesso
   const { mode } = await searchParams;
   const supabase = await createSupabaseServerClient();
 
-  const [{ data: student, error: studentError }, { data: lesson, error: lessonError }] =
-    await Promise.all([
-      supabase
-        .from("students")
-        .select("id, student_name")
-        .eq("id", id)
-        .maybeSingle(),
-      supabase
-        .from("lessons")
-        .select("id, student_id, lesson_at, topics, topic_tags, went_well, parent_note, improve, homework, effort, confidence, fee_pence, paid, status")
-        .eq("id", lessonId)
-        .eq("student_id", id)
-        .maybeSingle(),
-    ]);
+  const [{ data: student, error: studentError }, { data: lesson, error: lessonError }, currencyCode] = await Promise.all([
+    supabase.from("students").select("id, student_name").eq("id", id).maybeSingle(),
+    supabase
+      .from("lessons")
+      .select("id, student_id, lesson_at, topics, topic_tags, went_well, parent_note, improve, homework, effort, confidence, fee_pence, paid, status, next_lesson_id")
+      .eq("id", lessonId)
+      .eq("student_id", id)
+      .maybeSingle(),
+    getUserCurrencyCode(supabase),
+  ]);
 
   if (studentError || lessonError || !student || !lesson) {
     notFound();
   }
+
+  const linkedNextLessonResult = lesson.next_lesson_id
+    ? await supabase
+        .from("lessons")
+        .select("id, lesson_at, topics, status")
+        .eq("id", lesson.next_lesson_id)
+        .eq("student_id", id)
+        .eq("status", "planned")
+        .maybeSingle()
+    : { data: null, error: null };
 
   const lessonStatus = lesson.status ?? "completed";
   const isPlannedLesson = lessonStatus === "planned";
@@ -40,27 +47,18 @@ export default async function EditLessonPage({ params, searchParams }: EditLesso
 
   return (
     <section className="w-full min-w-0 max-w-3xl">
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0">
-          <h1 className="text-xl font-semibold text-zinc-900">
-            {isCompletingPlannedLesson
-              ? "Complete lesson"
-              : isPlannedLesson
-                ? "Edit scheduled lesson"
-                : "Edit lesson"}
-          </h1>
-          <p className="mt-1 text-sm text-zinc-600">
-            {student.student_name}
-            {isPlannedLesson && !isCompletingPlannedLesson ? " · Planned lesson" : ""}
-          </p>
-        </div>
-        <Link
-          href={`/app/students/${student.id}`}
-          className="inline-flex w-full items-center justify-center rounded-md border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-700 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-fit"
-        >
-          Back to student
-        </Link>
-      </div>
+      <LessonPageHeader
+        studentName={student.student_name}
+        pageLabel={
+          isCompletingPlannedLesson
+            ? "Complete lesson"
+            : isPlannedLesson
+              ? "Edit scheduled lesson"
+              : "Edit lesson"
+        }
+        metaLabel={isPlannedLesson && !isCompletingPlannedLesson ? "Planned lesson" : undefined}
+        backHref={`/app/students/${student.id}`}
+      />
 
       {isPlannedLesson && !isCompletingPlannedLesson ? (
         <ScheduleLessonForm
@@ -68,9 +66,11 @@ export default async function EditLessonPage({ params, searchParams }: EditLesso
           lessonId={lesson.id}
           studentId={student.id}
           studentName={student.student_name}
+          currencyCode={currencyCode}
           initialLesson={{
             lessonAt: lesson.lesson_at,
             topics: plannedTopics,
+            feeAmount: (lesson.fee_pence / 100).toFixed(2),
           }}
         />
       ) : (
@@ -79,6 +79,7 @@ export default async function EditLessonPage({ params, searchParams }: EditLesso
           lessonId={lesson.id}
           studentId={student.id}
           studentName={student.student_name}
+          currencyCode={currencyCode}
           saveStatus="completed"
           completionMode={isCompletingPlannedLesson}
           initialLesson={{
@@ -91,8 +92,15 @@ export default async function EditLessonPage({ params, searchParams }: EditLesso
             homework: lesson.homework ?? "",
             effort: lesson.effort,
             confidence: lesson.confidence,
-            feeGbp: (lesson.fee_pence / 100).toFixed(2),
+            feeAmount: (lesson.fee_pence / 100).toFixed(2),
             paid: lesson.paid,
+            nextLesson: linkedNextLessonResult.data
+              ? {
+                  id: linkedNextLessonResult.data.id,
+                  lessonAt: linkedNextLessonResult.data.lesson_at,
+                  topics: linkedNextLessonResult.data.topics,
+                }
+              : null,
           }}
         />
       )}

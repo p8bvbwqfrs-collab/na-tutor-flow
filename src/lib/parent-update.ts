@@ -1,4 +1,4 @@
-import { formatShortDateLocal } from "@/lib/datetime";
+import { formatShortDateLocal, formatTimeLocal } from "@/lib/datetime";
 
 export type ParentUpdateLesson = {
   lessonAt: string;
@@ -9,6 +9,7 @@ export type ParentUpdateLesson = {
   homework: string;
   effort: number;
   confidence: number;
+  nextLessonAt?: string | null;
 };
 
 export function splitIntoBulletPoints(input: string) {
@@ -46,6 +47,13 @@ export function formatParentUpdate(studentName: string, lesson: ParentUpdateLess
 
   if (homeworkPoints.length > 0) {
     lines.push("", "Homework", ...homeworkPoints.map((point) => `• ${point}`));
+  }
+
+  if (lesson.nextLessonAt) {
+    lines.push(
+      "",
+      `Next lesson scheduled: ${formatShortDateLocal(lesson.nextLessonAt)} at ${formatTimeLocal(lesson.nextLessonAt)}`,
+    );
   }
 
   lines.push("", `Effort: ${lesson.effort}/5`, `Confidence: ${lesson.confidence}/5`);

@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { FormEvent, useMemo, useState } from "react";
+import { getCurrencyLabel, type SupportedCurrencyCode } from "@/lib/currency";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { LessonFormSection } from "../components/lesson-form-section";
 
 type ScheduleLessonFormProps = {
   studentId: string;
@@ -12,7 +14,9 @@ type ScheduleLessonFormProps = {
   initialLesson?: {
     lessonAt: string;
     topics: string;
+    feeAmount: string;
   };
+  currencyCode?: SupportedCurrencyCode;
 };
 
 function toDatetimeLocalValue(date: Date) {
@@ -35,6 +39,7 @@ export function ScheduleLessonForm({
   mode = "create",
   lessonId,
   initialLesson,
+  currencyCode = "GBP",
 }: ScheduleLessonFormProps) {
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const isEditMode = mode === "edit";
@@ -43,6 +48,7 @@ export function ScheduleLessonForm({
   const [lessonDate, setLessonDate] = useState(getDateValue(initialDate));
   const [lessonTime, setLessonTime] = useState(getTimeValue(initialDate));
   const [topics, setTopics] = useState(initialLesson?.topics ?? "");
+  const [fee, setFee] = useState(initialLesson?.feeAmount ?? "0.00");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -53,6 +59,17 @@ export function ScheduleLessonForm({
 
     if (!lessonDate || !lessonTime) {
       setError("Lesson date and time is required.");
+      return;
+    }
+
+    if (!fee.trim()) {
+      setError("Fee is required.");
+      return;
+    }
+
+    const feeValue = Number(fee);
+    if (!Number.isFinite(feeValue) || feeValue < 0) {
+      setError("Fee must be a number greater than or equal to 0.");
       return;
     }
 
@@ -67,7 +84,7 @@ export function ScheduleLessonForm({
       topics: trimmedTopics || "Planned lesson",
       effort: 3,
       confidence: 3,
-      fee_pence: 0,
+      fee_pence: Math.round(feeValue * 100),
       paid: false,
       status: "planned",
     };
@@ -122,55 +139,76 @@ export function ScheduleLessonForm({
       onSubmit={onSubmit}
       className="w-full min-w-0 max-w-full space-y-4 overflow-hidden rounded-lg border border-zinc-200 bg-white p-4"
     >
-      <div className="grid min-w-0 gap-4 sm:grid-cols-2">
+      <LessonFormSection title="Lesson details">
+        <div className="grid min-w-0 gap-4 sm:grid-cols-2">
+          <div className="min-w-0">
+            <label htmlFor="lesson_date" className="block text-sm font-medium text-zinc-700">
+              Lesson date
+            </label>
+            <input
+              id="lesson_date"
+              type="date"
+              required
+              aria-invalid={Boolean(error)}
+              aria-describedby={error ? formErrorId : undefined}
+              value={lessonDate}
+              onChange={(event) => setLessonDate(event.target.value)}
+              className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-500 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 disabled:bg-zinc-100 disabled:text-zinc-600"
+            />
+          </div>
+
+          <div className="min-w-0">
+            <label htmlFor="lesson_time" className="block text-sm font-medium text-zinc-700">
+              Lesson time
+            </label>
+            <input
+              id="lesson_time"
+              type="time"
+              required
+              aria-invalid={Boolean(error)}
+              aria-describedby={error ? formErrorId : undefined}
+              value={lessonTime}
+              onChange={(event) => setLessonTime(event.target.value)}
+              className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-500 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 disabled:bg-zinc-100 disabled:text-zinc-600"
+            />
+          </div>
+        </div>
+
         <div className="min-w-0">
-          <label htmlFor="lesson_date" className="block text-sm font-medium text-zinc-700">
-            Lesson date
+          <label htmlFor="topics" className="block text-sm font-medium text-zinc-700">
+            Planned topic or note (optional)
           </label>
-          <input
-            id="lesson_date"
-            type="date"
-            required
+          <textarea
+            id="topics"
+            rows={3}
             aria-invalid={Boolean(error)}
             aria-describedby={error ? formErrorId : undefined}
-            value={lessonDate}
-            onChange={(event) => setLessonDate(event.target.value)}
+            value={topics}
+            onChange={(event) => setTopics(event.target.value)}
             className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-500 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 disabled:bg-zinc-100 disabled:text-zinc-600"
+            placeholder={`What do you want to cover with ${studentName}?`}
           />
         </div>
 
         <div className="min-w-0">
-          <label htmlFor="lesson_time" className="block text-sm font-medium text-zinc-700">
-            Lesson time
+          <label htmlFor="fee" className="block text-sm font-medium text-zinc-700">
+            {getCurrencyLabel(currencyCode)}
           </label>
           <input
-            id="lesson_time"
-            type="time"
+            id="fee"
+            type="number"
+            min={0}
+            step="0.01"
             required
             aria-invalid={Boolean(error)}
             aria-describedby={error ? formErrorId : undefined}
-            value={lessonTime}
-            onChange={(event) => setLessonTime(event.target.value)}
+            value={fee}
+            onChange={(event) => setFee(event.target.value)}
             className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-500 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 disabled:bg-zinc-100 disabled:text-zinc-600"
+            placeholder="50.00"
           />
         </div>
-      </div>
-
-      <div className="min-w-0">
-        <label htmlFor="topics" className="block text-sm font-medium text-zinc-700">
-          Planned topic or note (optional)
-        </label>
-        <textarea
-          id="topics"
-          rows={3}
-          aria-invalid={Boolean(error)}
-          aria-describedby={error ? formErrorId : undefined}
-          value={topics}
-          onChange={(event) => setTopics(event.target.value)}
-          className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-500 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 disabled:bg-zinc-100 disabled:text-zinc-600"
-          placeholder={`What do you want to cover with ${studentName}?`}
-        />
-      </div>
+      </LessonFormSection>
 
       {error ? (
         <p

@@ -1,3 +1,5 @@
+import { formatCurrencyFromMinorUnits, type SupportedCurrencyCode } from "@/lib/currency";
+
 type MonthlyPoint = {
   month: string;
   amountPence: number;
@@ -5,15 +7,10 @@ type MonthlyPoint = {
 
 type MonthlyEarningsChartProps = {
   data: MonthlyPoint[];
+  currencyCode: SupportedCurrencyCode;
 };
 
-const currencyFormatter = new Intl.NumberFormat("en-GB", {
-  style: "currency",
-  currency: "GBP",
-  maximumFractionDigits: 0,
-});
-
-export function MonthlyEarningsChart({ data }: MonthlyEarningsChartProps) {
+export function MonthlyEarningsChart({ data, currencyCode }: MonthlyEarningsChartProps) {
   if (data.length === 0) {
     return (
       <div className="rounded-md border border-dashed border-zinc-300 bg-zinc-50 px-3 py-4 text-sm text-zinc-600">
@@ -71,7 +68,7 @@ export function MonthlyEarningsChart({ data }: MonthlyEarningsChartProps) {
           <g key={tickValue}>
             <line x1={leftPad} y1={y} x2={chartWidth - rightPad} y2={y} stroke="#f1f5f9" strokeWidth="1" />
             <text x="0" y={y + 4} className="fill-zinc-500 text-[10px]">
-              {currencyFormatter.format(tickValue / 100)}
+              {formatCurrencyFromMinorUnits(tickValue, currencyCode, { maximumFractionDigits: 0 })}
             </text>
           </g>
         );

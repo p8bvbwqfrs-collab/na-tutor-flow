@@ -1,6 +1,7 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getUserCurrencyCode } from "@/lib/user-settings";
+import { LessonPageHeader } from "../components/lesson-page-header";
 import { ScheduleLessonForm } from "./schedule-lesson-form";
 
 type ScheduleLessonPageProps = {
@@ -11,32 +12,50 @@ export default async function ScheduleLessonPage({ params }: ScheduleLessonPageP
   const { id } = await params;
   const supabase = await createSupabaseServerClient();
 
-  const { data: student, error } = await supabase
-    .from("students")
-    .select("id, student_name")
-    .eq("id", id)
-    .maybeSingle();
+  const [{ data: student, error }, { data: recentLesson }, currencyCode] = await Promise.all([
+    supabase
+      .from("students")
+      .select("id, student_name")
+      .eq("id", id)
+      .maybeSingle(),
+    supabase
+      .from("lessons")
+      .select("fee_pence")
+      .eq("student_id", id)
+      .or("status.eq.completed,status.is.null")
+      .order("lesson_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    getUserCurrencyCode(supabase),
+  ]);
 
   if (error || !student) {
     notFound();
   }
 
-  return (
-    <section className="max-w-3xl">
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-zinc-900">Schedule lesson</h1>
-          <p className="mt-1 text-sm text-zinc-600">{student.student_name}</p>
-        </div>
-        <Link
-          href={`/app/students/${student.id}`}
-          className="inline-flex w-fit rounded-md border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-700 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-        >
-          Back to student
-        </Link>
-      </div>
+  const initialFeeAmount =
+    typeof recentLesson?.fee_pence === "number"
+      ? (recentLesson.fee_pence / 100).toFixed(2)
+      : "0.00";
 
-      <ScheduleLessonForm studentId={student.id} studentName={student.student_name} />
+  return (
+    <section className="w-full min-w-0 max-w-3xl">
+      <LessonPageHeader
+        studentName={student.student_name}
+        pageLabel="Schedule lesson"
+        backHref={`/app/students/${student.id}`}
+      />
+
+      <ScheduleLessonForm
+        studentId={student.id}
+        studentName={student.student_name}
+        currencyCode={currencyCode}
+        initialLesson={{
+          lessonAt: new Date().toISOString(),
+          topics: "",
+          feeAmount: initialFeeAmount,
+        }}
+      />
     </section>
   );
 }

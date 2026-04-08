@@ -1,8 +1,10 @@
 import { headers } from "next/headers";
 import { canUseCalendarFeeds, generateCalendarFeedToken } from "@/lib/calendar-feed";
+import { getUserCurrencyCode } from "@/lib/user-settings";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { LogoutButton } from "../../components/logout-button";
 import { CopyFeedLinkButton } from "./components/copy-feed-link-button";
+import { CurrencySettingsForm } from "./components/currency-settings-form";
 
 export default async function SettingsPage() {
   const supabase = await createSupabaseServerClient();
@@ -10,6 +12,7 @@ export default async function SettingsPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  const currencyCode = await getUserCurrencyCode(supabase);
   const host = headerStore.get("x-forwarded-host") ?? headerStore.get("host");
   const protocol = headerStore.get("x-forwarded-proto") ?? "https";
   const baseUrl = host ? `${protocol}://${host}` : "";
@@ -48,6 +51,17 @@ export default async function SettingsPage() {
               <LogoutButton />
             </div>
           </div>
+        </section>
+
+        <section className="rounded-lg border border-zinc-200 bg-white p-4">
+          <h2 className="text-lg font-medium text-zinc-900">Preferences</h2>
+          <p className="mt-1 text-sm text-zinc-600">
+            Choose how fees and totals are shown across the app.
+          </p>
+
+          {user ? (
+            <CurrencySettingsForm userId={user.id} initialCurrencyCode={currencyCode} />
+          ) : null}
         </section>
 
         <section className="rounded-lg border border-zinc-200 bg-white p-4">

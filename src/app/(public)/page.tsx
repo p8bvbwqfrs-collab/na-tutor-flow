@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { ParentUpdatePreview } from "./parent-update-preview";
 
 export default function HomePage() {
   return (
@@ -9,18 +8,26 @@ export default function HomePage() {
           NA&apos;s Tutor Flow
         </p>
         <h1 className="mt-3 text-3xl font-semibold tracking-tight text-zinc-900 sm:text-4xl">
-          Run your tutoring — lessons, scheduling, and parent updates in one place
+          Run your tutoring without the admin.
         </h1>
         <p className="mx-auto mt-4 max-w-2xl text-sm leading-6 text-zinc-600 sm:text-base">
-          A simple tool for tutors to log lessons, schedule sessions, track progress, and send clear parent updates — all in one place.
+          Log lessons, send parent updates, and schedule the next session — all in one place.
         </p>
         <div className="mt-6">
-          <Link
-            href="/login"
-            className="inline-flex min-h-11 items-center justify-center rounded-md bg-zinc-800 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-          >
-            Get started
-          </Link>
+          <div className="flex flex-col items-center justify-center gap-2 sm:flex-row">
+            <Link
+              href="/login"
+              className="inline-flex min-h-11 items-center justify-center rounded-md bg-zinc-800 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+            >
+              Get started
+            </Link>
+            <Link
+              href="/how-it-works"
+              className="inline-flex min-h-11 items-center justify-center rounded-md border border-zinc-200 bg-white px-5 py-2.5 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+            >
+              See how it works
+            </Link>
+          </div>
         </div>
         <p className="mt-3 text-sm text-zinc-500">Built for independent tutors</p>
       </div>
@@ -30,7 +37,7 @@ export default function HomePage() {
           Everything you need after each lesson — in one place
         </h2>
         <p className="mt-1 text-sm text-zinc-600">
-          Keep the details, follow-up, and payment status together in one clear workflow.
+          Notes, parent updates, scheduling, and payments — all connected in one simple workflow.
         </p>
         <div className="mt-4 rounded-lg border border-zinc-200 bg-zinc-50 p-4">
           <div className="border-b border-zinc-200 pb-3">
@@ -42,53 +49,47 @@ export default function HomePage() {
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div className="rounded-lg border border-zinc-200 bg-white p-4">
               <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Students</p>
-              <p className="mt-2 text-sm text-zinc-600">Quick access to each student and their progress.</p>
+              <p className="mt-2 text-sm text-zinc-600">
+                See each student&apos;s lessons, progress, and notes in one place.
+              </p>
             </div>
             <div className="rounded-lg border border-zinc-200 bg-white p-4">
               <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Lessons</p>
-              <p className="mt-2 text-sm text-zinc-600">Log and schedule lessons in seconds.</p>
+              <p className="mt-2 text-sm text-zinc-600">
+                Log what you covered and schedule the next session straight away.
+              </p>
             </div>
             <div className="rounded-lg border border-zinc-200 bg-white p-4">
               <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Calendar</p>
-              <p className="mt-2 text-sm text-zinc-600">See your lessons over time and stay organised.</p>
+              <p className="mt-2 text-sm text-zinc-600">
+                See upcoming and completed lessons at a glance.
+              </p>
             </div>
             <div className="rounded-lg border border-zinc-200 bg-white p-4">
               <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Parent updates</p>
-              <p className="mt-2 text-sm text-zinc-600">Generate clear summaries parents understand.</p>
+              <p className="mt-2 text-sm text-zinc-600">
+                Turn your notes into clear updates you can send in seconds.
+              </p>
             </div>
           </div>
-          <p className="mt-4 text-sm text-zinc-600">
-            Works with your calendar so your lessons are always where you need them.
-          </p>
         </div>
       </section>
 
       <section className="rounded-lg border border-zinc-200 bg-white p-4">
-        <h2 className="text-lg font-medium text-zinc-900">What parents receive</h2>
+        <h2 className="text-lg font-medium text-zinc-900">Clear parent updates, ready to send</h2>
         <p className="mt-1 text-sm text-zinc-600">
-          After each lesson, you can send a clear, parent-friendly update like this:
+          Turn your lesson notes into a clear update for parents without rewriting everything by hand.
         </p>
-        <ParentUpdatePreview />
-      </section>
-
-      <section className="rounded-lg border border-zinc-200 bg-white p-4">
-        <h2 className="text-lg font-medium text-zinc-900">How it works</h2>
-        <p className="mt-1 text-sm text-zinc-600">A simple routine you can repeat after each lesson.</p>
-        <div className="mt-3 grid gap-3 sm:grid-cols-3">
-          <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-3">
-            <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Step 1</p>
-            <p className="mt-2 text-sm text-zinc-600">Add students.</p>
-          </div>
-          <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-3">
-            <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Step 2</p>
-            <p className="mt-2 text-sm text-zinc-600">Log lessons.</p>
-          </div>
-          <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-3">
-            <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Step 3</p>
-            <p className="mt-2 text-sm text-zinc-600">Copy updates and track payments.</p>
-          </div>
+        <div className="mt-4">
+          <Link
+            href="/how-it-works"
+            className="inline-flex items-center text-sm font-medium text-zinc-900 underline-offset-4 transition-colors hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+          >
+            See how it works
+          </Link>
         </div>
       </section>
+
     </section>
   );
 }

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { formatCurrencyFromMinorUnits } from "@/lib/currency";
 import {
   formatDateTimeLocal,
   formatMonthShortLocal,
@@ -6,6 +7,7 @@ import {
 } from "@/lib/datetime";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { formatParentUpdate } from "@/lib/parent-update";
+import { getUserCurrencyCode } from "@/lib/user-settings";
 import { MarkPaidButton } from "./components/mark-paid-button";
 import { MonthlyEarningsChart } from "./components/monthly-earnings-chart";
 import { ChartRangeFilter, type ChartRange } from "./components/chart-range-filter";
@@ -41,11 +43,6 @@ type ChartLessonRow = {
   fee_pence: number;
   status: "planned" | "completed" | "cancelled" | null;
 };
-
-const currencyFormatter = new Intl.NumberFormat("en-GB", {
-  style: "currency",
-  currency: "GBP",
-});
 
 function getRangeFromSearchParam(range: string | undefined): ChartRange {
   if (range === "3m" || range === "6m" || range === "12m" || range === "all") {
@@ -102,6 +99,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const { range } = await searchParams;
   const selectedRange = getRangeFromSearchParam(range);
   const supabase = await createSupabaseServerClient();
+  const currencyCode = await getUserCurrencyCode(supabase);
 
   const now = new Date();
   const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
@@ -295,13 +293,13 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         <div className="rounded-lg border border-zinc-200 bg-white p-3 sm:p-4">
           <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">This month earned</p>
           <p className="mt-1.5 text-2xl font-semibold text-zinc-900 sm:mt-2">
-            {currencyFormatter.format(monthEarningsPence / 100)}
+            {formatCurrencyFromMinorUnits(monthEarningsPence, currencyCode)}
           </p>
         </div>
         <div className="rounded-lg border border-zinc-200 bg-white p-3 sm:p-4">
           <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Unpaid total</p>
           <p className="mt-1.5 text-2xl font-semibold text-zinc-900 sm:mt-2">
-            {currencyFormatter.format(unpaidTotalPence / 100)}
+            {formatCurrencyFromMinorUnits(unpaidTotalPence, currencyCode)}
           </p>
         </div>
         <div className="rounded-lg border border-zinc-200 bg-white p-3 sm:p-4">
@@ -424,7 +422,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
               <h2 className="text-lg font-medium text-zinc-900">Earnings over time</h2>
               <p className="mt-1 text-sm text-zinc-600">{rangeLabel}</p>
               <p className="mt-1 text-sm font-medium text-zinc-900">
-                {currencyFormatter.format(selectedRangeEarningsPence / 100)}
+                {formatCurrencyFromMinorUnits(selectedRangeEarningsPence, currencyCode)}
               </p>
             </div>
             <ChartRangeFilter selected={selectedRange} />
@@ -446,7 +444,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             </div>
           ) : (
             <div className="mt-3 sm:mt-4">
-              <MonthlyEarningsChart data={monthlyChartData} />
+              <MonthlyEarningsChart data={monthlyChartData} currencyCode={currencyCode} />
             </div>
           )}
         </div>
@@ -520,7 +518,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                       {formatDateTimeLocal(lesson.lesson_at)}
                     </td>
                     <td className="whitespace-nowrap px-3 py-3 text-zinc-900">
-                      {currencyFormatter.format(lesson.fee_pence / 100)}
+                      {formatCurrencyFromMinorUnits(lesson.fee_pence, currencyCode)}
                     </td>
                     <td className="px-3 py-3">
                       <MarkPaidButton lessonId={lesson.id} />
