@@ -3,8 +3,12 @@ import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "NA's Tutor Flow",
-  description: "A simple tool for independent tutors to log lessons, update parents, and track payments.",
+  metadataBase: new URL("https://www.natutorflow.com"),
+  title: {
+    default: "Tutor Flow – Run your tutoring without the admin",
+    template: "%s | Tutor Flow",
+  },
+  description: "Log lessons, send parent updates, and schedule sessions in one simple flow.",
 };
 
 export default function RootLayout({
