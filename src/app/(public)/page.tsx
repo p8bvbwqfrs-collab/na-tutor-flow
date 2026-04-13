@@ -90,6 +90,33 @@ export default function HomePage() {
         </div>
       </section>
 
+      <section className="rounded-lg border border-zinc-200 bg-white p-4">
+        <h2 className="text-lg font-medium text-zinc-900">Helpful resources for tutors</h2>
+        <p className="mt-1 text-sm text-zinc-600">
+          Simple guides and templates for lesson notes, parent updates, and payment tracking.
+        </p>
+        <div className="mt-4 flex flex-col gap-3">
+          <Link
+            href="/tutor-lesson-notes-template"
+            className="inline-flex min-h-11 items-center rounded-md border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+          >
+            Tutor lesson notes template
+          </Link>
+          <Link
+            href="/tutor-payment-tracker"
+            className="inline-flex min-h-11 items-center rounded-md border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+          >
+            Tutor payment tracker
+          </Link>
+          <Link
+            href="/how-to-write-parent-updates-after-tutoring"
+            className="inline-flex min-h-11 items-center rounded-md border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+          >
+            How to write parent updates after tutoring
+          </Link>
+        </div>
+      </section>
+
     </section>
   );
 }
