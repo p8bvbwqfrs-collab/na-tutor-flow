@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SiteFooter } from "@/components/site-footer";
 
 export default function PublicLayout({
   children,
@@ -30,32 +31,7 @@ export default function PublicLayout({
       </header>
 
       <main className="mx-auto w-full max-w-4xl px-4 py-6">{children}</main>
-
-      <footer className="border-t border-zinc-200 bg-white">
-        <div className="mx-auto flex w-full max-w-4xl flex-col gap-2 px-4 py-4 text-sm text-zinc-600 sm:flex-row sm:items-center sm:justify-between">
-          <p>Tutor Flow</p>
-          <div className="flex items-center gap-4">
-            <Link
-              href="/about"
-              className="underline-offset-4 transition-colors hover:text-zinc-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-            >
-              About
-            </Link>
-            <Link
-              href="/privacy"
-              className="underline-offset-4 transition-colors hover:text-zinc-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-            >
-              Privacy
-            </Link>
-            <Link
-              href="/terms"
-              className="underline-offset-4 transition-colors hover:text-zinc-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-            >
-              Terms
-            </Link>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

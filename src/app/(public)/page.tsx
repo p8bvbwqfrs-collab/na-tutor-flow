@@ -76,21 +76,6 @@ export default function HomePage() {
       </section>
 
       <section className="rounded-lg border border-zinc-200 bg-white p-4">
-        <h2 className="text-lg font-medium text-zinc-900">Clear parent updates, ready to send</h2>
-        <p className="mt-1 text-sm text-zinc-600">
-          Turn your lesson notes into a clear update for parents without rewriting everything by hand.
-        </p>
-        <div className="mt-4">
-          <Link
-            href="/how-it-works"
-            className="inline-flex items-center text-sm font-medium text-zinc-900 underline-offset-4 transition-colors hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-          >
-            See how it works
-          </Link>
-        </div>
-      </section>
-
-      <section className="rounded-lg border border-zinc-200 bg-white p-4">
         <h2 className="text-lg font-medium text-zinc-900">Helpful resources for tutors</h2>
         <p className="mt-1 text-sm text-zinc-600">
           Simple guides and templates for lesson notes, parent updates, and payment tracking.

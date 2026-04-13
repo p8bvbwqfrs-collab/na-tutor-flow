@@ -369,7 +369,9 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
         <section className="rounded-lg border border-zinc-200 bg-white p-4">
           <h2 className="text-lg font-medium text-zinc-900">Upcoming lessons</h2>
-          <p className="mt-1 text-sm text-zinc-600">Any lessons already dated in the future.</p>
+          <p className="mt-1 text-sm text-zinc-600">
+            Your scheduled lessons. Open one when you’re ready to complete it after the session.
+          </p>
 
           {upcomingLessonsResult.error ? (
             <p
@@ -380,7 +382,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             </p>
           ) : upcomingLessons.length === 0 ? (
             <p className="mt-4 rounded-md border border-dashed border-zinc-300 bg-zinc-50 px-3 py-2 text-sm text-zinc-700">
-              No upcoming lessons yet.
+              No scheduled lessons yet.
             </p>
           ) : (
             <div className="mt-4 space-y-3">

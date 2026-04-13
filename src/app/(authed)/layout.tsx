@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SiteFooter } from "@/components/site-footer";
 import { AuthedNav } from "./components/authed-nav";
 import { LogoutButton } from "./components/logout-button";
 
@@ -8,7 +9,7 @@ export default function AuthedLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="min-h-screen">
+    <div className="flex min-h-screen flex-col">
       <header className="border-b border-zinc-200 bg-white text-zinc-900">
         <div className="mx-auto max-w-4xl px-4 py-3">
           <div className="flex flex-col gap-3">
@@ -31,6 +32,7 @@ export default function AuthedLayout({
         </div>
       </header>
       <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-6">{children}</main>
+      <SiteFooter />
     </div>
   );
 }

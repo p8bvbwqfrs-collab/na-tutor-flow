@@ -232,7 +232,7 @@ export function NewLessonForm({
         topics: trimmedNextLessonTopics || "Planned lesson",
         effort: 3,
         confidence: 3,
-        fee_pence: 0,
+        fee_pence: feePence,
         paid: false,
         status: "planned" as const,
       };
