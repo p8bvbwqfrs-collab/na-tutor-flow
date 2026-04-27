@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { getCompletedLessonUpdateStorageKey } from "@/lib/lesson-completion";
+import { LessonUpdateActions } from "@/components/lesson-update-actions";
 
 type CompletedLessonUpdateBannerProps = {
   studentId: string;
@@ -12,9 +13,6 @@ export function CompletedLessonUpdateBanner({
 }: CompletedLessonUpdateBannerProps) {
   const storageKey = useMemo(() => getCompletedLessonUpdateStorageKey(studentId), [studentId]);
   const [parentUpdate, setParentUpdate] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
-  const [shared, setShared] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const savedUpdate = window.sessionStorage.getItem(storageKey);
@@ -23,54 +21,9 @@ export function CompletedLessonUpdateBanner({
     }
   }, [storageKey]);
 
-  async function onCopyUpdate() {
-    if (!parentUpdate) {
-      return;
-    }
-
-    try {
-      await navigator.clipboard.writeText(parentUpdate);
-      setCopied(true);
-      setShared(false);
-      setError(null);
-    } catch {
-      setError("We couldn’t copy the update. Please copy it manually.");
-    }
-  }
-
-  async function onShareUpdate() {
-    if (!parentUpdate) {
-      return;
-    }
-
-    if (typeof navigator === "undefined" || !navigator.share) {
-      setError("Sharing isn’t available on this device. Please copy the update instead.");
-      return;
-    }
-
-    try {
-      await navigator.share({
-        title: "Lesson update",
-        text: parentUpdate,
-      });
-      setShared(true);
-      setCopied(false);
-      setError(null);
-    } catch (shareError) {
-      if (shareError instanceof DOMException && shareError.name === "AbortError") {
-        return;
-      }
-
-      setError("We couldn’t open the share sheet. Please copy the update instead.");
-    }
-  }
-
   function onDismiss() {
     window.sessionStorage.removeItem(storageKey);
     setParentUpdate(null);
-    setCopied(false);
-    setShared(false);
-    setError(null);
   }
 
   if (!parentUpdate) {
@@ -84,23 +37,10 @@ export function CompletedLessonUpdateBanner({
           Lesson completed
         </p>
         <p className="mt-1 text-sm text-emerald-900/80">
-          The lesson is now saved on the student page. Copy or share the parent update from here.
+          The lesson is now saved on the student page. Share the parent update from here.
         </p>
         <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-          <button
-            type="button"
-            onClick={onCopyUpdate}
-            className="inline-flex min-h-11 items-center justify-center rounded-md bg-zinc-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-          >
-            Copy update
-          </button>
-          <button
-            type="button"
-            onClick={onShareUpdate}
-            className="inline-flex min-h-11 items-center justify-center rounded-md border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-          >
-            Share update
-          </button>
+          <LessonUpdateActions message={parentUpdate} />
           <button
             type="button"
             onClick={onDismiss}
@@ -108,11 +48,6 @@ export function CompletedLessonUpdateBanner({
           >
             Dismiss
           </button>
-        </div>
-        <div className="mt-2 min-h-5">
-          {copied ? <p className="text-sm font-medium text-emerald-700">Copied.</p> : null}
-          {!copied && shared ? <p className="text-sm font-medium text-emerald-700">Shared.</p> : null}
-          {!copied && !shared && error ? <p className="text-sm text-rose-800">{error}</p> : null}
         </div>
       </div>
 

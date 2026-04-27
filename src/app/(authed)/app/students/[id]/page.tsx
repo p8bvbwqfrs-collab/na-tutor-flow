@@ -9,7 +9,9 @@ import {
   formatTimeLocal,
 } from "@/lib/datetime";
 import { getUserCurrencyCode } from "@/lib/user-settings";
+import { formatParentUpdate } from "@/lib/parent-update";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { LessonUpdateActions } from "@/components/lesson-update-actions";
 import { LessonPaidToggle } from "./components/lesson-paid-toggle";
 import { CompletedLessonUpdateBanner } from "./components/completed-lesson-update-banner";
 import { MonthlySummaryGenerator } from "./components/monthly-summary-generator";
@@ -32,6 +34,7 @@ type Lesson = {
   topics: string;
   topic_tags: string[] | null;
   went_well: string | null;
+  parent_note: string | null;
   improve: string | null;
   homework: string | null;
   fee_pence: number;
@@ -47,32 +50,6 @@ function cleanLessonText(value: string) {
     .map((part) => part.replace(/^[-•]\s*/, "").trim())
     .filter(Boolean)
     .join(", ");
-}
-
-function findLatestNonEmptyValue<T>(lessons: Lesson[], getValue: (lesson: Lesson) => T | null) {
-  for (const lesson of lessons) {
-    const value = getValue(lesson);
-
-    if (typeof value === "string") {
-      if (value.trim()) {
-        return value.trim();
-      }
-      continue;
-    }
-
-    if (Array.isArray(value)) {
-      if (value.length > 0) {
-        return value;
-      }
-      continue;
-    }
-
-    if (value) {
-      return value;
-    }
-  }
-
-  return null;
 }
 
 function isCompletedLessonStatus(status: "planned" | "completed" | "cancelled" | null) {
@@ -98,7 +75,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
     supabase
       .from("lessons")
       .select(
-        "id, lesson_at, topics, topic_tags, went_well, improve, homework, fee_pence, paid, confidence, effort, status",
+        "id, lesson_at, topics, topic_tags, went_well, parent_note, improve, homework, fee_pence, paid, confidence, effort, status",
       )
       .eq("student_id", id)
       .order("lesson_at", { ascending: false });
@@ -106,7 +83,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
   const fallbackLessonsQuery = () =>
     supabase
       .from("lessons")
-      .select("id, lesson_at, topics, went_well, improve, homework, fee_pence, paid, confidence, effort, status")
+      .select("id, lesson_at, topics, went_well, parent_note, improve, homework, fee_pence, paid, confidence, effort, status")
       .eq("student_id", id)
       .order("lesson_at", { ascending: false });
 
@@ -213,6 +190,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
           : "neutral";
 
   const chronologicalLessons = [...completedLessons].reverse();
+  const latestCompletedLesson = completedLessons[0] ?? null;
   const confidenceTrendPoints = chronologicalLessons.map((lesson) => ({
     label: formatShortDateLocal(lesson.lesson_at),
     value: lesson.confidence,
@@ -221,13 +199,6 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
     label: formatShortDateLocal(lesson.lesson_at),
     value: lesson.effort,
   }));
-  const nextFocusPrep = findLatestNonEmptyValue(completedLessons, (lesson) => lesson.improve);
-  const homeworkPrep = findLatestNonEmptyValue(completedLessons, (lesson) => lesson.homework);
-  const recentTopicTags = findLatestNonEmptyValue(completedLessons, (lesson) => lesson.topic_tags);
-  const recentTopicText = findLatestNonEmptyValue(completedLessons, (lesson) => lesson.topics);
-  const recentTopicPrep = Array.isArray(recentTopicTags)
-    ? recentTopicTags.join(", ")
-    : recentTopicText;
 
   return (
     <section>
@@ -300,6 +271,97 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
         />
       </div>
 
+      <section className="mt-6">
+        <div className="rounded-lg border border-zinc-200 bg-white p-4 sm:p-5">
+          {latestCompletedLesson ? (
+            <>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:gap-3">
+                    <h2 className="text-lg font-medium text-zinc-900">Latest notes</h2>
+                    <p className="text-sm text-zinc-500">
+                      {formatDateLocal(latestCompletedLesson.lesson_at)} at {formatTimeLocal(latestCompletedLesson.lesson_at)}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-start gap-2 sm:justify-end">
+                  <Link
+                    href={`/app/students/${student.id}/lessons/${latestCompletedLesson.id}/view`}
+                    className="inline-flex min-h-9 items-center justify-center rounded-md bg-zinc-800 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                  >
+                    View notes
+                  </Link>
+                  <LessonUpdateActions
+                    reserveFeedbackSpace={false}
+                    message={formatParentUpdate(student.student_name, {
+                      lessonAt: latestCompletedLesson.lesson_at,
+                      topics: latestCompletedLesson.topics ?? "",
+                      wentWell: latestCompletedLesson.went_well ?? "",
+                      parentNote: latestCompletedLesson.parent_note ?? "",
+                      improve: latestCompletedLesson.improve ?? "",
+                      homework: latestCompletedLesson.homework ?? "",
+                      effort: latestCompletedLesson.effort,
+                      confidence: latestCompletedLesson.confidence,
+                    })}
+                  />
+                </div>
+              </div>
+
+              {/* Latest notes stays focused on next-session useful details; full notes live on the lesson page. */}
+              <div className="mt-2 rounded-lg border border-zinc-200 bg-neutral-50 p-3">
+                <p className="text-sm font-medium leading-6 text-zinc-900 sm:text-[15px]">
+                  {cleanLessonText(latestCompletedLesson.topics) || "No focus captured yet."}
+                </p>
+                {latestCompletedLesson.improve || latestCompletedLesson.homework ? (
+                  <div className="mt-3 divide-y divide-zinc-100 rounded-md border border-zinc-200 bg-white px-3 py-1 text-sm leading-6 text-zinc-700">
+                    {latestCompletedLesson.improve ? (
+                      <div className="grid gap-0.5 py-2 sm:grid-cols-[5.5rem_minmax(0,1fr)] sm:gap-3">
+                        <p className="text-sm font-medium text-zinc-900">Improve</p>
+                        <p>{cleanLessonText(latestCompletedLesson.improve)}</p>
+                      </div>
+                    ) : null}
+                    {latestCompletedLesson.homework ? (
+                      <div className="grid gap-0.5 py-2 sm:grid-cols-[5.5rem_minmax(0,1fr)] sm:gap-3">
+                        <p className="text-sm font-medium text-zinc-900">Homework</p>
+                        <p>{cleanLessonText(latestCompletedLesson.homework)}</p>
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <span className="inline-flex rounded-md border border-zinc-200 bg-white px-2.5 py-1 text-xs font-medium text-zinc-700">
+                    Effort {latestCompletedLesson.effort}/5
+                  </span>
+                  <span className="inline-flex rounded-md border border-zinc-200 bg-white px-2.5 py-1 text-xs font-medium text-zinc-700">
+                    Confidence {latestCompletedLesson.confidence}/5
+                  </span>
+                  {latestCompletedLesson.topic_tags && latestCompletedLesson.topic_tags.length > 0
+                    ? latestCompletedLesson.topic_tags.slice(0, 4).map((tag) => (
+                        <span
+                          key={tag}
+                          className="inline-flex rounded-full border border-zinc-200 bg-white px-2 py-0.5 text-[11px] font-medium text-zinc-600"
+                        >
+                          {tag}
+                        </span>
+                      ))
+                    : null}
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <h2 className="text-lg font-medium text-zinc-900">Latest notes</h2>
+              <div className="mt-4 rounded-md border border-dashed border-zinc-300 bg-zinc-50 p-4">
+                <p className="text-sm font-medium text-zinc-900">No lesson notes yet.</p>
+                <p className="mt-2 text-sm text-zinc-600">
+                  Log a lesson to start building this student&apos;s history.
+                </p>
+              </div>
+            </>
+          )}
+        </div>
+      </section>
+
       <div className="mt-6 space-y-6">
         {plannedLessons.length > 0 ? (
           <section>
@@ -355,38 +417,6 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
             </div>
           </section>
         ) : null}
-
-        <section>
-          <div className="rounded-lg border border-zinc-200 bg-white p-4">
-            <h2 className="text-lg font-medium text-zinc-900">Next lesson prep</h2>
-            <p className="mt-1 text-sm text-zinc-600">What to pick up next time, based on recent lessons.</p>
-            {completedLessons.length > 0 ? (
-              <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
-                  <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Next session reminder</p>
-                  <p className="mt-2 text-sm text-zinc-900">{nextFocusPrep || "No next focus captured yet."}</p>
-                </div>
-                <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
-                  <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Homework to review</p>
-                  <p className="mt-2 text-sm text-zinc-900">
-                    {homeworkPrep || "No homework or follow-up noted yet."}
-                  </p>
-                </div>
-                <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
-                  <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Recent topic</p>
-                  <p className="mt-2 text-sm text-zinc-900">{recentTopicPrep || "No recent topic captured yet."}</p>
-                </div>
-              </div>
-            ) : (
-              <div className="mt-4 rounded-md border border-dashed border-zinc-300 bg-zinc-50 p-4">
-                <p className="text-sm font-medium text-zinc-900">No prep notes yet.</p>
-                <p className="mt-2 text-sm text-zinc-600">
-                  Once you log a completed lesson, the latest area to improve, homework, and recent topics will show here.
-                </p>
-              </div>
-            )}
-          </div>
-        </section>
 
         <section>
           <MonthlySummaryGenerator studentName={student.student_name} lessons={completedLessons} />
@@ -447,7 +477,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
                       <tr key={lesson.id} className="border-t border-zinc-200 text-zinc-900 hover:bg-zinc-50">
                         <td className="whitespace-nowrap px-3 py-3 align-top text-zinc-900">
                           <Link
-                            href={`/app/students/${student.id}/lessons/${lesson.id}`}
+                            href={`/app/students/${student.id}/lessons/${lesson.id}/view`}
                             className="block underline-offset-4 hover:underline"
                           >
                             <span className="block font-medium text-zinc-900">
@@ -460,7 +490,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
                         </td>
                         <td className="max-w-sm px-3 py-3 align-top text-zinc-900" title={lesson.topics}>
                           <Link
-                            href={`/app/students/${student.id}/lessons/${lesson.id}`}
+                            href={`/app/students/${student.id}/lessons/${lesson.id}/view`}
                             className="block underline-offset-4 hover:underline"
                           >
                             <span className="block font-medium text-zinc-900">
@@ -482,14 +512,14 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
                         </td>
                         <td className="whitespace-nowrap px-3 py-3 align-top text-zinc-900">
                           <Link
-                            href={`/app/students/${student.id}/lessons/${lesson.id}`}
+                            href={`/app/students/${student.id}/lessons/${lesson.id}/view`}
                             className="block text-zinc-900 underline-offset-4 hover:underline"
                           >
                             {formatCurrencyFromMinorUnits(lesson.fee_pence, currencyCode)}
                           </Link>
                         </td>
                         <td className="px-3 py-3 align-top">
-                          <Link href={`/app/students/${student.id}/lessons/${lesson.id}`} className="block">
+                          <Link href={`/app/students/${student.id}/lessons/${lesson.id}/view`} className="block">
                             <span
                               className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
                                 lesson.paid ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"
@@ -500,12 +530,12 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
                           </Link>
                         </td>
                         <td className="px-3 py-3 align-top">
-                          <div className="flex flex-wrap items-center gap-2">
+                          <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
                             <Link
-                              href={`/app/students/${student.id}/lessons/${lesson.id}`}
-                              className="text-sm font-medium text-zinc-900 underline-offset-4 hover:underline"
+                              href={`/app/students/${student.id}/lessons/${lesson.id}/view`}
+                              className="inline-flex min-h-9 items-center justify-center rounded-md bg-zinc-800 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
                             >
-                              Edit
+                              View notes
                             </Link>
                             <LessonPaidToggle lessonId={lesson.id} initialPaid={lesson.paid} />
                           </div>

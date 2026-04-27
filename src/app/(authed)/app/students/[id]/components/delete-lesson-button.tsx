@@ -8,9 +8,10 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 type DeleteLessonButtonProps = {
   lessonId: string;
   studentId: string;
+  className?: string;
 };
 
-export function DeleteLessonButton({ lessonId, studentId }: DeleteLessonButtonProps) {
+export function DeleteLessonButton({ lessonId, studentId, className }: DeleteLessonButtonProps) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -61,7 +62,10 @@ export function DeleteLessonButton({ lessonId, studentId }: DeleteLessonButtonPr
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="inline-flex min-h-11 w-full items-center justify-center rounded-md border border-rose-200 bg-white px-4 py-2 text-sm font-medium text-rose-700 transition-colors hover:bg-rose-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
+        className={
+          className ??
+          "inline-flex min-h-11 w-full items-center justify-center rounded-md border border-rose-200 bg-white px-4 py-2 text-sm font-medium text-rose-700 transition-colors hover:bg-rose-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
+        }
       >
         Delete lesson
       </button>

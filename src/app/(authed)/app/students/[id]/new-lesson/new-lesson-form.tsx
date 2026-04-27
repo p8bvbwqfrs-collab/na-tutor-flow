@@ -7,6 +7,7 @@ import { getCurrencyLabel, type SupportedCurrencyCode } from "@/lib/currency";
 import { getCompletedLessonUpdateStorageKey } from "@/lib/lesson-completion";
 import { formatParentUpdate } from "@/lib/parent-update";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { LessonUpdateActions } from "@/components/lesson-update-actions";
 import { DeleteLessonButton } from "../components/delete-lesson-button";
 import { LessonFormSection } from "../components/lesson-form-section";
 import { RatingSelector } from "../components/rating-selector";
@@ -119,15 +120,11 @@ export function NewLessonForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [savedLesson, setSavedLesson] = useState<SavedLessonState | null>(null);
-  const [copied, setCopied] = useState(false);
-  const [shared, setShared] = useState(false);
   const [postSaveWarning, setPostSaveWarning] = useState<string | null>(null);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
-    setCopied(false);
-    setShared(false);
     setPostSaveWarning(null);
 
     const trimmedTopics = topics.trim();
@@ -299,57 +296,13 @@ export function NewLessonForm({
     setSavedLesson(nextSavedLesson);
   }
 
-  async function onCopyWhatsApp() {
-    if (!savedLesson) {
-      return;
-    }
-
-    const message = formatParentUpdate(studentName, savedLesson);
-
-    try {
-      await navigator.clipboard.writeText(message);
-      setCopied(true);
-      setShared(false);
-    } catch {
-      setError("We couldn’t copy the update. Please copy it manually.");
-    }
-  }
-
-  async function onShareUpdate() {
-    if (!savedLesson) {
-      return;
-    }
-
-    const message = formatParentUpdate(studentName, savedLesson);
-
-    if (typeof navigator === "undefined" || !navigator.share) {
-      setError("Sharing isn’t available on this device. Please copy the update instead.");
-      return;
-    }
-
-    try {
-      await navigator.share({
-        title: `${studentName} lesson update`,
-        text: message,
-      });
-      setShared(true);
-      setCopied(false);
-    } catch (shareError) {
-      if (shareError instanceof DOMException && shareError.name === "AbortError") {
-        return;
-      }
-
-      setError("We couldn’t open the share sheet. Please copy the update instead.");
-    }
-  }
-
   const parentUpdate = savedLesson ? formatParentUpdate(studentName, savedLesson) : "";
   const successTitle = completionMode ? "Lesson completed" : isEditMode ? "Lesson updated" : "Lesson saved";
   const successCopy = completionMode
-    ? "Share or copy the parent update while the lesson details are still fresh."
+    ? "Share the parent update while the lesson details are still fresh."
     : isEditMode
-    ? "Share or copy the refreshed parent update before you head back to the student page."
-    : "Share or copy the parent update while the lesson is still fresh.";
+    ? "Share the refreshed parent update before you head back to the student page."
+    : "Share the parent update while the lesson is still fresh.";
 
   if (savedLesson) {
     return (
@@ -362,20 +315,7 @@ export function NewLessonForm({
             {successCopy}
           </p>
           <div className="mt-3 grid min-w-0 gap-2 sm:grid-cols-2">
-            <button
-              type="button"
-              onClick={onCopyWhatsApp}
-              className="inline-flex min-h-11 w-full min-w-0 items-center justify-center rounded-md bg-zinc-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-            >
-              Copy update
-            </button>
-            <button
-              type="button"
-              onClick={onShareUpdate}
-              className="inline-flex min-h-11 w-full min-w-0 items-center justify-center rounded-md border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-            >
-              Share update
-            </button>
+            <LessonUpdateActions message={parentUpdate} />
             <Link
               href={`/app/students/${studentId}`}
               className="inline-flex min-h-11 w-full min-w-0 items-center justify-center rounded-md border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
@@ -392,12 +332,10 @@ export function NewLessonForm({
             ) : null}
           </div>
           <div className="mt-2 min-h-5">
-            {copied ? <p className="text-sm font-medium text-emerald-700">Copied.</p> : null}
-            {!copied && shared ? <p className="text-sm font-medium text-emerald-700">Shared.</p> : null}
-            {!copied && !shared && postSaveWarning ? (
+            {postSaveWarning ? (
               <p className="text-sm text-amber-800">{postSaveWarning}</p>
             ) : null}
-            {!copied && !shared && !postSaveWarning && error ? (
+            {!postSaveWarning && error ? (
               <p className="text-sm text-rose-800">{error}</p>
             ) : null}
           </div>

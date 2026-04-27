@@ -157,7 +157,11 @@ export function CalendarGrid({
                   {desktopVisibleLessons.map((lesson) => (
                     <Link
                       key={lesson.id}
-                      href={`/app/students/${lesson.studentId}/lessons/${lesson.id}`}
+                      href={
+                        lesson.status === "planned"
+                          ? `/app/students/${lesson.studentId}/lessons/${lesson.id}`
+                          : `/app/students/${lesson.studentId}/lessons/${lesson.id}/view`
+                      }
                       className={`block rounded-md border px-2 py-1 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 ${
                         lesson.status === "planned"
                           ? "border-sky-100 bg-sky-50/70 hover:border-sky-200 hover:bg-sky-50"
@@ -211,7 +215,11 @@ export function CalendarGrid({
                 return (
                   <Link
                     key={lesson.id}
-                    href={`/app/students/${lesson.studentId}/lessons/${lesson.id}`}
+                    href={
+                      lesson.status === "planned"
+                        ? `/app/students/${lesson.studentId}/lessons/${lesson.id}`
+                        : `/app/students/${lesson.studentId}/lessons/${lesson.id}/view`
+                    }
                     className="block rounded-lg border border-zinc-200 bg-zinc-50 p-3 transition-colors hover:border-zinc-300 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
                   >
                     <p className="text-sm font-medium text-zinc-900">

@@ -11,7 +11,7 @@ import { getUserCurrencyCode } from "@/lib/user-settings";
 import { MarkPaidButton } from "./components/mark-paid-button";
 import { MonthlyEarningsChart } from "./components/monthly-earnings-chart";
 import { ChartRangeFilter, type ChartRange } from "./components/chart-range-filter";
-import { CopyUpdateButton } from "./components/copy-update-button";
+import { ShareUpdateButton } from "./components/copy-update-button";
 
 type LessonRow = {
   id: string;
@@ -89,6 +89,14 @@ function getStudentName(
 
 function isCompletedLessonStatus(status: "planned" | "completed" | "cancelled" | null) {
   return status === "completed" || status === null;
+}
+
+function cleanLessonText(value: string) {
+  return value
+    .split(/\n|;/)
+    .map((part) => part.replace(/^[-•]\s*/, "").trim())
+    .filter(Boolean)
+    .join(", ");
 }
 
 type DashboardPageProps = {
@@ -331,23 +339,29 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                   key={lesson.id}
                   className="rounded-lg border border-zinc-200 bg-zinc-50 p-3 transition-colors hover:border-zinc-300 hover:bg-white"
                 >
-                  <Link
-                    href={`/app/students/${lesson.student_id}/lessons/${lesson.id}`}
-                    className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-                  >
-                    <p className="text-sm font-medium text-zinc-900">
-                      {getStudentName(lesson.student) ?? "Unknown student"}
+                  <p className="text-sm font-medium text-zinc-900">
+                    {getStudentName(lesson.student) ?? "Unknown student"}
+                  </p>
+                  <p className="mt-1 text-sm text-zinc-600">
+                    {formatDateTimeLocal(lesson.lesson_at)}
+                  </p>
+                  {lesson.topics ? (
+                    <p className="mt-2 line-clamp-2 text-sm text-zinc-700">
+                      {cleanLessonText(lesson.topics)}
                     </p>
-                    <p className="mt-1 text-sm text-zinc-600">
-                      {formatDateTimeLocal(lesson.lesson_at)}
-                    </p>
-                  </Link>
+                  ) : null}
+                  <div className="mt-3 flex flex-wrap items-start gap-2">
+                    <Link
+                      href={`/app/students/${lesson.student_id}/lessons/${lesson.id}/view`}
+                      className="inline-flex min-h-9 items-center justify-center rounded-md bg-zinc-800 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                    >
+                      View notes
+                    </Link>
                   {getStudentName(lesson.student) &&
                   lesson.topics &&
                   lesson.effort != null &&
                   lesson.confidence != null ? (
-                    <div className="mt-2">
-                      <CopyUpdateButton
+                      <ShareUpdateButton
                         message={formatParentUpdate(getStudentName(lesson.student)!, {
                           lessonAt: lesson.lesson_at,
                           topics: lesson.topics ?? "",
@@ -359,8 +373,8 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                           confidence: lesson.confidence,
                         })}
                       />
-                    </div>
                   ) : null}
+                  </div>
                 </div>
               ))}
             </div>
