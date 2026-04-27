@@ -5,5 +5,5 @@ type ShareUpdateButtonProps = {
 };
 
 export function ShareUpdateButton({ message }: ShareUpdateButtonProps) {
-  return <LessonUpdateActions message={message} />;
+  return <LessonUpdateActions message={message} reserveFeedbackSpace={false} />;
 }

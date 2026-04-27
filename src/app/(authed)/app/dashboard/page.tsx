@@ -350,7 +350,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                       {cleanLessonText(lesson.topics)}
                     </p>
                   ) : null}
-                  <div className="mt-3 flex flex-wrap items-start gap-2">
+                  <div className="mt-2 flex flex-wrap items-start gap-2">
                     <Link
                       href={`/app/students/${lesson.student_id}/lessons/${lesson.id}/view`}
                       className="inline-flex min-h-9 items-center justify-center rounded-md bg-zinc-800 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
