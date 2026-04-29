@@ -67,7 +67,9 @@ export function PaymentsMonthlySection({
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h2 className="text-lg font-medium text-zinc-900">Payments</h2>
-            <p className="mt-1 text-sm text-zinc-600">Record and review money received for this student.</p>
+            <p className="mt-1 text-sm text-zinc-600">
+              Record payments here if you take upfront or bulk payments. Otherwise, just mark lessons as paid.
+            </p>
           </div>
           <RecordPaymentForm studentId={studentId} currencyCode={currencyCode} />
         </div>

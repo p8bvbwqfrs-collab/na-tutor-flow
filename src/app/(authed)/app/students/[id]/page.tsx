@@ -394,7 +394,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
 
               {/* Latest notes stays focused on next-session useful details; full notes live on the lesson page. */}
               <div className="mt-2 rounded-lg border border-zinc-200 bg-neutral-50 p-3">
-                <p className="text-sm font-medium leading-6 text-zinc-900 sm:text-[15px]">
+                <p className="line-clamp-2 break-words text-sm font-medium leading-6 text-zinc-900 sm:line-clamp-3 sm:text-[15px]">
                   {cleanLessonText(latestCompletedLesson.topics) || "No focus captured yet."}
                 </p>
                 {latestCompletedLesson.improve || latestCompletedLesson.homework ? (
@@ -402,13 +402,13 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
                     {latestCompletedLesson.improve ? (
                       <div className="grid gap-0.5 py-2 sm:grid-cols-[5.5rem_minmax(0,1fr)] sm:gap-3">
                         <p className="text-sm font-medium text-zinc-900">Improve</p>
-                        <p>{cleanLessonText(latestCompletedLesson.improve)}</p>
+                        <p className="line-clamp-2 break-words">{cleanLessonText(latestCompletedLesson.improve)}</p>
                       </div>
                     ) : null}
                     {latestCompletedLesson.homework ? (
                       <div className="grid gap-0.5 py-2 sm:grid-cols-[5.5rem_minmax(0,1fr)] sm:gap-3">
                         <p className="text-sm font-medium text-zinc-900">Homework</p>
-                        <p>{cleanLessonText(latestCompletedLesson.homework)}</p>
+                        <p className="line-clamp-2 break-words">{cleanLessonText(latestCompletedLesson.homework)}</p>
                       </div>
                     ) : null}
                   </div>
@@ -424,9 +424,9 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
                     ? latestCompletedLesson.topic_tags.slice(0, 4).map((tag) => (
                         <span
                           key={tag}
-                          className="inline-flex rounded-full border border-zinc-200 bg-white px-2 py-0.5 text-[11px] font-medium text-zinc-600"
+                          className="inline-flex max-w-full rounded-full border border-zinc-200 bg-white px-2 py-0.5 text-[11px] font-medium text-zinc-600"
                         >
-                          {tag}
+                          <span className="break-all">{tag}</span>
                         </span>
                       ))
                     : null}
