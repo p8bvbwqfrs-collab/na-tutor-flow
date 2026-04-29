@@ -10,6 +10,7 @@ export const revalidate = 0;
 type Student = {
   id: string;
   student_name: string;
+  subject: string | null;
   parent_name: string | null;
   parent_contact: string | null;
   parent_email: string | null;
@@ -30,7 +31,7 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
 
   let query = supabase
     .from("students")
-    .select("id, student_name, parent_name, parent_contact, parent_email, archived_at")
+    .select("id, student_name, subject, parent_name, parent_contact, parent_email, archived_at")
     .order("created_at", { ascending: false });
 
   query = showArchived
@@ -57,7 +58,7 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
         <div className="flex flex-col gap-3">
           <div>
             <h1 className="text-xl font-semibold text-zinc-900">Students</h1>
-            <p className="mt-1 text-sm text-zinc-600">Manage your student list and parent details.</p>
+            <p className="mt-1 text-sm text-zinc-600">Manage your student list and contact details.</p>
 
             <div className="mt-3 inline-flex rounded-md border border-zinc-200 bg-white p-1">
               <Link

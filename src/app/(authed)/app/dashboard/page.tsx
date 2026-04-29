@@ -300,7 +300,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           <ol className="mt-4 space-y-2 text-sm text-zinc-700">
             <li>1. Add your first student</li>
             <li>2. Log your first lesson</li>
-            <li>3. Copy an update for the parent</li>
+            <li>3. Share an update message</li>
           </ol>
           <Link
             href="/app/students/new"

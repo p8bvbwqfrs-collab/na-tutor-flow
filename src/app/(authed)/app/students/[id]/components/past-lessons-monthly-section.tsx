@@ -70,7 +70,7 @@ export function PastLessonsMonthlySection({
           <div className="mt-4 rounded-md border border-dashed border-zinc-300 bg-zinc-50 p-4">
             <p className="text-sm font-medium text-zinc-900">No lessons logged yet.</p>
             <p className="mt-2 text-sm text-zinc-600">
-              Log your first lesson to track progress and generate parent updates.
+              Log your first lesson to track progress and generate update messages.
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
               <Link
@@ -109,25 +109,25 @@ export function PastLessonsMonthlySection({
 
                   return (
                     <tr key={lesson.id} className="border-t border-zinc-200 text-zinc-900 hover:bg-zinc-50">
-                      <td className="whitespace-nowrap px-3 py-3 align-top text-zinc-900">
+                      <td className="whitespace-nowrap px-3 py-4 align-middle text-zinc-900">
                         <Link
                           href={`/app/students/${studentId}/lessons/${lesson.id}/view`}
                           className="block underline-offset-4 hover:underline"
                         >
-                          <span className="block font-medium text-zinc-900">
-                            {formatDateLocal(lesson.lesson_at)}
-                          </span>
-                          <span className="mt-1 block text-xs text-zinc-600">
+                          <span className="block text-zinc-900">{formatDateLocal(lesson.lesson_at)}</span>
+                          <span className="mt-1 block text-xs text-zinc-500">
                             {formatTimeLocal(lesson.lesson_at)}
                           </span>
                         </Link>
                       </td>
-                      <td className="max-w-sm px-3 py-3 align-top text-zinc-900" title={lesson.topics}>
+                      <td className="max-w-sm px-3 py-4 align-middle text-zinc-900" title={lesson.topics}>
                         <Link
                           href={`/app/students/${studentId}/lessons/${lesson.id}/view`}
                           className="block underline-offset-4 hover:underline"
                         >
-                          <span className="block font-medium text-zinc-900">{cleanLessonText(lesson.topics)}</span>
+                          <span className="block font-medium leading-6 text-zinc-900">
+                            {cleanLessonText(lesson.topics)}
+                          </span>
                           {lesson.topic_tags && lesson.topic_tags.length > 0 ? (
                             <span className="mt-2 flex flex-wrap gap-1.5">
                               {lesson.topic_tags.map((tag) => (
@@ -142,7 +142,7 @@ export function PastLessonsMonthlySection({
                           ) : null}
                         </Link>
                       </td>
-                      <td className="whitespace-nowrap px-3 py-3 align-top text-zinc-900">
+                      <td className="whitespace-nowrap px-3 py-4 align-middle text-zinc-900">
                         <Link
                           href={`/app/students/${studentId}/lessons/${lesson.id}/view`}
                           className="block text-zinc-900 underline-offset-4 hover:underline"
@@ -150,7 +150,7 @@ export function PastLessonsMonthlySection({
                           {formatCurrencyFromMinorUnits(lesson.fee_pence, currencyCode)}
                         </Link>
                       </td>
-                      <td className="whitespace-nowrap px-3 py-3 align-top">
+                      <td className="whitespace-nowrap px-3 py-4 align-middle">
                         <Link href={`/app/students/${studentId}/lessons/${lesson.id}/view`} className="block">
                           <span
                             className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${getPaymentStatusClassName(paymentStatus)}`}
@@ -159,15 +159,15 @@ export function PastLessonsMonthlySection({
                           </span>
                         </Link>
                       </td>
-                      <td className="px-3 py-3 align-top">
-                        <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-start">
+                      <td className="px-3 py-4 pr-4 align-middle">
+                        <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:flex-nowrap sm:items-center">
                           <Link
                             href={`/app/students/${studentId}/lessons/${lesson.id}/view`}
                             className="inline-flex min-h-9 w-full items-center justify-center whitespace-nowrap rounded-md bg-zinc-800 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
                           >
                             View notes
                           </Link>
-                          <LessonPaidToggle lessonId={lesson.id} status={paymentStatus} />
+                          <LessonPaidToggle lessonId={lesson.id} status={paymentStatus} compact />
                         </div>
                       </td>
                     </tr>

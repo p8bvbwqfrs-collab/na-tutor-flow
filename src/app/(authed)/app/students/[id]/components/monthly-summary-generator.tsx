@@ -289,7 +289,7 @@ ${buildSummarySection("Homework / follow-up", summaryInputs.homework)}`;
           <div>
             <h2 className="text-lg font-medium text-zinc-900">Monthly summary</h2>
             <p className="mt-1 text-sm text-zinc-600">
-              Generate a parent-ready summary from this student&apos;s lessons.
+              Generate an update-ready summary from this student&apos;s lessons.
             </p>
           </div>
         ) : null}
@@ -369,7 +369,7 @@ ${buildSummarySection("Homework / follow-up", summaryInputs.homework)}`;
             </>
           ) : (
             <div className="rounded-md border border-dashed border-zinc-300 bg-zinc-50 px-3 py-4 text-sm text-zinc-600">
-              Select a month and generate a summary to review or copy for a parent update.
+              Select a month and generate a summary to review or copy for an update message.
             </div>
           )}
         </div>

@@ -7,6 +7,7 @@ create table if not exists public.students (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null default auth.uid() references auth.users(id),
   student_name text not null,
+  subject text,
   parent_name text,
   parent_email text,
   notes text,

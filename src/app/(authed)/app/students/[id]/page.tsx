@@ -117,7 +117,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
   const studentQuery = supabase
     .from("students")
     .select(
-      "id, student_name, parent_name, parent_contact, parent_email, notes, created_at, archived_at, default_fee_pence",
+      "id, student_name, subject, parent_name, parent_contact, parent_email, notes, created_at, archived_at, default_fee_pence",
     )
     .eq("id", id)
     .maybeSingle();
@@ -287,7 +287,14 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
 
   return (
     <section>
-      <h1 className="text-xl font-semibold text-zinc-900">{student.student_name}</h1>
+      <div className="flex flex-wrap items-center gap-2">
+        <h1 className="text-xl font-semibold text-zinc-900">{student.student_name}</h1>
+        {student.subject ? (
+          <span className="inline-flex rounded-full border border-zinc-200 bg-zinc-50 px-2.5 py-1 text-xs font-medium text-zinc-600">
+            {student.subject}
+          </span>
+        ) : null}
+      </div>
       <p className="mt-1 text-sm text-zinc-600">Profile, progress, and lesson history.</p>
 
       <div className="mt-4 flex flex-wrap items-center gap-2">

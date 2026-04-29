@@ -7,6 +7,7 @@ import { useState } from "react";
 type Student = {
   id: string;
   student_name: string;
+  subject: string | null;
   parent_name: string | null;
   parent_contact: string | null;
   parent_email: string | null;
@@ -67,11 +68,14 @@ export function StudentsList({ students }: StudentsListProps) {
                   <p className="text-base font-medium text-zinc-900">
                     {student.student_name}
                   </p>
+                  {student.subject ? (
+                    <p className="mt-1 text-sm font-medium text-zinc-600">{student.subject}</p>
+                  ) : null}
 
                   {student.parent_name || parentContact ? (
                     <div className="mt-1.5 space-y-1 text-sm text-zinc-600">
-                      {student.parent_name ? <p>Parent: {student.parent_name}</p> : null}
-                      {parentContact ? <p>Contact: {parentContact}</p> : null}
+                      {student.parent_name ? <p>Contact name: {student.parent_name}</p> : null}
+                      {parentContact ? <p>Contact details: {parentContact}</p> : null}
                     </div>
                   ) : null}
                 </div>
@@ -104,8 +108,9 @@ export function StudentsList({ students }: StudentsListProps) {
             <thead className="bg-zinc-100 text-zinc-700">
               <tr>
                 <th className="px-4 py-3 font-medium">Student name</th>
-                <th className="px-4 py-3 font-medium">Parent name</th>
-                <th className="px-4 py-3 font-medium">Parent contact</th>
+                <th className="px-4 py-3 font-medium">Subject</th>
+                <th className="px-4 py-3 font-medium">Contact name</th>
+                <th className="px-4 py-3 font-medium">Contact details</th>
                 <th className="px-4 py-3 text-right font-medium">Actions</th>
               </tr>
             </thead>
@@ -120,6 +125,7 @@ export function StudentsList({ students }: StudentsListProps) {
                       {student.student_name}
                     </Link>
                   </td>
+                  <td className="px-4 py-3 text-zinc-900">{student.subject || "—"}</td>
                   <td className="px-4 py-3 text-zinc-900">{student.parent_name || "—"}</td>
                   <td className="px-4 py-3 text-zinc-900">
                     {student.parent_contact || student.parent_email || "—"}

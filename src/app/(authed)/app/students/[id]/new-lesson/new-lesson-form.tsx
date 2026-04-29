@@ -336,10 +336,10 @@ export function NewLessonForm({
   const parentUpdate = savedLesson ? formatParentUpdate(studentName, savedLesson) : "";
   const successTitle = completionMode ? "Lesson completed" : isEditMode ? "Lesson updated" : "Lesson saved";
   const successCopy = completionMode
-    ? "Share the parent update while the lesson details are still fresh."
+    ? "Share the update message while the lesson details are still fresh."
     : isEditMode
-    ? "Share the refreshed parent update before you head back to the student page."
-    : "Share the parent update while the lesson is still fresh.";
+    ? "Share the refreshed update message before you head back to the student page."
+    : "Share the update message while the lesson is still fresh.";
 
   if (savedLesson) {
     return (
@@ -383,7 +383,7 @@ export function NewLessonForm({
         </div>
 
         <div className="rounded-lg border border-zinc-200 bg-white p-4">
-          <h2 className="text-sm font-medium text-zinc-700">Parent update</h2>
+          <h2 className="text-sm font-medium text-zinc-700">Update message</h2>
           <pre className="mt-2 whitespace-pre-wrap rounded-md border border-zinc-200 bg-zinc-50 p-3 text-sm text-zinc-800">
             {parentUpdate}
           </pre>
@@ -516,7 +516,7 @@ export function NewLessonForm({
 
             <div className="min-w-0">
               <label htmlFor="parent_note" className="block text-sm font-medium text-zinc-700">
-                Quick note for parent (optional)
+                Quick note for contact (optional)
               </label>
               <textarea
                 id="parent_note"
@@ -526,7 +526,7 @@ export function NewLessonForm({
                 value={parentNote}
                 onChange={(event) => setParentNote(event.target.value)}
                 className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-500 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 disabled:bg-zinc-100 disabled:text-zinc-600"
-                placeholder="Anything helpful or encouraging you want the parent to know?"
+                placeholder="Anything helpful or encouraging you want the contact to know?"
               />
             </div>
 

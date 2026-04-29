@@ -11,11 +11,13 @@ import {
 type LessonPaidToggleProps = {
   lessonId: string;
   status: "paid" | "part-paid" | "unpaid";
+  compact?: boolean;
 };
 
 export function LessonPaidToggle({
   lessonId,
   status,
+  compact = false,
 }: LessonPaidToggleProps) {
   const router = useRouter();
   const [paymentStatus, setPaymentStatus] = useState(status);
@@ -80,7 +82,11 @@ export function LessonPaidToggle({
       >
         {isUpdating ? "Saving..." : paymentStatus === "paid" ? "Mark unpaid" : "Mark paid"}
       </button>
-      <div className="min-h-4">{error ? <p className="text-xs text-rose-700">{error}</p> : null}</div>
+      {compact ? (
+        error ? <p className="text-xs text-rose-700">{error}</p> : null
+      ) : (
+        <div className="min-h-4">{error ? <p className="text-xs text-rose-700">{error}</p> : null}</div>
+      )}
     </div>
   );
 }

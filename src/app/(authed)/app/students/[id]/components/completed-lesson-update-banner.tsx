@@ -37,7 +37,7 @@ export function CompletedLessonUpdateBanner({
           Lesson completed
         </p>
         <p className="mt-1 text-sm text-emerald-900/80">
-          The lesson is now saved on the student page. Share the parent update from here.
+          The lesson is now saved on the student page. Share the update message from here.
         </p>
         <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
           <LessonUpdateActions message={parentUpdate} />
@@ -52,7 +52,7 @@ export function CompletedLessonUpdateBanner({
       </div>
 
       <div className="rounded-lg border border-zinc-200 bg-white p-4">
-        <h2 className="text-sm font-medium text-zinc-700">Parent update</h2>
+        <h2 className="text-sm font-medium text-zinc-700">Update message</h2>
         <pre className="mt-2 whitespace-pre-wrap rounded-md border border-zinc-200 bg-zinc-50 p-3 text-sm text-zinc-800">
           {parentUpdate}
         </pre>

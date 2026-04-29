@@ -13,7 +13,7 @@ export default async function EditStudentPage({ params }: EditStudentPageProps) 
 
   const { data: student, error } = await supabase
     .from("students")
-    .select("id, student_name, parent_name, parent_contact, parent_email, notes, default_fee_pence")
+    .select("id, student_name, subject, parent_name, parent_contact, parent_email, notes, default_fee_pence")
     .eq("id", id)
     .maybeSingle();
 
@@ -25,12 +25,13 @@ export default async function EditStudentPage({ params }: EditStudentPageProps) 
     <section className="max-w-2xl">
       <div className="mb-4">
         <h1 className="text-xl font-semibold text-zinc-900">Edit student</h1>
-        <p className="mt-1 text-sm text-zinc-600">Update student and parent details.</p>
+        <p className="mt-1 text-sm text-zinc-600">Update student and contact details.</p>
       </div>
 
       <EditStudentForm
         studentId={student.id}
         initialStudentName={student.student_name}
+        initialSubject={student.subject ?? ""}
         initialParentName={student.parent_name ?? ""}
         initialParentContact={student.parent_contact ?? student.parent_email ?? ""}
         initialNotes={student.notes ?? ""}

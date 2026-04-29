@@ -7,6 +7,7 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 type EditStudentFormProps = {
   studentId: string;
   initialStudentName: string;
+  initialSubject: string;
   initialParentName: string;
   initialParentContact: string;
   initialNotes: string;
@@ -16,6 +17,7 @@ type EditStudentFormProps = {
 export function EditStudentForm({
   studentId,
   initialStudentName,
+  initialSubject,
   initialParentName,
   initialParentContact,
   initialNotes,
@@ -25,6 +27,7 @@ export function EditStudentForm({
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
 
   const [studentName, setStudentName] = useState(initialStudentName);
+  const [subject, setSubject] = useState(initialSubject);
   const [parentName, setParentName] = useState(initialParentName);
   const [parentContact, setParentContact] = useState(initialParentContact);
   const [notes, setNotes] = useState(initialNotes);
@@ -58,6 +61,7 @@ export function EditStudentForm({
       .from("students")
       .update({
         student_name: trimmedStudentName,
+        subject: subject.trim() || null,
         parent_name: parentName.trim() || null,
         parent_contact: trimmedParentContact || null,
         notes: notes.trim() || null,
@@ -94,8 +98,25 @@ export function EditStudentForm({
       </div>
 
       <div>
+        <label htmlFor="subject" className="block text-sm font-medium text-zinc-700">
+          Subject
+        </label>
+        <input
+          id="subject"
+          aria-invalid={Boolean(error)}
+          aria-describedby={error ? formErrorId : "subject-help"}
+          value={subject}
+          onChange={(event) => setSubject(event.target.value)}
+          className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-500 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 disabled:bg-zinc-100 disabled:text-zinc-600"
+        />
+        <p id="subject-help" className="mt-1 text-xs text-zinc-500">
+          e.g. Maths, French, English, Science
+        </p>
+      </div>
+
+      <div>
         <label htmlFor="parent_name" className="block text-sm font-medium text-zinc-700">
-          Parent name
+          Contact name
         </label>
         <input
           id="parent_name"
@@ -109,7 +130,7 @@ export function EditStudentForm({
 
       <div>
         <label htmlFor="parent_contact" className="block text-sm font-medium text-zinc-700">
-          Parent contact (email or mobile)
+          Contact details
         </label>
         <input
           id="parent_contact"

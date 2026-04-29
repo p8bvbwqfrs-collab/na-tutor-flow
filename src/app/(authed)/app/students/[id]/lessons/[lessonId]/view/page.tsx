@@ -205,7 +205,7 @@ export default async function ViewLessonPage({ params }: ViewLessonPageProps) {
 
           {lesson.homework ? <NoteBlock title="Homework">{cleanLessonText(lesson.homework)}</NoteBlock> : null}
 
-          {lesson.parent_note ? <NoteBlock title="Quick note for parent">{lesson.parent_note}</NoteBlock> : null}
+          {lesson.parent_note ? <NoteBlock title="Quick note for contact">{lesson.parent_note}</NoteBlock> : null}
 
           <div>
             <h2 className="text-xs font-medium uppercase tracking-wide text-zinc-500">Lesson details</h2>

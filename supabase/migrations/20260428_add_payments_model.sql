@@ -1,6 +1,9 @@
 alter table public.students
 add column if not exists default_fee_pence integer check (default_fee_pence >= 0);
 
+alter table public.students
+add column if not exists subject text;
+
 create table if not exists public.payments (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
