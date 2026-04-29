@@ -3,11 +3,16 @@
 import Link from "next/link";
 import { FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getCurrencyLabel, type SupportedCurrencyCode } from "@/lib/currency";
+import { formatCurrencyFromMinorUnits, getCurrencyLabel, type SupportedCurrencyCode } from "@/lib/currency";
 import { getCompletedLessonUpdateStorageKey } from "@/lib/lesson-completion";
 import { formatParentUpdate } from "@/lib/parent-update";
+import {
+  getPaymentStatusLabel,
+  type LessonPaymentStatus,
+} from "@/lib/payments";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { LessonUpdateActions } from "@/components/lesson-update-actions";
+import { applyAvailableCreditToLesson, payOutstandingLessonAmount } from "../../../payment-actions";
 import { DeleteLessonButton } from "../components/delete-lesson-button";
 import { LessonFormSection } from "../components/lesson-form-section";
 import { RatingSelector } from "../components/rating-selector";
@@ -32,6 +37,9 @@ type LessonFormProps = {
     confidence: number;
     feeAmount: string;
     paid: boolean;
+    paymentStatus?: LessonPaymentStatus;
+    availableCreditPence?: number;
+    outstandingPence?: number;
     nextLesson?: {
       id: string;
       lessonAt: string;
@@ -117,6 +125,17 @@ export function NewLessonForm({
   const [confidence, setConfidence] = useState(String(initialLesson?.confidence ?? 3));
   const [fee, setFee] = useState(initialLesson?.feeAmount ?? "0.00");
   const [paid, setPaid] = useState(initialLesson?.paid ?? false);
+  const paymentStatus = initialLesson?.paymentStatus ?? "unpaid";
+  const availableCreditPence = initialLesson?.availableCreditPence ?? 0;
+  const outstandingPence = initialLesson?.outstandingPence ?? 0;
+  const [useCreditOnSave, setUseCreditOnSave] = useState(false);
+  const isAlreadyCovered = paymentStatus === "paid";
+  const feePreviewValue = Number(fee);
+  const feePreviewPence = Number.isFinite(feePreviewValue) ? Math.max(0, Math.round(feePreviewValue * 100)) : 0;
+  const initialFeeValue = Number(initialLesson?.feeAmount ?? 0);
+  const initialFeePence = Number.isFinite(initialFeeValue) ? Math.max(0, Math.round(initialFeeValue * 100)) : 0;
+  const existingAllocatedPence = Math.max(0, initialFeePence - outstandingPence);
+  const creditOutstandingPence = lessonId ? Math.max(0, feePreviewPence - existingAllocatedPence) : feePreviewPence;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [savedLesson, setSavedLesson] = useState<SavedLessonState | null>(null);
@@ -218,6 +237,24 @@ export function NewLessonForm({
       return;
     }
 
+    if (useCreditOnSave && feePence > 0) {
+      const creditResult = await applyAvailableCreditToLesson(savedLessonId);
+
+      if (!creditResult.ok) {
+        setError(creditResult.error ?? "The lesson was saved, but the credit could not be used.");
+        return;
+      }
+    }
+
+    if (paid && feePence > 0) {
+      const paymentResult = await payOutstandingLessonAmount(savedLessonId);
+
+      if (!paymentResult.ok) {
+        setError(paymentResult.error ?? "The lesson was saved, but the payment could not be recorded.");
+        return;
+      }
+    }
+
     let nextLessonScheduled = false;
     let nextLessonSaveWarning: string | null = null;
 
@@ -306,7 +343,7 @@ export function NewLessonForm({
 
   if (savedLesson) {
     return (
-      <div className="w-full min-w-0 space-y-4 rounded-lg border border-zinc-200 bg-white p-4">
+      <div className="w-full min-w-0 space-y-3">
         <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
           <p role="status" className="text-base font-semibold text-emerald-900">
             {successTitle}
@@ -314,18 +351,22 @@ export function NewLessonForm({
           <p className="mt-1 text-sm text-emerald-900/80">
             {successCopy}
           </p>
-          <div className="mt-3 grid min-w-0 gap-2 sm:grid-cols-2">
-            <LessonUpdateActions message={parentUpdate} />
+          <div className="mt-3 flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+            <LessonUpdateActions
+              message={parentUpdate}
+              reserveFeedbackSpace={false}
+              buttonClassName="inline-flex min-h-10 w-full items-center justify-center whitespace-nowrap rounded-md border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
+            />
             <Link
               href={`/app/students/${studentId}`}
-              className="inline-flex min-h-11 w-full min-w-0 items-center justify-center rounded-md border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+              className="inline-flex min-h-10 min-w-0 items-center justify-center whitespace-nowrap rounded-md border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
             >
               Back to student
             </Link>
             {!isEditMode ? (
               <Link
                 href="/app/calendar"
-                className="inline-flex min-h-11 w-full min-w-0 items-center justify-center rounded-md border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                className="inline-flex min-h-10 min-w-0 items-center justify-center whitespace-nowrap rounded-md border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
               >
                 View your lessons in the calendar
               </Link>
@@ -341,7 +382,7 @@ export function NewLessonForm({
           </div>
         </div>
 
-        <div>
+        <div className="rounded-lg border border-zinc-200 bg-white p-4">
           <h2 className="text-sm font-medium text-zinc-700">Parent update</h2>
           <pre className="mt-2 whitespace-pre-wrap rounded-md border border-zinc-200 bg-zinc-50 p-3 text-sm text-zinc-800">
             {parentUpdate}
@@ -536,18 +577,56 @@ export function NewLessonForm({
             </div>
 
             <div className="min-w-0 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-3">
-              <label className="inline-flex items-center gap-2 text-sm font-medium text-zinc-900">
-                <input
-                  type="checkbox"
-                  checked={paid}
-                  onChange={(event) => setPaid(event.target.checked)}
-                  className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
-                />
-                Mark lesson as paid
-              </label>
-              <p className="mt-1 text-xs text-zinc-600">
-                {paid ? "This lesson will be saved as paid." : "This lesson will be saved as unpaid."}
-              </p>
+              {isAlreadyCovered ? (
+                <>
+                  <p className="text-sm font-medium text-zinc-900">Payment: Paid / covered</p>
+                  <p className="mt-1 text-xs text-zinc-600">
+                    This lesson is already covered by a recorded payment.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <label className="inline-flex items-center gap-2 text-sm font-medium text-zinc-900">
+                    <input
+                      type="checkbox"
+                      checked={paid}
+                      onChange={(event) => setPaid(event.target.checked)}
+                      className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+                    />
+                    Paid now
+                  </label>
+                  <p className="mt-1 text-xs text-zinc-600">
+                    {paid
+                      ? "Record a payment for the outstanding amount."
+                      : paymentStatus === "part-paid"
+                        ? `Payment: ${getPaymentStatusLabel(paymentStatus)}. Leave unticked to keep the remaining amount unpaid.`
+                        : "Leave unticked to keep this lesson unpaid."}
+                  </p>
+                  {availableCreditPence > 0 && creditOutstandingPence > 0 ? (
+                    <div className="mt-3 rounded-md border border-emerald-200 bg-white p-3">
+                      <p className="text-xs text-zinc-600">
+                        Credit available: {formatCurrencyFromMinorUnits(availableCreditPence, currencyCode)}
+                      </p>
+                      <label className="mt-2 inline-flex items-center gap-2 text-sm font-medium text-emerald-900">
+                        <input
+                          type="checkbox"
+                          checked={useCreditOnSave}
+                          onChange={(event) => setUseCreditOnSave(event.target.checked)}
+                          className="h-4 w-4 rounded border-zinc-300 text-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+                        />
+                        Use available credit for this lesson
+                      </label>
+                      <p className="mt-1 text-xs text-zinc-600">Use money already recorded for this student.</p>
+                      {availableCreditPence < creditOutstandingPence ? (
+                        <p className="mt-2 text-xs text-zinc-600">
+                          Remaining after credit:{" "}
+                          {formatCurrencyFromMinorUnits(creditOutstandingPence - availableCreditPence, currencyCode)} unpaid.
+                        </p>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </>
+              )}
             </div>
 
             <div className="min-w-0 rounded-lg border border-zinc-200 bg-zinc-50/60 p-4 sm:col-span-2">

@@ -10,6 +10,7 @@ type EditStudentFormProps = {
   initialParentName: string;
   initialParentContact: string;
   initialNotes: string;
+  initialDefaultFeeAmount: string;
 };
 
 export function EditStudentForm({
@@ -18,6 +19,7 @@ export function EditStudentForm({
   initialParentName,
   initialParentContact,
   initialNotes,
+  initialDefaultFeeAmount,
 }: EditStudentFormProps) {
   const router = useRouter();
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
@@ -26,6 +28,7 @@ export function EditStudentForm({
   const [parentName, setParentName] = useState(initialParentName);
   const [parentContact, setParentContact] = useState(initialParentContact);
   const [notes, setNotes] = useState(initialNotes);
+  const [defaultFee, setDefaultFee] = useState(initialDefaultFeeAmount);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const formErrorId = "edit-student-form-error";
@@ -42,6 +45,13 @@ export function EditStudentForm({
       return;
     }
 
+    const defaultFeePence = defaultFee.trim() ? Math.round(Number(defaultFee) * 100) : null;
+
+    if (defaultFee.trim() && (!Number.isFinite(Number(defaultFee)) || Number(defaultFee) < 0)) {
+      setError("Default lesson fee must be 0 or more.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     const { error: updateError } = await supabase
@@ -51,6 +61,7 @@ export function EditStudentForm({
         parent_name: parentName.trim() || null,
         parent_contact: trimmedParentContact || null,
         notes: notes.trim() || null,
+        default_fee_pence: defaultFeePence,
       })
       .eq("id", studentId);
 
@@ -108,6 +119,26 @@ export function EditStudentForm({
           onChange={(event) => setParentContact(event.target.value)}
           className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-500 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 disabled:bg-zinc-100 disabled:text-zinc-600"
         />
+      </div>
+
+      <div>
+        <label htmlFor="default_fee" className="block text-sm font-medium text-zinc-700">
+          Default lesson fee
+        </label>
+        <input
+          id="default_fee"
+          type="number"
+          min={0}
+          step="0.01"
+          aria-invalid={Boolean(error)}
+          aria-describedby={error ? formErrorId : undefined}
+          value={defaultFee}
+          onChange={(event) => setDefaultFee(event.target.value)}
+          className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-500 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 disabled:bg-zinc-100 disabled:text-zinc-600"
+        />
+        <p className="mt-1 text-xs text-zinc-500">
+          Used to prefill new lessons. You can still change the fee on each lesson.
+        </p>
       </div>
 
       <div>

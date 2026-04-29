@@ -7,6 +7,14 @@ import {
 } from "@/lib/datetime";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { formatParentUpdate } from "@/lib/parent-update";
+import {
+  calculateLessonPaymentStatus,
+  getPaidAllocatedAmountForLesson,
+  getPaymentStatusClassName,
+  getPaymentStatusLabel,
+  type AllocationLike,
+  type PaymentLike,
+} from "@/lib/payments";
 import { getUserCurrencyCode } from "@/lib/user-settings";
 import { MarkPaidButton } from "./components/mark-paid-button";
 import { MonthlyEarningsChart } from "./components/monthly-earnings-chart";
@@ -17,7 +25,6 @@ type LessonRow = {
   id: string;
   lesson_at: string;
   fee_pence: number;
-  paid: boolean;
   student_id: string;
   status: "planned" | "completed" | "cancelled" | null;
   student: { student_name: string } | { student_name: string }[] | null;
@@ -28,6 +35,7 @@ type DashboardLessonOverviewRow = {
   student_id: string;
   lesson_at: string;
   status: "planned" | "completed" | "cancelled" | null;
+  fee_pence: number;
   topics?: string | null;
   went_well?: string | null;
   parent_note?: string | null;
@@ -39,10 +47,27 @@ type DashboardLessonOverviewRow = {
 };
 
 type ChartLessonRow = {
+  id: string;
   lesson_at: string;
   fee_pence: number;
   status: "planned" | "completed" | "cancelled" | null;
 };
+
+type DashboardPaymentRow = PaymentLike & {
+  payment_date: string | null;
+  created_at: string;
+};
+
+type DashboardAllocationRow = {
+  payment_id: string;
+  lesson_id: string;
+  amount_pence: number;
+  payment: PaymentLike | PaymentLike[] | null;
+};
+
+function getPayment(payment: PaymentLike | PaymentLike[] | null | undefined) {
+  return Array.isArray(payment) ? payment[0] ?? null : payment ?? null;
+}
 
 function getRangeFromSearchParam(range: string | undefined): ChartRange {
   if (range === "3m" || range === "6m" || range === "12m" || range === "all") {
@@ -110,6 +135,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const currencyCode = await getUserCurrencyCode(supabase);
 
   const now = new Date();
+  const currentMonthKey = getMonthKeyLocal(now);
   const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
   const monthEnd = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
   const monthCount = selectedRange === "3m" ? 3 : selectedRange === "12m" ? 12 : 6;
@@ -117,56 +143,24 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const fixedRangeStart = fixedMonthStarts[0] ?? monthStart;
   const chartLessonsQuery = supabase
     .from("lessons")
-    .select("lesson_at, fee_pence, status")
+    .select("id, lesson_at, fee_pence, status")
     .or("status.eq.completed,status.is.null")
     .lt("lesson_at", monthEnd.toISOString());
 
   const [
     activeStudentsResult,
-    unpaidTotalsResult,
-    monthTotalsResult,
-    unpaidLessonsResult,
-    unpaidLessonsCountResult,
-    paidLessonsCountResult,
     chartLessonsResult,
     oldestLessonResult,
     recentLessonsResult,
     upcomingLessonsResult,
+    paymentsResult,
+    paymentAllocationsResult,
+    derivedLessonsResult,
   ] = await Promise.all([
     supabase
       .from("students")
       .select("id", { count: "exact", head: true })
       .is("archived_at", null),
-    supabase
-      .from("lessons")
-      .select("fee_pence")
-      .eq("paid", false)
-      .or("status.eq.completed,status.is.null"),
-    supabase
-      .from("lessons")
-      .select("fee_pence")
-      .or("status.eq.completed,status.is.null")
-      .gte("lesson_at", monthStart.toISOString())
-      .lt("lesson_at", monthEnd.toISOString()),
-    supabase
-      .from("lessons")
-      .select(
-        "id, lesson_at, fee_pence, paid, student_id, status, student:students!lessons_student_id_fkey(student_name)",
-      )
-      .eq("paid", false)
-      .or("status.eq.completed,status.is.null")
-      .order("lesson_at", { ascending: false })
-      .limit(20),
-    supabase
-      .from("lessons")
-      .select("id", { count: "exact", head: true })
-      .eq("paid", false)
-      .or("status.eq.completed,status.is.null"),
-    supabase
-      .from("lessons")
-      .select("id", { count: "exact", head: true })
-      .eq("paid", true)
-      .or("status.eq.completed,status.is.null"),
     selectedRange === "all"
       ? chartLessonsQuery
       : chartLessonsQuery.gte("lesson_at", fixedRangeStart.toISOString()),
@@ -179,32 +173,31 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       .maybeSingle(),
     supabase
       .from("lessons")
-      .select("id, student_id, lesson_at, status, topics, went_well, parent_note, improve, homework, effort, confidence, student:students!lessons_student_id_fkey(student_name)")
+      .select("id, student_id, lesson_at, status, fee_pence, topics, went_well, parent_note, improve, homework, effort, confidence, student:students!lessons_student_id_fkey(student_name)")
       .or("status.eq.completed,status.is.null")
       .order("lesson_at", { ascending: false })
       .limit(3),
     supabase
       .from("lessons")
-      .select("id, student_id, lesson_at, status, student:students!lessons_student_id_fkey(student_name)")
+      .select("id, student_id, lesson_at, status, fee_pence, student:students!lessons_student_id_fkey(student_name)")
       .eq("status", "planned")
       .order("lesson_at", { ascending: true })
       .limit(3),
+    supabase
+      .from("payments")
+      .select("id, amount_pence, payment_date, source, note, created_at"),
+    supabase
+      .from("payment_allocations")
+      .select("payment_id, lesson_id, amount_pence, payment:payments(id, amount_pence, source, note)"),
+    supabase
+      .from("lessons")
+      .select(
+        "id, lesson_at, fee_pence, student_id, status, student:students!lessons_student_id_fkey(student_name)",
+      )
+      .or("status.eq.completed,status.is.null")
+      .order("lesson_at", { ascending: false }),
   ]);
-
-  const unpaidTotalPence = (unpaidTotalsResult.data ?? []).reduce(
-    (sum, row) => sum + row.fee_pence,
-    0,
-  );
-
-  const monthEarningsPence = (monthTotalsResult.data ?? []).reduce(
-    (sum, row) => sum + row.fee_pence,
-    0,
-  );
-
-  const unpaidLessons = (unpaidLessonsResult.data ?? []) as LessonRow[];
   const activeStudentsCount = activeStudentsResult.count ?? 0;
-  const unpaidLessonsCount = unpaidLessonsCountResult.count ?? 0;
-  const paidLessonsCount = paidLessonsCountResult.count ?? 0;
   const oldestLessonAt = oldestLessonResult.data?.lesson_at
     ? new Date(oldestLessonResult.data.lesson_at)
     : null;
@@ -216,6 +209,31 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const upcomingLessons = ((upcomingLessonsResult.data ?? []) as DashboardLessonOverviewRow[]).filter(
     (lesson) => lesson.status === "planned",
   );
+  const payments = (paymentsResult.data ?? []) as DashboardPaymentRow[];
+  const paymentAllocations = ((paymentAllocationsResult.data ?? []) as DashboardAllocationRow[]).map((allocation) => ({
+    ...allocation,
+    payment: getPayment(allocation.payment),
+  })) as AllocationLike[];
+  const derivedLessons = (derivedLessonsResult.data ?? []) as LessonRow[];
+  const unpaidLessons = derivedLessons
+    .filter((lesson) => {
+      return lesson.fee_pence - getPaidAllocatedAmountForLesson(lesson.id, paymentAllocations) > 0;
+    })
+    .slice(0, 20);
+  const unpaidTotalPence = derivedLessons.reduce((sum, lesson) => {
+    return sum + Math.max(0, lesson.fee_pence - getPaidAllocatedAmountForLesson(lesson.id, paymentAllocations));
+  }, 0);
+  const paidLessonsCount = derivedLessons.filter(
+    (lesson) => calculateLessonPaymentStatus(lesson, paymentAllocations) === "paid",
+  ).length;
+  const unpaidLessonsCount = derivedLessons.filter(
+    (lesson) => lesson.fee_pence - getPaidAllocatedAmountForLesson(lesson.id, paymentAllocations) > 0,
+  ).length;
+  const receivedThisMonthPence = payments
+    .filter((payment) => {
+      return getMonthKeyLocal(payment.payment_date ?? payment.created_at) === currentMonthKey;
+    })
+    .reduce((sum, payment) => sum + payment.amount_pence, 0);
 
   const monthStarts =
     selectedRange === "all"
@@ -232,11 +250,12 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     chartMap.set(key, 0);
   });
 
-  filteredChartLessons.forEach((lesson) => {
+  filteredChartLessons
+    .forEach((lesson) => {
     const key = getMonthKeyLocal(lesson.lesson_at);
 
     if (chartMap.has(key)) {
-      chartMap.set(key, (chartMap.get(key) ?? 0) + lesson.fee_pence);
+      chartMap.set(key, (chartMap.get(key) ?? 0) + getPaidAllocatedAmountForLesson(lesson.id, paymentAllocations));
     }
   });
 
@@ -247,8 +266,9 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       amountPence: chartMap.get(key) ?? 0,
     };
   });
-  const selectedRangeEarningsPence = filteredChartLessons.reduce(
-    (sum, lesson) => sum + lesson.fee_pence,
+  const selectedRangeEarningsPence = filteredChartLessons
+    .reduce(
+    (sum, lesson) => sum + getPaidAllocatedAmountForLesson(lesson.id, paymentAllocations),
     0,
   );
   const rangeLabel =
@@ -267,13 +287,11 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
       {showDashboardOnboarding &&
       !activeStudentsResult.error &&
-      !unpaidTotalsResult.error &&
-      !monthTotalsResult.error &&
-      !unpaidLessonsResult.error &&
-      !unpaidLessonsCountResult.error &&
-      !paidLessonsCountResult.error &&
       !chartLessonsResult.error &&
-      !oldestLessonResult.error ? (
+      !oldestLessonResult.error &&
+      !paymentsResult.error &&
+      !paymentAllocationsResult.error &&
+      !derivedLessonsResult.error ? (
         <div className="mt-6 rounded-lg border border-zinc-200 bg-white p-4">
           <p className="text-lg font-medium text-zinc-900">Get started by adding your first student</p>
           <p className="mt-2 text-sm text-zinc-600">
@@ -299,9 +317,9 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           <p className="mt-1.5 text-2xl font-semibold text-zinc-900 sm:mt-2">{activeStudentsCount}</p>
         </div>
         <div className="rounded-lg border border-zinc-200 bg-white p-3 sm:p-4">
-          <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">This month earned</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Received this month</p>
           <p className="mt-1.5 text-2xl font-semibold text-zinc-900 sm:mt-2">
-            {formatCurrencyFromMinorUnits(monthEarningsPence, currencyCode)}
+            {formatCurrencyFromMinorUnits(receivedThisMonthPence, currencyCode)}
           </p>
         </div>
         <div className="rounded-lg border border-zinc-200 bg-white p-3 sm:p-4">
@@ -339,12 +357,23 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                   key={lesson.id}
                   className="rounded-lg border border-zinc-200 bg-zinc-50 p-3 transition-colors hover:border-zinc-300 hover:bg-white"
                 >
-                  <p className="text-sm font-medium text-zinc-900">
-                    {getStudentName(lesson.student) ?? "Unknown student"}
-                  </p>
-                  <p className="mt-1 text-sm text-zinc-600">
-                    {formatDateTimeLocal(lesson.lesson_at)}
-                  </p>
+                  {(() => {
+                    const paymentStatus = calculateLessonPaymentStatus(lesson, paymentAllocations);
+
+                    return (
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-sm font-medium text-zinc-900">
+                          {getStudentName(lesson.student) ?? "Unknown student"}
+                        </p>
+                        <span className="text-sm text-zinc-600">{formatDateTimeLocal(lesson.lesson_at)}</span>
+                        <span
+                          className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${getPaymentStatusClassName(paymentStatus)}`}
+                        >
+                          {getPaymentStatusLabel(paymentStatus)}
+                        </span>
+                      </div>
+                    );
+                  })()}
                   {lesson.topics ? (
                     <p className="mt-2 line-clamp-2 text-sm text-zinc-700">
                       {cleanLessonText(lesson.topics)}
@@ -409,12 +438,25 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                     href={`/app/students/${lesson.student_id}/lessons/${lesson.id}`}
                     className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
                   >
-                    <p className="text-sm font-medium text-zinc-900">
-                      {getStudentName(lesson.student) ?? "Unknown student"}
-                    </p>
-                    <p className="mt-1 text-sm text-zinc-600">
-                      {formatDateTimeLocal(lesson.lesson_at)}
-                    </p>
+                    {(() => {
+                      const paymentStatus = calculateLessonPaymentStatus(lesson, paymentAllocations);
+
+                      return (
+                        <>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="text-sm font-medium text-zinc-900">
+                              {getStudentName(lesson.student) ?? "Unknown student"}
+                            </p>
+                            <span className="text-sm text-zinc-600">{formatDateTimeLocal(lesson.lesson_at)}</span>
+                            <span
+                              className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${getPaymentStatusClassName(paymentStatus)}`}
+                            >
+                              {getPaymentStatusLabel(paymentStatus)}
+                            </span>
+                          </div>
+                        </>
+                      );
+                    })()}
                   </Link>
                   <div className="mt-2">
                     <Link
@@ -445,13 +487,11 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           </div>
           {!hasAnyLessons &&
           !activeStudentsResult.error &&
-          !unpaidTotalsResult.error &&
-          !monthTotalsResult.error &&
-          !unpaidLessonsResult.error &&
-          !unpaidLessonsCountResult.error &&
-          !paidLessonsCountResult.error &&
           !chartLessonsResult.error &&
-          !oldestLessonResult.error ? (
+          !oldestLessonResult.error &&
+          !paymentsResult.error &&
+          !paymentAllocationsResult.error &&
+          !derivedLessonsResult.error ? (
             <div className="mt-3 rounded-lg border border-dashed border-zinc-300 bg-zinc-50 p-4">
               <p className="text-sm font-medium text-zinc-900">No lesson insights yet.</p>
               <p className="mt-2 text-sm text-zinc-600">
@@ -484,13 +524,11 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         <h2 className="text-lg font-medium text-zinc-900">Unpaid lessons</h2>
 
         {activeStudentsResult.error ||
-        unpaidTotalsResult.error ||
-        monthTotalsResult.error ||
-        unpaidLessonsResult.error ||
-        unpaidLessonsCountResult.error ||
-        paidLessonsCountResult.error ||
         chartLessonsResult.error ||
-        oldestLessonResult.error ? (
+        oldestLessonResult.error ||
+        paymentsResult.error ||
+        paymentAllocationsResult.error ||
+        derivedLessonsResult.error ? (
           <p
             role="alert"
             className="mt-3 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-900"
@@ -515,32 +553,60 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             <table className="min-w-full text-left text-sm">
               <thead className="bg-zinc-100 text-zinc-700">
                 <tr>
-                  <th className="px-3 py-2 font-medium">Student</th>
-                  <th className="px-3 py-2 font-medium">Date</th>
-                  <th className="px-3 py-2 font-medium">Fee</th>
-                  <th className="px-3 py-2 font-medium">Action</th>
+                  <th className="whitespace-nowrap px-3 py-2 text-xs font-medium uppercase tracking-wide text-zinc-500">
+                    Student
+                  </th>
+                  <th className="whitespace-nowrap px-3 py-2 text-xs font-medium uppercase tracking-wide text-zinc-500">
+                    Date
+                  </th>
+                  <th className="whitespace-nowrap px-3 py-2 text-xs font-medium uppercase tracking-wide text-zinc-500">
+                    Remaining
+                  </th>
+                  <th className="whitespace-nowrap px-3 py-2 text-xs font-medium uppercase tracking-wide text-zinc-500">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {unpaidLessons.map((lesson, index) => (
-                  <tr
-                    key={lesson.id}
-                    className={`${index % 2 === 0 ? "bg-white" : "bg-zinc-50"} border-t border-zinc-200 text-zinc-900 hover:bg-zinc-50`}
-                  >
-                    <td className="px-3 py-3 text-zinc-900">
-                      {getStudentName(lesson.student) ?? "Unknown student"}
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-3 text-zinc-900">
-                      {formatDateTimeLocal(lesson.lesson_at)}
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-3 text-zinc-900">
-                      {formatCurrencyFromMinorUnits(lesson.fee_pence, currencyCode)}
-                    </td>
-                    <td className="px-3 py-3">
-                      <MarkPaidButton lessonId={lesson.id} />
-                    </td>
-                  </tr>
-                ))}
+                {unpaidLessons.map((lesson, index) => {
+                  const remainingPence = Math.max(
+                    0,
+                    lesson.fee_pence - getPaidAllocatedAmountForLesson(lesson.id, paymentAllocations),
+                  );
+
+                  return (
+                    <tr
+                      key={lesson.id}
+                      className={`${index % 2 === 0 ? "bg-white" : "bg-zinc-50"} border-t border-zinc-200 text-zinc-900 hover:bg-zinc-50`}
+                    >
+                      <td className="px-3 py-2.5 align-middle font-medium text-zinc-900">
+                        <Link
+                          href={`/app/students/${lesson.student_id}`}
+                          className="underline-offset-4 hover:underline"
+                        >
+                          {getStudentName(lesson.student) ?? "Unknown student"}
+                        </Link>
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-2.5 align-middle text-zinc-700">
+                        {formatDateTimeLocal(lesson.lesson_at)}
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-2.5 align-middle font-semibold text-zinc-900">
+                        {formatCurrencyFromMinorUnits(remainingPence, currencyCode)}
+                      </td>
+                      <td className="px-3 py-2.5 align-middle">
+                        <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-start">
+                          <Link
+                            href={`/app/students/${lesson.student_id}/lessons/${lesson.id}/view`}
+                            className="inline-flex min-h-9 w-full items-center justify-center whitespace-nowrap rounded-md bg-zinc-800 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
+                          >
+                            View notes
+                          </Link>
+                          <MarkPaidButton lessonId={lesson.id} />
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

@@ -1,41 +1,72 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import {
+  getMarkLessonUnpaidConfirmation,
+  markLessonUnpaid,
+  payOutstandingLessonAmount,
+} from "../../../payment-actions";
 
 type LessonPaidToggleProps = {
   lessonId: string;
-  initialPaid: boolean;
+  status: "paid" | "part-paid" | "unpaid";
 };
 
-export function LessonPaidToggle({ lessonId, initialPaid }: LessonPaidToggleProps) {
+export function LessonPaidToggle({
+  lessonId,
+  status,
+}: LessonPaidToggleProps) {
   const router = useRouter();
-  const supabase = useMemo(() => createSupabaseBrowserClient(), []);
-  const [paid, setPaid] = useState(initialPaid);
+  const [paymentStatus, setPaymentStatus] = useState(status);
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function onToggle() {
-    const nextPaid = !paid;
-
+  useEffect(() => {
+    setPaymentStatus(status);
     setError(null);
-    setPaid(nextPaid);
+  }, [status]);
+
+  async function onToggle() {
+    setError(null);
     setIsUpdating(true);
 
-    const { error: updateError } = await supabase
-      .from("lessons")
-      .update({ paid: nextPaid })
-      .eq("id", lessonId);
+    if (paymentStatus === "paid") {
+      const confirmation = await getMarkLessonUnpaidConfirmation(lessonId);
+      const confirmed = window.confirm(
+        confirmation.message ||
+          "This will mark the lesson as unpaid. Any reusable payment credit will remain on the student account.",
+      );
 
-    setIsUpdating(false);
+      if (!confirmed) {
+        setIsUpdating(false);
+        return;
+      }
 
-    if (updateError) {
-      setPaid(!nextPaid);
-      setError("Could not update.");
+      const result = await markLessonUnpaid(lessonId);
+
+      setIsUpdating(false);
+
+      if (!result.ok) {
+        setError(result.error ?? "Could not update.");
+        return;
+      }
+
+      setPaymentStatus("unpaid");
+      router.refresh();
       return;
     }
 
+    const result = await payOutstandingLessonAmount(lessonId);
+
+    setIsUpdating(false);
+
+    if (!result.ok) {
+      setError(result.error ?? "Could not update.");
+      return;
+    }
+
+    setPaymentStatus("paid");
     router.refresh();
   }
 
@@ -45,11 +76,11 @@ export function LessonPaidToggle({ lessonId, initialPaid }: LessonPaidToggleProp
         type="button"
         onClick={onToggle}
         disabled={isUpdating}
-        className="rounded-md border border-zinc-300 px-2.5 py-1.5 text-xs font-medium text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 disabled:cursor-not-allowed disabled:text-zinc-400"
+        className="inline-flex min-h-9 w-full items-center justify-center whitespace-nowrap rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-zinc-100 disabled:text-zinc-500 sm:w-auto"
       >
-        {isUpdating ? "Saving..." : paid ? "Mark unpaid" : "Mark paid"}
+        {isUpdating ? "Saving..." : paymentStatus === "paid" ? "Mark unpaid" : "Mark paid"}
       </button>
-      {error ? <p className="text-xs text-rose-700">{error}</p> : null}
+      <div className="min-h-4">{error ? <p className="text-xs text-rose-700">{error}</p> : null}</div>
     </div>
   );
 }

@@ -31,7 +31,7 @@ export function CompletedLessonUpdateBanner({
   }
 
   return (
-    <div className="mt-4 space-y-4 rounded-lg border border-zinc-200 bg-white p-4">
+    <div className="mt-4 space-y-3">
       <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
         <p role="status" className="text-base font-semibold text-emerald-900">
           Lesson completed
@@ -51,7 +51,7 @@ export function CompletedLessonUpdateBanner({
         </div>
       </div>
 
-      <div>
+      <div className="rounded-lg border border-zinc-200 bg-white p-4">
         <h2 className="text-sm font-medium text-zinc-700">Parent update</h2>
         <pre className="mt-2 whitespace-pre-wrap rounded-md border border-zinc-200 bg-zinc-50 p-3 text-sm text-zinc-800">
           {parentUpdate}

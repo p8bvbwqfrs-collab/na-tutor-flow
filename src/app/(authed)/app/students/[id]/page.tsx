@@ -7,14 +7,25 @@ import {
   formatDateTimeLocal,
   formatShortDateLocal,
   formatTimeLocal,
+  getMonthKeyLocal,
 } from "@/lib/datetime";
 import { getUserCurrencyCode } from "@/lib/user-settings";
 import { formatParentUpdate } from "@/lib/parent-update";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { LessonUpdateActions } from "@/components/lesson-update-actions";
-import { LessonPaidToggle } from "./components/lesson-paid-toggle";
+import {
+  calculateLessonPaymentStatus,
+  calculateStudentCredit,
+  getOutstandingLessonAmount,
+  getPaymentStatusClassName,
+  getPaymentStatusLabel,
+  type AllocationLike,
+  type PaymentLike,
+} from "@/lib/payments";
 import { CompletedLessonUpdateBanner } from "./components/completed-lesson-update-banner";
 import { MonthlySummaryGenerator } from "./components/monthly-summary-generator";
+import { PastLessonsMonthlySection } from "./components/past-lessons-monthly-section";
+import { PaymentsMonthlySection } from "./components/payments-monthly-section";
 import { PlannedLessonStatusButton } from "./components/planned-lesson-status-button";
 import { ProgressSignalCard } from "./components/progress-signal-card";
 import { StudentArchiveToggle } from "./components/student-archive-toggle";
@@ -25,7 +36,12 @@ export const revalidate = 0;
 
 type StudentPageProps = {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ lessonUpdated?: string; lessonCompleted?: string }>;
+  searchParams: Promise<{
+    lessonUpdated?: string;
+    lessonCompleted?: string;
+    lessonsMonth?: string;
+    paymentsMonth?: string;
+  }>;
 };
 
 type Lesson = {
@@ -44,6 +60,40 @@ type Lesson = {
   status: "planned" | "completed" | "cancelled" | null;
 };
 
+type Payment = PaymentLike & {
+  payment_date: string | null;
+  covers_from: string | null;
+  covers_to: string | null;
+  sessions_covered: number | null;
+  note: string | null;
+  created_at: string;
+};
+
+type AllocationRow = {
+  payment_id: string;
+  lesson_id: string;
+  amount_pence: number;
+  payment: PaymentLike | PaymentLike[] | null;
+};
+
+function getPayment(payment: PaymentLike | PaymentLike[] | null | undefined) {
+  return Array.isArray(payment) ? payment[0] ?? null : payment ?? null;
+}
+
+function parseMonthParam(value: string | undefined) {
+  if (!value || !/^\d{4}-\d{2}$/.test(value)) {
+    return null;
+  }
+
+  const [year, month] = value.split("-").map(Number);
+
+  if (!year || !month || month < 1 || month > 12) {
+    return null;
+  }
+
+  return new Date(Date.UTC(year, month - 1, 1));
+}
+
 function cleanLessonText(value: string) {
   return value
     .split(/\n|;/)
@@ -60,13 +110,14 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
   noStore();
 
   const { id } = await params;
-  const { lessonUpdated, lessonCompleted } = await searchParams;
+  const search = await searchParams;
+  const { lessonUpdated, lessonCompleted } = search;
   const supabase = await createSupabaseServerClient();
 
   const studentQuery = supabase
     .from("students")
     .select(
-      "id, student_name, parent_name, parent_contact, parent_email, notes, created_at, archived_at",
+      "id, student_name, parent_name, parent_contact, parent_email, notes, created_at, archived_at, default_fee_pence",
     )
     .eq("id", id)
     .maybeSingle();
@@ -87,9 +138,19 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
       .eq("student_id", id)
       .order("lesson_at", { ascending: false });
 
-  const [{ data: student, error: studentError }, initialLessonsResult, currencyCode] = await Promise.all([
+  const [
+    { data: student, error: studentError },
+    initialLessonsResult,
+    paymentsResult,
+    currencyCode,
+  ] = await Promise.all([
     studentQuery,
     lessonsQuery(),
+    supabase
+      .from("payments")
+      .select("id, amount_pence, payment_date, covers_from, covers_to, sessions_covered, source, note, created_at")
+      .eq("student_id", id)
+      .order("created_at", { ascending: false }),
     getUserCurrencyCode(supabase),
   ]);
 
@@ -115,15 +176,39 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
   }
 
   const lessons: Lesson[] = lessonsData ?? [];
+  const lessonIds = lessons.map((lesson) => lesson.id);
+  const allocationsResult =
+    lessonIds.length > 0
+      ? await supabase
+          .from("payment_allocations")
+          .select("payment_id, lesson_id, amount_pence, payment:payments(id, amount_pence, source, note)")
+          .in("lesson_id", lessonIds)
+      : { data: [], error: null };
+  const payments = (paymentsResult.data ?? []) as Payment[];
+  const allocations = ((allocationsResult.data ?? []) as AllocationRow[]).map((allocation) => ({
+    ...allocation,
+    payment: getPayment(allocation.payment),
+  })) as AllocationLike[];
   const completedLessons = lessons.filter((lesson) => isCompletedLessonStatus(lesson.status));
   const plannedLessons = [...lessons]
     .filter((lesson) => lesson.status === "planned")
     .sort((a, b) => new Date(a.lesson_at).getTime() - new Date(b.lesson_at).getTime());
   const isArchived = Boolean(student.archived_at);
   const totalLessons = completedLessons.length;
-  const outstandingAmountPence = completedLessons
-    .filter((lesson) => !lesson.paid)
-    .reduce((sum, lesson) => sum + lesson.fee_pence, 0);
+  const outstandingAmountPence = completedLessons.reduce(
+    (sum, lesson) => sum + getOutstandingLessonAmount(lesson, allocations),
+    0,
+  );
+  const studentCreditPence = calculateStudentCredit(payments, allocations);
+  const defaultMonthStart = new Date();
+  const lessonsMonthStart =
+    parseMonthParam(search.lessonsMonth) ??
+    new Date(Date.UTC(defaultMonthStart.getUTCFullYear(), defaultMonthStart.getUTCMonth(), 1));
+  const paymentsMonthStart =
+    parseMonthParam(search.paymentsMonth) ??
+    new Date(Date.UTC(defaultMonthStart.getUTCFullYear(), defaultMonthStart.getUTCMonth(), 1));
+  const initialLessonsMonthKey = getMonthKeyLocal(lessonsMonthStart);
+  const initialPaymentsMonthKey = getMonthKeyLocal(paymentsMonthStart);
   const latestLessonDate =
     totalLessons > 0 ? formatDateTimeLocal(completedLessons[0].lesson_at) : "No lessons yet";
   const avgConfidence =
@@ -382,9 +467,20 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
                     >
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div>
-                          <p className="text-sm font-medium text-zinc-900">
-                            {formatDateLocal(lesson.lesson_at)} at {formatTimeLocal(lesson.lesson_at)}
-                          </p>
+                          {(() => {
+                            const paymentStatus = calculateLessonPaymentStatus(lesson, allocations);
+
+                            return (
+                              <p className="flex flex-wrap items-center gap-2 text-sm font-medium text-zinc-900">
+                                <span>{formatDateLocal(lesson.lesson_at)} at {formatTimeLocal(lesson.lesson_at)}</span>
+                                <span
+                                  className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${getPaymentStatusClassName(paymentStatus)}`}
+                                >
+                                  {getPaymentStatusLabel(paymentStatus)}
+                                </span>
+                              </p>
+                            );
+                          })()}
                           <p className="mt-1 text-sm text-zinc-600">
                             {plannedTopic || "No planned topic or note yet."}
                           </p>
@@ -432,122 +528,22 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
           </div>
         </section>
 
-        <section>
-          <div className="rounded-lg border border-zinc-200 bg-white p-4">
-            <h2 className="text-lg font-medium text-zinc-900">Past lessons</h2>
-            {lessonsError ? (
-              <p className="mt-4 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">
-                Could not load lessons.
-              </p>
-            ) : completedLessons.length === 0 ? (
-              <div className="mt-4 rounded-md border border-dashed border-zinc-300 bg-zinc-50 p-4">
-                <p className="text-sm font-medium text-zinc-900">No lessons logged yet.</p>
-                <p className="mt-2 text-sm text-zinc-600">
-                  Log your first lesson to track progress and generate parent updates.
-                </p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <Link
-                    href={`/app/students/${student.id}/new-lesson`}
-                    className="inline-flex rounded-md bg-zinc-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-                  >
-                    Log lesson
-                  </Link>
-                  <Link
-                    href={`/app/students/${student.id}/schedule-lesson`}
-                    className="inline-flex rounded-md border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 transition-colors hover:bg-zinc-50 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-                  >
-                    Schedule lesson
-                  </Link>
-                </div>
-              </div>
-            ) : (
-              <div className="mt-4 overflow-x-auto">
-                <table className="min-w-full text-left text-sm">
-                  <thead className="bg-zinc-100 text-zinc-700">
-                    <tr>
-                      <th className="px-3 py-2 font-medium">Date</th>
-                      <th className="px-3 py-2 font-medium">Topics</th>
-                      <th className="px-3 py-2 font-medium">Fee</th>
-                      <th className="px-3 py-2 font-medium">Paid</th>
-                      <th className="px-3 py-2 font-medium">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {completedLessons.map((lesson) => (
-                      <tr key={lesson.id} className="border-t border-zinc-200 text-zinc-900 hover:bg-zinc-50">
-                        <td className="whitespace-nowrap px-3 py-3 align-top text-zinc-900">
-                          <Link
-                            href={`/app/students/${student.id}/lessons/${lesson.id}/view`}
-                            className="block underline-offset-4 hover:underline"
-                          >
-                            <span className="block font-medium text-zinc-900">
-                              {formatDateLocal(lesson.lesson_at)}
-                            </span>
-                            <span className="mt-1 block text-xs text-zinc-600">
-                              {formatTimeLocal(lesson.lesson_at)}
-                            </span>
-                          </Link>
-                        </td>
-                        <td className="max-w-sm px-3 py-3 align-top text-zinc-900" title={lesson.topics}>
-                          <Link
-                            href={`/app/students/${student.id}/lessons/${lesson.id}/view`}
-                            className="block underline-offset-4 hover:underline"
-                          >
-                            <span className="block font-medium text-zinc-900">
-                              {cleanLessonText(lesson.topics)}
-                            </span>
-                            {lesson.topic_tags && lesson.topic_tags.length > 0 ? (
-                              <span className="mt-2 flex flex-wrap gap-1.5">
-                                {lesson.topic_tags.map((tag) => (
-                                  <span
-                                    key={tag}
-                                    className="inline-flex rounded-full border border-zinc-200 bg-zinc-50 px-2 py-0.5 text-[11px] font-medium text-zinc-600"
-                                  >
-                                    {tag}
-                                  </span>
-                                ))}
-                              </span>
-                            ) : null}
-                          </Link>
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-3 align-top text-zinc-900">
-                          <Link
-                            href={`/app/students/${student.id}/lessons/${lesson.id}/view`}
-                            className="block text-zinc-900 underline-offset-4 hover:underline"
-                          >
-                            {formatCurrencyFromMinorUnits(lesson.fee_pence, currencyCode)}
-                          </Link>
-                        </td>
-                        <td className="px-3 py-3 align-top">
-                          <Link href={`/app/students/${student.id}/lessons/${lesson.id}/view`} className="block">
-                            <span
-                              className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
-                                lesson.paid ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"
-                              }`}
-                            >
-                              {lesson.paid ? "Paid" : "Unpaid"}
-                            </span>
-                          </Link>
-                        </td>
-                        <td className="px-3 py-3 align-top">
-                          <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
-                            <Link
-                              href={`/app/students/${student.id}/lessons/${lesson.id}/view`}
-                              className="inline-flex min-h-9 items-center justify-center rounded-md bg-zinc-800 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-                            >
-                              View notes
-                            </Link>
-                            <LessonPaidToggle lessonId={lesson.id} initialPaid={lesson.paid} />
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        </section>
+        <PastLessonsMonthlySection
+          studentId={student.id}
+          lessons={completedLessons}
+          allocations={allocations}
+          currencyCode={currencyCode}
+          initialMonthKey={initialLessonsMonthKey}
+          hasLessonsError={Boolean(lessonsError)}
+        />
+
+        <PaymentsMonthlySection
+          studentId={student.id}
+          payments={payments}
+          studentCreditPence={studentCreditPence}
+          currencyCode={currencyCode}
+          initialMonthKey={initialPaymentsMonthKey}
+        />
       </div>
 
       <div className="mt-6">

@@ -13,7 +13,7 @@ export default async function EditStudentPage({ params }: EditStudentPageProps) 
 
   const { data: student, error } = await supabase
     .from("students")
-    .select("id, student_name, parent_name, parent_contact, parent_email, notes")
+    .select("id, student_name, parent_name, parent_contact, parent_email, notes, default_fee_pence")
     .eq("id", id)
     .maybeSingle();
 
@@ -34,6 +34,9 @@ export default async function EditStudentPage({ params }: EditStudentPageProps) 
         initialParentName={student.parent_name ?? ""}
         initialParentContact={student.parent_contact ?? student.parent_email ?? ""}
         initialNotes={student.notes ?? ""}
+        initialDefaultFeeAmount={
+          typeof student.default_fee_pence === "number" ? (student.default_fee_pence / 100).toFixed(2) : ""
+        }
       />
 
       <div className="mt-4">

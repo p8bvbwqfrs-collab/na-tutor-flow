@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { payOutstandingLessonAmount } from "../../payment-actions";
 
 type MarkPaidButtonProps = {
   lessonId: string;
@@ -15,23 +15,17 @@ export function MarkPaidButton({ lessonId }: MarkPaidButtonProps) {
   const [error, setError] = useState<string | null>(null);
 
   async function onMarkPaid() {
-    const supabase = createSupabaseBrowserClient();
-
     setIsUpdating(true);
     setError(null);
     setMarked(true);
 
-    const { error: updateError } = await supabase
-      .from("lessons")
-      .update({ paid: true })
-      .eq("id", lessonId)
-      .eq("paid", false);
+    const result = await payOutstandingLessonAmount(lessonId);
 
     setIsUpdating(false);
 
-    if (updateError) {
+    if (!result.ok) {
       setMarked(false);
-      setError("Could not update payment status.");
+      setError(result.error ?? "Could not record payment.");
       return;
     }
 
@@ -44,7 +38,7 @@ export function MarkPaidButton({ lessonId }: MarkPaidButtonProps) {
         type="button"
         onClick={onMarkPaid}
         disabled={isUpdating || marked}
-        className="rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-zinc-100 disabled:text-zinc-600"
+        className="inline-flex min-h-9 w-full items-center justify-center whitespace-nowrap rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-zinc-100 disabled:text-zinc-600 sm:w-auto"
       >
         {isUpdating ? "Saving..." : marked ? "Marked" : "Mark paid"}
       </button>

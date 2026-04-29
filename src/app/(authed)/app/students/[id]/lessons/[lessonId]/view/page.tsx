@@ -3,6 +3,13 @@ import { notFound, redirect } from "next/navigation";
 import { formatCurrencyFromMinorUnits } from "@/lib/currency";
 import { formatDateLocal, formatDateTimeLocal, formatTimeLocal } from "@/lib/datetime";
 import { formatParentUpdate } from "@/lib/parent-update";
+import {
+  calculateLessonPaymentStatus,
+  getPaymentStatusClassName,
+  getPaymentStatusLabel,
+  type AllocationLike,
+  type PaymentLike,
+} from "@/lib/payments";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getUserCurrencyCode } from "@/lib/user-settings";
 import { LessonUpdateActions } from "@/components/lesson-update-actions";
@@ -20,6 +27,17 @@ type OtherLesson = {
   lesson_at: string;
   topics: string | null;
 };
+
+type AllocationRow = {
+  payment_id: string;
+  lesson_id: string;
+  amount_pence: number;
+  payment: PaymentLike | PaymentLike[] | null;
+};
+
+function getPayment(payment: PaymentLike | PaymentLike[] | null | undefined) {
+  return Array.isArray(payment) ? payment[0] ?? null : payment ?? null;
+}
 
 function cleanLessonText(value: string) {
   return value
@@ -76,6 +94,15 @@ export default async function ViewLessonPage({ params }: ViewLessonPageProps) {
         .eq("student_id", id)
         .maybeSingle()
     : { data: null, error: null };
+  const allocationsResult = await supabase
+    .from("payment_allocations")
+    .select("payment_id, lesson_id, amount_pence, payment:payments(id, amount_pence, source, note)")
+    .eq("lesson_id", lesson.id);
+  const allocations = ((allocationsResult.data ?? []) as AllocationRow[]).map((allocation) => ({
+    ...allocation,
+    payment: getPayment(allocation.payment),
+  })) as AllocationLike[];
+  const paymentStatus = calculateLessonPaymentStatus(lesson, allocations);
   const otherLessonsResult = await supabase
     .from("lessons")
     .select("id, lesson_at, topics")
@@ -112,7 +139,7 @@ export default async function ViewLessonPage({ params }: ViewLessonPageProps) {
     },
     {
       label: "Payment",
-      value: lesson.paid ? "Paid" : "Unpaid",
+      value: getPaymentStatusLabel(paymentStatus),
     },
   ];
 
@@ -128,8 +155,13 @@ export default async function ViewLessonPage({ params }: ViewLessonPageProps) {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Date/time</p>
-            <p className="mt-1 text-sm font-medium text-zinc-900">
-              {formatDateLocal(lesson.lesson_at)} at {formatTimeLocal(lesson.lesson_at)}
+            <p className="mt-1 flex flex-wrap items-center gap-2 text-sm font-medium text-zinc-900">
+              <span>{formatDateLocal(lesson.lesson_at)} at {formatTimeLocal(lesson.lesson_at)}</span>
+              <span
+                className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${getPaymentStatusClassName(paymentStatus)}`}
+              >
+                {getPaymentStatusLabel(paymentStatus)}
+              </span>
             </p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-start sm:justify-end">

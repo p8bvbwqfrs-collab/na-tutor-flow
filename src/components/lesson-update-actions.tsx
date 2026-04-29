@@ -5,12 +5,14 @@ import { useState } from "react";
 type LessonUpdateActionsProps = {
   message: string;
   className?: string;
+  buttonClassName?: string;
   reserveFeedbackSpace?: boolean;
 };
 
 export function LessonUpdateActions({
   message,
   className = "",
+  buttonClassName = "inline-flex min-h-9 items-center justify-center rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2",
   reserveFeedbackSpace = true,
 }: LessonUpdateActionsProps) {
   const [shared, setShared] = useState(false);
@@ -59,7 +61,7 @@ export function LessonUpdateActions({
       <button
         type="button"
         onClick={onShare}
-        className="inline-flex min-h-9 items-center justify-center rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+        className={buttonClassName}
       >
         Share update
       </button>

@@ -1,5 +1,12 @@
 import { notFound } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import {
+  calculateLessonPaymentStatus,
+  calculateStudentCredit,
+  getOutstandingLessonAmount,
+  type AllocationLike,
+  type PaymentLike,
+} from "@/lib/payments";
 import { getUserCurrencyCode } from "@/lib/user-settings";
 import { LessonPageHeader } from "../../components/lesson-page-header";
 import { NewLessonForm } from "../../new-lesson/new-lesson-form";
@@ -9,6 +16,17 @@ type EditLessonPageProps = {
   params: Promise<{ id: string; lessonId: string }>;
   searchParams: Promise<{ mode?: string }>;
 };
+
+type AllocationRow = {
+  payment_id: string;
+  lesson_id: string;
+  amount_pence: number;
+  payment: PaymentLike | PaymentLike[] | null;
+};
+
+function getPayment(payment: PaymentLike | PaymentLike[] | null | undefined) {
+  return Array.isArray(payment) ? payment[0] ?? null : payment ?? null;
+}
 
 export default async function EditLessonPage({ params, searchParams }: EditLessonPageProps) {
   const { id, lessonId } = await params;
@@ -44,6 +62,33 @@ export default async function EditLessonPage({ params, searchParams }: EditLesso
   const isPlannedLesson = lessonStatus === "planned";
   const isCompletingPlannedLesson = isPlannedLesson && mode === "complete";
   const plannedTopics = lesson.topics === "Planned lesson" ? "" : lesson.topics;
+  const allocationsResult = await supabase
+    .from("payment_allocations")
+    .select("payment_id, lesson_id, amount_pence, payment:payments(id, amount_pence, source, note)")
+    .eq("lesson_id", lesson.id);
+  const allocations = ((allocationsResult.data ?? []) as AllocationRow[]).map((allocation) => ({
+    ...allocation,
+    payment: getPayment(allocation.payment),
+  })) as AllocationLike[];
+  const paymentStatus = calculateLessonPaymentStatus(lesson, allocations);
+  const outstandingPence = getOutstandingLessonAmount(lesson, allocations);
+  const [{ data: paymentRows }, { data: studentLessonRows }] = await Promise.all([
+    supabase.from("payments").select("id, amount_pence, source, note").eq("student_id", id),
+    supabase.from("lessons").select("id").eq("student_id", id),
+  ]);
+  const studentLessonIds = (studentLessonRows ?? []).map((studentLesson) => studentLesson.id);
+  const studentAllocationsResult =
+    studentLessonIds.length > 0
+      ? await supabase
+          .from("payment_allocations")
+          .select("payment_id, lesson_id, amount_pence, payment:payments(id, amount_pence, source, note)")
+          .in("lesson_id", studentLessonIds)
+      : { data: [] };
+  const studentAllocations = ((studentAllocationsResult.data ?? []) as AllocationRow[]).map((allocation) => ({
+    ...allocation,
+    payment: getPayment(allocation.payment),
+  })) as AllocationLike[];
+  const availableCreditPence = calculateStudentCredit((paymentRows ?? []) as PaymentLike[], studentAllocations);
 
   return (
     <section className="w-full min-w-0 max-w-3xl">
@@ -93,7 +138,10 @@ export default async function EditLessonPage({ params, searchParams }: EditLesso
             effort: lesson.effort,
             confidence: lesson.confidence,
             feeAmount: (lesson.fee_pence / 100).toFixed(2),
-            paid: lesson.paid,
+            paid: paymentStatus === "paid",
+            paymentStatus,
+            availableCreditPence,
+            outstandingPence,
             nextLesson: linkedNextLessonResult.data
               ? {
                   id: linkedNextLessonResult.data.id,
