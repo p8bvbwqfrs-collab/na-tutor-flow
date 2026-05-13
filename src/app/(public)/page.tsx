@@ -106,12 +106,12 @@ export default function HomePage() {
   return (
     <section className="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:py-10">
       <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white p-6 sm:p-8 lg:p-10">
-        <div className="grid gap-7 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-center">
-          <div className="text-center lg:text-left">
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-zinc-500">
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-center lg:gap-10 xl:gap-12">
+          <div className="mx-auto max-w-xl text-center lg:mx-0 lg:text-left">
+            <p className="whitespace-nowrap text-sm font-semibold uppercase tracking-[0.18em] text-zinc-500">
               Built for independent tutors
             </p>
-            <h1 className="mx-auto mt-3 max-w-3xl text-3xl font-semibold tracking-tight text-zinc-900 sm:text-5xl lg:mx-0">
+            <h1 className="mx-auto mt-3 max-w-[24ch] text-balance text-3xl font-semibold tracking-tight text-zinc-900 sm:text-5xl lg:mx-0">
               Spend less time on admin, more time teaching
             </h1>
             <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-zinc-600 lg:mx-0">
@@ -136,7 +136,7 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="mx-auto w-full max-w-2xl lg:max-w-none">
+          <div className="mx-auto w-full max-w-2xl lg:mr-0 lg:max-w-none">
             <img
               src="/images/tutor-flow-student-preview.png"
               alt="Tutor Flow student page showing lesson notes, progress, and upcoming lessons"

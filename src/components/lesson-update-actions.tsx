@@ -56,6 +56,8 @@ export function LessonUpdateActions({
     }
   }
 
+  const feedback = shared || copiedFallback || error;
+
   return (
     <div className={className}>
       <button
@@ -65,13 +67,15 @@ export function LessonUpdateActions({
       >
         Share update
       </button>
-      <div className={reserveFeedbackSpace ? "min-h-5" : ""}>
-        {shared ? <p className="mt-1 text-xs text-emerald-700">Shared.</p> : null}
-        {!shared && copiedFallback ? (
-          <p className="mt-1 text-xs text-emerald-700">Sharing unavailable, copied update.</p>
-        ) : null}
-        {!shared && !copiedFallback && error ? <p className="mt-1 text-xs text-rose-800">{error}</p> : null}
-      </div>
+      {reserveFeedbackSpace || feedback ? (
+        <div className={reserveFeedbackSpace ? "min-h-5" : ""}>
+          {shared ? <p className="mt-1 text-xs text-emerald-700">Shared.</p> : null}
+          {!shared && copiedFallback ? (
+            <p className="mt-1 text-xs text-emerald-700">Sharing unavailable, copied update.</p>
+          ) : null}
+          {!shared && !copiedFallback && error ? <p className="mt-1 text-xs text-rose-800">{error}</p> : null}
+        </div>
+      ) : null}
     </div>
   );
 }

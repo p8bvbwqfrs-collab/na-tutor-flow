@@ -23,6 +23,7 @@ import {
   type PaymentLike,
 } from "@/lib/payments";
 import { CompletedLessonUpdateBanner } from "./components/completed-lesson-update-banner";
+import { LessonSuccessPanel } from "./components/lesson-success-panel";
 import { MonthlySummaryGenerator } from "./components/monthly-summary-generator";
 import { PastLessonsMonthlySection } from "./components/past-lessons-monthly-section";
 import { PaymentsMonthlySection } from "./components/payments-monthly-section";
@@ -320,12 +321,12 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
       </div>
 
       {lessonUpdated === "1" ? (
-        <p
-          role="status"
-          className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900"
-        >
-          Lesson updated
-        </p>
+        <div className="mt-4">
+          <LessonSuccessPanel
+            title="Lesson updated"
+            description="The lesson is now saved on the student page."
+          />
+        </div>
       ) : null}
 
       {lessonCompleted === "1" ? (

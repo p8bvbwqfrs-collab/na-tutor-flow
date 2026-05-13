@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { getCompletedLessonUpdateStorageKey } from "@/lib/lesson-completion";
-import { LessonUpdateActions } from "@/components/lesson-update-actions";
+import { LessonSuccessPanel } from "./lesson-success-panel";
 
 type CompletedLessonUpdateBannerProps = {
   studentId: string;
@@ -31,32 +31,16 @@ export function CompletedLessonUpdateBanner({
   }
 
   return (
-    <div className="mt-4 space-y-3">
-      <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
-        <p role="status" className="text-base font-semibold text-emerald-900">
-          Lesson completed
-        </p>
-        <p className="mt-1 text-sm text-emerald-900/80">
-          The lesson is now saved on the student page. Share the update message from here.
-        </p>
-        <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-          <LessonUpdateActions message={parentUpdate} />
-          <button
-            type="button"
-            onClick={onDismiss}
-            className="inline-flex min-h-11 items-center justify-center rounded-md border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-          >
-            Dismiss
-          </button>
-        </div>
-      </div>
-
-      <div className="rounded-lg border border-zinc-200 bg-white p-4">
-        <h2 className="text-sm font-medium text-zinc-700">Update message</h2>
-        <pre className="mt-2 whitespace-pre-wrap rounded-md border border-zinc-200 bg-zinc-50 p-3 text-sm text-zinc-800">
-          {parentUpdate}
-        </pre>
-      </div>
+    <div className="mt-4">
+      <LessonSuccessPanel
+        title="Lesson completed"
+        description="The lesson is now saved on the student page. Share the update message from here."
+        updateMessage={parentUpdate}
+        secondaryAction={{
+          label: "Dismiss",
+          onClick: onDismiss,
+        }}
+      />
     </div>
   );
 }
