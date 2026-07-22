@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
@@ -27,11 +27,18 @@ export function LoginClient() {
   const [error, setError] = useState<string | null>(initialError);
   const [confirmationEmail, setConfirmationEmail] = useState<string | null>(null);
   const formErrorId = "login-form-error";
+  const errorRef = useRef<HTMLParagraphElement>(null);
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
 
   useEffect(() => {
     setError(initialError);
   }, [initialError]);
+
+  useEffect(() => {
+    if (error) {
+      errorRef.current?.focus();
+    }
+  }, [error]);
 
   useEffect(() => {
     if (cooldownSeconds <= 0) {
@@ -119,6 +126,11 @@ export function LoginClient() {
 
   async function onPrimarySubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (isAuthSubmitting) {
+      return;
+    }
+
     setError(null);
     setMessage(null);
 
@@ -135,6 +147,8 @@ export function LoginClient() {
     }
 
     setIsAuthSubmitting(true);
+
+    let shouldRestoreForm = true;
 
     try {
       if (authMode === "sign_in") {
@@ -166,12 +180,15 @@ export function LoginClient() {
         }
       }
 
+      shouldRestoreForm = false;
       router.push("/app/dashboard");
       router.refresh();
     } catch {
       setError("Unable to complete authentication. Please try again.");
     } finally {
-      setIsAuthSubmitting(false);
+      if (shouldRestoreForm) {
+        setIsAuthSubmitting(false);
+      }
     }
   }
 
@@ -373,6 +390,7 @@ export function LoginClient() {
             autoComplete="email"
             aria-invalid={Boolean(error)}
             aria-describedby={error ? formErrorId : undefined}
+            disabled={isAuthSubmitting}
             value={email}
             onChange={(event) => onEmailChange(event.target.value)}
             className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-500 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 disabled:bg-zinc-100 disabled:text-zinc-600"
@@ -392,6 +410,7 @@ export function LoginClient() {
             autoComplete={authMode === "sign_in" ? "current-password" : "new-password"}
             aria-invalid={Boolean(error)}
             aria-describedby={error ? formErrorId : undefined}
+            disabled={isAuthSubmitting}
             value={password}
             onChange={(event) => onPasswordChange(event.target.value)}
             className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-500 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 disabled:bg-zinc-100 disabled:text-zinc-600"
@@ -402,16 +421,37 @@ export function LoginClient() {
         <button
           type="submit"
           disabled={isAuthSubmitting || isResetSending || isSending || isVerifying}
-          className="inline-flex w-full items-center justify-center rounded-md bg-zinc-800 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-zinc-400 disabled:text-zinc-100"
+          className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-md bg-zinc-800 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-zinc-400 disabled:text-zinc-100"
         >
+          {isAuthSubmitting ? (
+            <svg
+              className="h-4 w-4 shrink-0 animate-spin"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+            >
+              <circle className="opacity-25" cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="3" />
+              <path className="opacity-90" fill="currentColor" d="M21 12a9 9 0 0 0-9-9v3a6 6 0 0 1 6 6h3Z" />
+            </svg>
+          ) : null}
+          <span>
+            {isAuthSubmitting
+              ? authMode === "sign_in"
+                ? "Signing in…"
+                : "Creating account…"
+              : authMode === "sign_in"
+                ? "Sign in"
+                : "Create account"}
+          </span>
+        </button>
+
+        <p className="sr-only" role="status" aria-live="polite">
           {isAuthSubmitting
             ? authMode === "sign_in"
-              ? "Signing in..."
-              : "Creating account..."
-            : authMode === "sign_in"
-              ? "Sign in"
-              : "Create account"}
-        </button>
+              ? "Signing in…"
+              : "Creating account…"
+            : ""}
+        </p>
 
         {authMode === "sign_in" ? (
           <div className="flex items-center justify-between gap-3">
@@ -542,6 +582,8 @@ export function LoginClient() {
         <p
           id={formErrorId}
           role="alert"
+          ref={errorRef}
+          tabIndex={-1}
           className="mt-4 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-900"
         >
           {error}
