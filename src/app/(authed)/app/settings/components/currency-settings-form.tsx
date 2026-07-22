@@ -50,7 +50,7 @@ export function CurrencySettingsForm({
   }
 
   return (
-    <div className="mt-4">
+    <div className="mt-3">
       <label htmlFor="currency_code" className="block text-sm font-medium text-zinc-700">
         Currency
       </label>
@@ -78,7 +78,7 @@ export function CurrencySettingsForm({
           {isSaving ? "Saving..." : "Save currency"}
         </button>
       </div>
-      <div className="mt-2 min-h-5">
+      <div className="mt-1 min-h-5">
         {saved ? <p className="text-sm text-emerald-700">Saved.</p> : null}
         {!saved && error ? <p className="text-sm text-rose-700">{error}</p> : null}
       </div>
