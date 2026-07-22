@@ -13,20 +13,28 @@ export default function PublicLayout({
           <Link
             href="/"
             className="group inline-flex items-center gap-2 rounded-md px-1 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-            aria-label="NA's Tutor Flow home"
+            aria-label="NA Tutor Flow home"
           >
             <span className="inline-block h-2.5 w-2.5 rounded-full bg-zinc-800" aria-hidden="true" />
-            <span className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">NA&apos;s</span>
+            <span className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">NA</span>
             <span className="text-lg font-semibold tracking-tight text-zinc-900 underline-offset-4 group-hover:underline">
               Tutor Flow
             </span>
           </Link>
-          <Link
-            href="/login"
-            className="rounded-md px-3 py-2 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-          >
-            Login
-          </Link>
+          <nav className="flex items-center gap-1" aria-label="Primary navigation">
+            <Link
+              href="/maths-tutor"
+              className="rounded-md px-2 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 hover:text-zinc-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:px-3"
+            >
+              Maths tutoring
+            </Link>
+            <Link
+              href="/login"
+              className="rounded-md px-2 py-2 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:px-3"
+            >
+              Login
+            </Link>
+          </nav>
         </div>
       </header>
 

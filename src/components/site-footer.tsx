@@ -15,6 +15,12 @@ export function SiteFooter({
         <p>Tutor Flow</p>
         <div className="flex flex-wrap items-center gap-4">
           <Link
+            href="/maths-tutor"
+            className="underline-offset-4 transition-colors hover:text-zinc-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+          >
+            Maths tutoring
+          </Link>
+          <Link
             href="/about"
             className="underline-offset-4 transition-colors hover:text-zinc-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
           >
