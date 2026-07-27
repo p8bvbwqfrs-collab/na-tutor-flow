@@ -3,15 +3,19 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { clearAuthenticationDraft } from "@/lib/auth-form-state";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 type AuthMode = "sign_in" | "sign_up";
 
-export function LoginClient() {
+type LoginClientProps = {
+  mode: AuthMode;
+};
+
+export function LoginClient({ mode: authMode }: LoginClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialError = searchParams.get("error");
-  const [authMode, setAuthMode] = useState<AuthMode>("sign_in");
   const [showOtpFallback, setShowOtpFallback] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -29,6 +33,17 @@ export function LoginClient() {
   const formErrorId = "login-form-error";
   const errorRef = useRef<HTMLParagraphElement>(null);
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
+
+  function clearSensitiveAuthenticationState() {
+    const cleared = clearAuthenticationDraft({ email, password, code, error, message });
+    setEmail(cleared.email);
+    setPassword(cleared.password);
+    setCode(cleared.code);
+    setError(cleared.error);
+    setMessage(cleared.message);
+    setShowOtpFallback(false);
+    setIsCodeSent(false);
+  }
 
   useEffect(() => {
     setError(initialError);
@@ -52,6 +67,27 @@ export function LoginClient() {
     return () => window.clearTimeout(timeoutId);
   }, [cooldownSeconds]);
 
+  useEffect(() => {
+    function clearOnHistoryNavigation() {
+      const cleared = clearAuthenticationDraft();
+      setEmail(cleared.email);
+      setPassword(cleared.password);
+      setCode(cleared.code);
+      setError(cleared.error);
+      setMessage(cleared.message);
+      setShowOtpFallback(false);
+      setIsCodeSent(false);
+    }
+
+    window.addEventListener("pagehide", clearOnHistoryNavigation);
+    window.addEventListener("popstate", clearOnHistoryNavigation);
+
+    return () => {
+      window.removeEventListener("pagehide", clearOnHistoryNavigation);
+      window.removeEventListener("popstate", clearOnHistoryNavigation);
+    };
+  }, []);
+
   function startCooldown() {
     setCooldownSeconds(60);
   }
@@ -65,6 +101,7 @@ export function LoginClient() {
   }
 
   async function handleForgotPasswordClick() {
+    setPassword("");
     setError(null);
     setMessage(null);
 
@@ -174,7 +211,6 @@ export function LoginClient() {
 
         if (!signUpData.session) {
           setConfirmationEmail(trimmedEmail);
-          setAuthMode("sign_in");
           setPassword("");
           return;
         }
@@ -346,18 +382,13 @@ export function LoginClient() {
             >
               {isResendingConfirmation ? "Sending..." : "Resend email"}
             </button>
-            <button
-              type="button"
-              onClick={() => {
-                setConfirmationEmail(null);
-                setError(null);
-                setMessage(null);
-                setAuthMode("sign_in");
-              }}
+            <Link
+              href="/login"
+              onClick={clearSensitiveAuthenticationState}
               className="inline-flex min-h-11 w-full items-center justify-center rounded-md border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
             >
               Back to sign in
-            </button>
+            </Link>
           </div>
         </div>
       </section>
@@ -472,40 +503,39 @@ export function LoginClient() {
 
       <div className="mt-3 text-sm">
         {authMode === "sign_in" ? (
-          <button
-            type="button"
-            onClick={() => {
-              setAuthMode("sign_up");
-              setError(null);
-              setMessage(null);
-            }}
+          <Link
+            href="/signup"
+            onClick={clearSensitiveAuthenticationState}
             className="font-medium text-blue-700 underline-offset-2 hover:text-blue-800 hover:underline"
           >
             Need an account? Create one
-          </button>
+          </Link>
         ) : (
-          <button
-            type="button"
-            onClick={() => {
-              setAuthMode("sign_in");
-              setError(null);
-              setMessage(null);
-            }}
+          <Link
+            href="/login"
+            onClick={clearSensitiveAuthenticationState}
             className="font-medium text-blue-700 underline-offset-2 hover:text-blue-800 hover:underline"
           >
             Already have an account? Sign in
-          </button>
+          </Link>
         )}
       </div>
 
-      <div className="mt-6 border-t border-zinc-200 pt-4">
+      {authMode === "sign_in" ? <div className="mt-6 border-t border-zinc-200 pt-4">
         <p className="text-sm font-medium text-zinc-900">Prefer a one-time code?</p>
         <p className="mt-1 text-sm text-zinc-600">
           Use email and password as the main sign-in method. A one-time code is available if needed.
         </p>
         <button
           type="button"
-          onClick={() => setShowOtpFallback((prev) => !prev)}
+          onClick={() => {
+            setPassword("");
+            setCode("");
+            setError(null);
+            setMessage(null);
+            setIsCodeSent(false);
+            setShowOtpFallback((prev) => !prev);
+          }}
           className="mt-2 text-sm font-medium text-blue-700 underline-offset-2 hover:text-blue-800 hover:underline"
         >
           {showOtpFallback ? "Hide one-time code option" : "Use a one-time code instead"}
@@ -561,7 +591,7 @@ export function LoginClient() {
             ) : null}
           </div>
         ) : null}
-      </div>
+      </div> : null}
 
       {cooldownSeconds > 0 ? (
         <p role="status" className="mt-3 text-sm text-zinc-700">

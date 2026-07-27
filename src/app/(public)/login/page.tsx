@@ -14,7 +14,7 @@ function LoginFallback() {
 export default function LoginPage() {
   return (
     <Suspense fallback={<LoginFallback />}>
-      <LoginClient />
+      <LoginClient mode="sign_in" />
     </Suspense>
   );
 }

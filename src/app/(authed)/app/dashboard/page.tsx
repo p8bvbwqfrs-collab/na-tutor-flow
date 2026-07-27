@@ -20,6 +20,7 @@ import { MarkPaidButton } from "./components/mark-paid-button";
 import { MonthlyEarningsChart } from "./components/monthly-earnings-chart";
 import { ChartRangeFilter, type ChartRange } from "./components/chart-range-filter";
 import { ShareUpdateButton } from "./components/copy-update-button";
+import { deriveDashboardExperience, getDashboardActions } from "./dashboard-onboarding";
 
 type LessonRow = {
   id: string;
@@ -63,6 +64,12 @@ type DashboardAllocationRow = {
   lesson_id: string;
   amount_pence: number;
   payment: PaymentLike | PaymentLike[] | null;
+};
+
+type DashboardStudentRow = {
+  id: string;
+  student_name: string;
+  archived_at: string | null;
 };
 
 function getPayment(payment: PaymentLike | PaymentLike[] | null | undefined) {
@@ -159,8 +166,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   ] = await Promise.all([
     supabase
       .from("students")
-      .select("id", { count: "exact", head: true })
-      .is("archived_at", null),
+      .select("id, student_name, archived_at"),
     selectedRange === "all"
       ? chartLessonsQuery
       : chartLessonsQuery.gte("lesson_at", fixedRangeStart.toISOString()),
@@ -197,12 +203,23 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       .or("status.eq.completed,status.is.null")
       .order("lesson_at", { ascending: false }),
   ]);
-  const activeStudentsCount = activeStudentsResult.count ?? 0;
+  const dashboardStudents = ((activeStudentsResult.data ?? []) as DashboardStudentRow[]).map(
+    (student) => ({
+      id: student.id,
+      studentName: student.student_name,
+      archivedAt: student.archived_at,
+    }),
+  );
   const oldestLessonAt = oldestLessonResult.data?.lesson_at
     ? new Date(oldestLessonResult.data.lesson_at)
     : null;
-  const hasAnyLessons = Boolean(oldestLessonAt);
-  const showDashboardOnboarding = activeStudentsCount === 0 && !hasAnyLessons;
+  const hasAnyLessons = Boolean(oldestLessonAt || (upcomingLessonsResult.data ?? []).length > 0);
+  const dashboardExperience = deriveDashboardExperience(dashboardStudents, hasAnyLessons);
+  const dashboardActions = getDashboardActions(
+    dashboardExperience.state,
+    dashboardExperience.activeStudents,
+  );
+  const activeStudentsCount = dashboardExperience.activeStudents.length;
   const recentLessons = ((recentLessonsResult.data ?? []) as DashboardLessonOverviewRow[]).filter((lesson) =>
     isCompletedLessonStatus(lesson.status),
   );
@@ -285,30 +302,67 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       <h1 className="text-xl font-semibold text-zinc-900">Dashboard</h1>
       <p className="mt-1 text-sm text-zinc-600">Overview of payments and recent unpaid lessons.</p>
 
-      {showDashboardOnboarding &&
-      !activeStudentsResult.error &&
+      {!activeStudentsResult.error &&
       !chartLessonsResult.error &&
       !oldestLessonResult.error &&
+      !upcomingLessonsResult.error &&
       !paymentsResult.error &&
       !paymentAllocationsResult.error &&
       !derivedLessonsResult.error ? (
-        <div className="mt-6 rounded-lg border border-zinc-200 bg-white p-4">
-          <p className="text-lg font-medium text-zinc-900">Get started by adding your first student</p>
-          <p className="mt-2 text-sm text-zinc-600">
-            Start with one student and one lesson, and the rest of the workflow will fall into place.
-          </p>
-          <ol className="mt-4 space-y-2 text-sm text-zinc-700">
-            <li>1. Add your first student</li>
-            <li>2. Log your first lesson</li>
-            <li>3. Share an update message</li>
-          </ol>
-          <Link
-            href="/app/students/new"
-            className="mt-5 inline-flex min-h-11 items-center justify-center rounded-md bg-zinc-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+        dashboardExperience.state === "no_active_students" ? (
+          <section
+            className="mt-6 min-w-0 rounded-lg border border-zinc-200 bg-white p-4 sm:p-5"
+            aria-labelledby="dashboard-onboarding-heading"
           >
-            Add student
-          </Link>
-        </div>
+            <h2 id="dashboard-onboarding-heading" className="text-lg font-medium text-zinc-900">
+              Let&apos;s set up Tutor Flow
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-600">
+              Start by adding a student. Their profile will keep lessons, progress and payments in one place.
+            </p>
+            <Link
+              href={dashboardActions[0].href}
+              className="mt-4 inline-flex min-h-11 w-full min-w-0 items-center justify-center rounded-md bg-zinc-800 px-4 py-2 text-center text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
+            >
+              {dashboardActions[0].label}
+            </Link>
+          </section>
+        ) : dashboardExperience.state === "student_ready" ? (
+          <section
+            className="mt-6 min-w-0 rounded-lg border border-zinc-200 bg-white p-4 sm:p-5"
+            aria-labelledby="dashboard-onboarding-heading"
+          >
+            <h2 id="dashboard-onboarding-heading" className="text-lg font-medium text-zinc-900">
+              Your student is ready
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-600">
+              Log a completed lesson or schedule the next one to start building their lesson history.
+            </p>
+            <div className="mt-4 grid min-w-0 gap-2 sm:flex sm:flex-wrap">
+              <Link
+                href={dashboardActions[0].href}
+                className="inline-flex min-h-11 w-full min-w-0 items-center justify-center rounded-md bg-zinc-800 px-4 py-2 text-center text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
+              >
+                {dashboardActions[0].label}
+              </Link>
+              <Link
+                href={dashboardActions[1].href}
+                className="inline-flex min-h-11 w-full min-w-0 items-center justify-center rounded-md border border-zinc-200 bg-white px-4 py-2 text-center text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
+              >
+                {dashboardActions[1].label}
+              </Link>
+            </div>
+          </section>
+        ) : (
+          <nav className="mt-5 min-w-0" aria-label="Dashboard quick actions">
+            <h2 className="text-sm font-medium text-zinc-700">Quick actions</h2>
+            <div className="mt-2 grid min-w-0 grid-cols-1 gap-2 sm:flex sm:flex-wrap">
+              <Link href={dashboardActions[0].href} className="inline-flex min-h-10 w-full min-w-0 items-center justify-center rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto">{dashboardActions[0].label}</Link>
+              <Link href={dashboardActions[1].href} className="inline-flex min-h-10 w-full min-w-0 items-center justify-center rounded-md bg-zinc-800 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto">{dashboardActions[1].label}</Link>
+              <Link href={dashboardActions[2].href} className="inline-flex min-h-10 w-full min-w-0 items-center justify-center rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto">{dashboardActions[2].label}</Link>
+            </div>
+          </nav>
+        )
       ) : null}
 
       <div className="mt-6 grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
