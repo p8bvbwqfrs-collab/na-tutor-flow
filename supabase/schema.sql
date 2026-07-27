@@ -9,6 +9,7 @@ create table if not exists public.students (
   student_name text not null,
   subject text,
   parent_name text,
+  parent_contact text,
   parent_email text,
   notes text,
   default_fee_pence integer check (default_fee_pence >= 0),
@@ -17,9 +18,10 @@ create table if not exists public.students (
 );
 
 create table if not exists public.user_settings (
-  user_id uuid primary key default auth.uid() references auth.users(id) on delete cascade,
+  user_id uuid primary key references auth.users(id) on delete cascade,
   currency_code text not null default 'GBP' check (currency_code in ('GBP', 'USD', 'EUR', 'AUD')),
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
 );
 
 create table if not exists public.lessons (
@@ -38,6 +40,7 @@ create table if not exists public.lessons (
   confidence int not null check (confidence between 1 and 5),
   fee_pence int not null check (fee_pence >= 0),
   paid boolean not null default false,
+  status text not null default 'completed' check (status in ('planned', 'completed', 'cancelled')),
   created_at timestamptz not null default now()
 );
 
@@ -51,7 +54,7 @@ create table if not exists public.payments (
   covers_from date,
   covers_to date,
   sessions_covered integer check (sessions_covered >= 0),
-  source text not null default 'recorded_payment' check (source in ('recorded_payment', 'lesson_paid_now', 'imported')),
+  source text,
   note text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -85,22 +88,57 @@ alter table public.lessons enable row level security;
 alter table public.payments enable row level security;
 alter table public.payment_allocations enable row level security;
 
+grant all privileges on table
+  public.students,
+  public.lessons,
+  public.user_settings,
+  public.payments,
+  public.payment_allocations
+to anon, authenticated, service_role;
+
+create or replace function public.set_user_id()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if new.user_id is null then
+    new.user_id := auth.uid();
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists set_students_user_id on public.students;
+create trigger set_students_user_id
+before insert on public.students
+for each row execute function public.set_user_id();
+
+drop trigger if exists set_lessons_user_id on public.lessons;
+create trigger set_lessons_user_id
+before insert on public.lessons
+for each row execute function public.set_user_id();
+
 drop policy if exists "students_select_own" on public.students;
 create policy "students_select_own"
   on public.students
   for select
+  to authenticated
   using (user_id = auth.uid());
 
 drop policy if exists "students_insert_own" on public.students;
 create policy "students_insert_own"
   on public.students
   for insert
+  to authenticated
   with check (user_id = auth.uid());
 
 drop policy if exists "students_update_own" on public.students;
 create policy "students_update_own"
   on public.students
   for update
+  to authenticated
   using (user_id = auth.uid())
   with check (user_id = auth.uid());
 
@@ -108,6 +146,7 @@ drop policy if exists "students_delete_own" on public.students;
 create policy "students_delete_own"
   on public.students
   for delete
+  to authenticated
   using (user_id = auth.uid() and archived_at is not null);
 
 drop policy if exists "lessons_select_own" on public.lessons;
@@ -115,37 +154,38 @@ drop policy if exists "user_settings_select_own" on public.user_settings;
 create policy "user_settings_select_own"
   on public.user_settings
   for select
+  to authenticated
   using (user_id = auth.uid());
 
 drop policy if exists "user_settings_insert_own" on public.user_settings;
 create policy "user_settings_insert_own"
   on public.user_settings
   for insert
+  to authenticated
   with check (user_id = auth.uid());
 
 drop policy if exists "user_settings_update_own" on public.user_settings;
 create policy "user_settings_update_own"
   on public.user_settings
   for update
+  to authenticated
   using (user_id = auth.uid())
   with check (user_id = auth.uid());
 
 drop policy if exists "user_settings_delete_own" on public.user_settings;
-create policy "user_settings_delete_own"
-  on public.user_settings
-  for delete
-  using (user_id = auth.uid());
 
 drop policy if exists "lessons_select_own" on public.lessons;
 create policy "lessons_select_own"
   on public.lessons
   for select
+  to authenticated
   using (user_id = auth.uid());
 
 drop policy if exists "lessons_insert_own" on public.lessons;
 create policy "lessons_insert_own"
   on public.lessons
   for insert
+  to authenticated
   with check (
     user_id = auth.uid()
     and exists (
@@ -160,6 +200,7 @@ drop policy if exists "lessons_update_own" on public.lessons;
 create policy "lessons_update_own"
   on public.lessons
   for update
+  to authenticated
   using (
     user_id = auth.uid()
     and exists (
@@ -183,6 +224,7 @@ drop policy if exists "lessons_delete_own" on public.lessons;
 create policy "lessons_delete_own"
   on public.lessons
   for delete
+  to authenticated
   using (
     user_id = auth.uid()
     and exists (
