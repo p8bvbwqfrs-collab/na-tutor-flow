@@ -18,14 +18,16 @@ type Student = {
 };
 
 type StudentsPageProps = {
-  searchParams: Promise<{ view?: string }>;
+  searchParams: Promise<{ view?: string; lessonAction?: string }>;
 };
 
 export default async function StudentsPage({ searchParams }: StudentsPageProps) {
   noStore();
 
-  const { view } = await searchParams;
+  const { view, lessonAction } = await searchParams;
   const showArchived = view === "archived";
+  const requestedLessonAction =
+    lessonAction === "log" || lessonAction === "schedule" ? lessonAction : null;
 
   const supabase = await createSupabaseServerClient();
 
@@ -121,6 +123,16 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
           </div>
         ) : (
           <div className="mt-6">
+            {requestedLessonAction && !showArchived ? (
+              <div className="mb-4 rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3">
+                <p className="text-sm font-medium text-zinc-900">
+                  Choose a student to {requestedLessonAction === "log" ? "log a lesson" : "schedule a lesson"}.
+                </p>
+                <p className="mt-1 text-sm text-zinc-600">
+                  Use the matching action beside the student below.
+                </p>
+              </div>
+            ) : null}
             <StudentsList students={students} />
           </div>
         )}
