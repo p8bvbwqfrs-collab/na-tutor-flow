@@ -125,9 +125,12 @@ create policy "payment_allocations_insert_own"
       select 1
       from public.lessons
       join public.students on students.id = lessons.student_id
+      join public.payments on payments.id = payment_allocations.payment_id
       where lessons.id = payment_allocations.lesson_id
         and lessons.user_id = auth.uid()
         and students.user_id = auth.uid()
+        and payments.user_id = auth.uid()
+        and payments.student_id = students.id
         and students.archived_at is null
     )
   );
@@ -142,9 +145,12 @@ create policy "payment_allocations_update_own"
       select 1
       from public.lessons
       join public.students on students.id = lessons.student_id
+      join public.payments on payments.id = payment_allocations.payment_id
       where lessons.id = payment_allocations.lesson_id
         and lessons.user_id = auth.uid()
         and students.user_id = auth.uid()
+        and payments.user_id = auth.uid()
+        and payments.student_id = students.id
         and students.archived_at is null
     )
   )
@@ -154,9 +160,12 @@ create policy "payment_allocations_update_own"
       select 1
       from public.lessons
       join public.students on students.id = lessons.student_id
+      join public.payments on payments.id = payment_allocations.payment_id
       where lessons.id = payment_allocations.lesson_id
         and lessons.user_id = auth.uid()
         and students.user_id = auth.uid()
+        and payments.user_id = auth.uid()
+        and payments.student_id = students.id
         and students.archived_at is null
     )
   );
@@ -171,9 +180,12 @@ create policy "payment_allocations_delete_own"
       select 1
       from public.lessons
       join public.students on students.id = lessons.student_id
+      join public.payments on payments.id = payment_allocations.payment_id
       where lessons.id = payment_allocations.lesson_id
         and lessons.user_id = auth.uid()
         and students.user_id = auth.uid()
+        and payments.user_id = auth.uid()
+        and payments.student_id = students.id
         and students.archived_at is null
     )
   );

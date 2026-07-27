@@ -118,6 +118,12 @@ test("RLS migration restricts deletion to archived students and related writes t
   assert.match(migration, /lessons_insert_own/);
   assert.match(migration, /payments_insert_own/);
   assert.match(migration, /payment_allocations_insert_own/);
+  assert.match(
+    migration,
+    /join public\.payments on payments\.id = payment_allocations\.payment_id/,
+  );
+  assert.match(migration, /payments\.user_id = auth\.uid\(\)/);
+  assert.match(migration, /payments\.student_id = students\.id/);
 });
 
 test("archived list and detail source omit mutating actions and expose restore/delete controls", () => {
