@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { FormEvent, useMemo, useState } from "react";
 import { getCurrencyLabel, type SupportedCurrencyCode } from "@/lib/currency";
+import { getLondonDateTimeInputValues } from "@/lib/datetime";
+import { getSubmittedLessonAtIso } from "@/lib/lesson-scheduling";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { LessonFormSection } from "../components/lesson-form-section";
 
@@ -19,20 +21,6 @@ type ScheduleLessonFormProps = {
   currencyCode?: SupportedCurrencyCode;
 };
 
-function toDatetimeLocalValue(date: Date) {
-  const offset = date.getTimezoneOffset();
-  const local = new Date(date.getTime() - offset * 60_000);
-  return local.toISOString().slice(0, 16);
-}
-
-function getDateValue(date: Date) {
-  return toDatetimeLocalValue(date).slice(0, 10);
-}
-
-function getTimeValue(date: Date) {
-  return toDatetimeLocalValue(date).slice(11, 16);
-}
-
 export function ScheduleLessonForm({
   studentId,
   studentName,
@@ -45,8 +33,9 @@ export function ScheduleLessonForm({
   const isEditMode = mode === "edit";
   const formErrorId = "schedule-lesson-form-error";
   const initialDate = initialLesson?.lessonAt ? new Date(initialLesson.lessonAt) : new Date();
-  const [lessonDate, setLessonDate] = useState(getDateValue(initialDate));
-  const [lessonTime, setLessonTime] = useState(getTimeValue(initialDate));
+  const initialDateTimeValues = getLondonDateTimeInputValues(initialDate);
+  const [lessonDate, setLessonDate] = useState(initialDateTimeValues.date);
+  const [lessonTime, setLessonTime] = useState(initialDateTimeValues.time);
   const [topics, setTopics] = useState(initialLesson?.topics ?? "");
   const [fee, setFee] = useState(initialLesson?.feeAmount ?? "0.00");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -75,12 +64,23 @@ export function ScheduleLessonForm({
 
     setIsSubmitting(true);
 
+    let lessonAtIso: string;
+
+    try {
+      lessonAtIso = getSubmittedLessonAtIso(new FormData(event.currentTarget));
+    } catch (dateTimeError) {
+      setIsSubmitting(false);
+      setError(
+        dateTimeError instanceof Error ? dateTimeError.message : "Lesson date and time is invalid.",
+      );
+      return;
+    }
+
     const trimmedTopics = topics.trim();
-    const lessonAt = new Date(`${lessonDate}T${lessonTime}`);
 
     const payload = {
       student_id: studentId,
-      lesson_at: lessonAt.toISOString(),
+      lesson_at: lessonAtIso,
       topics: trimmedTopics || "Planned lesson",
       effort: 3,
       confidence: 3,
@@ -147,6 +147,7 @@ export function ScheduleLessonForm({
             </label>
             <input
               id="lesson_date"
+              name="lesson_date"
               type="date"
               required
               aria-invalid={Boolean(error)}
@@ -163,6 +164,7 @@ export function ScheduleLessonForm({
             </label>
             <input
               id="lesson_time"
+              name="lesson_time"
               type="time"
               required
               aria-invalid={Boolean(error)}
