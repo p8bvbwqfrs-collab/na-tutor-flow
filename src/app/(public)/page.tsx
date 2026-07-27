@@ -119,7 +119,7 @@ export default function HomePage() {
             </p>
             <div className="mt-6 flex flex-col items-center justify-center gap-2 sm:flex-row lg:justify-start">
               <Link
-                href="/login"
+                href="/signup"
                 className="inline-flex min-h-11 w-full items-center justify-center rounded-md bg-zinc-800 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
               >
                 Get started free
@@ -212,7 +212,7 @@ export default function HomePage() {
           Log lessons, track payments, and send updates — all in one place.
         </p>
         <Link
-          href="/login"
+          href="/signup"
           className="mt-5 inline-flex min-h-11 items-center justify-center rounded-md bg-zinc-800 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
         >
           Get started free

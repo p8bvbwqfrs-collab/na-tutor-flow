@@ -67,6 +67,7 @@ export default function ResetPasswordPage() {
             type="password"
             required
             minLength={8}
+            autoComplete="new-password"
             aria-invalid={Boolean(error)}
             aria-describedby={error ? "reset-password-error" : undefined}
             value={password}
@@ -84,6 +85,7 @@ export default function ResetPasswordPage() {
             type="password"
             required
             minLength={8}
+            autoComplete="new-password"
             aria-invalid={Boolean(error)}
             aria-describedby={error ? "reset-password-error" : undefined}
             value={confirmPassword}
