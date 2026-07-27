@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { EditStudentForm } from "./student-edit-form";
 
@@ -13,12 +13,16 @@ export default async function EditStudentPage({ params }: EditStudentPageProps) 
 
   const { data: student, error } = await supabase
     .from("students")
-    .select("id, student_name, subject, parent_name, parent_contact, parent_email, notes, default_fee_pence")
+    .select("id, student_name, subject, parent_name, parent_contact, parent_email, notes, default_fee_pence, archived_at")
     .eq("id", id)
     .maybeSingle();
 
   if (error || !student) {
     notFound();
+  }
+
+  if (student.archived_at) {
+    redirect(`/app/students/${student.id}?archived=1`);
   }
 
   return (

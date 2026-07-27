@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
   calculateLessonPaymentStatus,
@@ -34,7 +34,7 @@ export default async function EditLessonPage({ params, searchParams }: EditLesso
   const supabase = await createSupabaseServerClient();
 
   const [{ data: student, error: studentError }, { data: lesson, error: lessonError }, currencyCode] = await Promise.all([
-    supabase.from("students").select("id, student_name").eq("id", id).maybeSingle(),
+    supabase.from("students").select("id, student_name, archived_at").eq("id", id).maybeSingle(),
     supabase
       .from("lessons")
       .select("id, student_id, lesson_at, topics, topic_tags, went_well, parent_note, improve, homework, effort, confidence, fee_pence, paid, status, next_lesson_id")
@@ -46,6 +46,10 @@ export default async function EditLessonPage({ params, searchParams }: EditLesso
 
   if (studentError || lessonError || !student || !lesson) {
     notFound();
+  }
+
+  if (student.archived_at) {
+    redirect(`/app/students/${student.id}?archived=1`);
   }
 
   const linkedNextLessonResult = lesson.next_lesson_id

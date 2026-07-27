@@ -12,6 +12,7 @@ create table if not exists public.students (
   parent_email text,
   notes text,
   default_fee_pence integer check (default_fee_pence >= 0),
+  archived_at timestamptz,
   created_at timestamptz not null default now()
 );
 
@@ -67,6 +68,7 @@ create table if not exists public.payment_allocations (
 );
 
 create index if not exists students_user_id_idx on public.students (user_id);
+create index if not exists students_archived_at_idx on public.students (archived_at);
 create index if not exists lessons_user_id_idx on public.lessons (user_id);
 create index if not exists lessons_student_id_idx on public.lessons (student_id);
 create index if not exists lessons_lesson_at_idx on public.lessons (lesson_at);
@@ -106,7 +108,7 @@ drop policy if exists "students_delete_own" on public.students;
 create policy "students_delete_own"
   on public.students
   for delete
-  using (user_id = auth.uid());
+  using (user_id = auth.uid() and archived_at is not null);
 
 drop policy if exists "lessons_select_own" on public.lessons;
 drop policy if exists "user_settings_select_own" on public.user_settings;
@@ -144,20 +146,52 @@ drop policy if exists "lessons_insert_own" on public.lessons;
 create policy "lessons_insert_own"
   on public.lessons
   for insert
-  with check (user_id = auth.uid());
+  with check (
+    user_id = auth.uid()
+    and exists (
+      select 1 from public.students
+      where students.id = lessons.student_id
+        and students.user_id = auth.uid()
+        and students.archived_at is null
+    )
+  );
 
 drop policy if exists "lessons_update_own" on public.lessons;
 create policy "lessons_update_own"
   on public.lessons
   for update
-  using (user_id = auth.uid())
-  with check (user_id = auth.uid());
+  using (
+    user_id = auth.uid()
+    and exists (
+      select 1 from public.students
+      where students.id = lessons.student_id
+        and students.user_id = auth.uid()
+        and students.archived_at is null
+    )
+  )
+  with check (
+    user_id = auth.uid()
+    and exists (
+      select 1 from public.students
+      where students.id = lessons.student_id
+        and students.user_id = auth.uid()
+        and students.archived_at is null
+    )
+  );
 
 drop policy if exists "lessons_delete_own" on public.lessons;
 create policy "lessons_delete_own"
   on public.lessons
   for delete
-  using (user_id = auth.uid());
+  using (
+    user_id = auth.uid()
+    and exists (
+      select 1 from public.students
+      where students.id = lessons.student_id
+        and students.user_id = auth.uid()
+        and students.archived_at is null
+    )
+  );
 
 drop policy if exists "payments_select_own" on public.payments;
 create policy "payments_select_own"
@@ -169,20 +203,52 @@ drop policy if exists "payments_insert_own" on public.payments;
 create policy "payments_insert_own"
   on public.payments
   for insert
-  with check (user_id = auth.uid());
+  with check (
+    user_id = auth.uid()
+    and exists (
+      select 1 from public.students
+      where students.id = payments.student_id
+        and students.user_id = auth.uid()
+        and students.archived_at is null
+    )
+  );
 
 drop policy if exists "payments_update_own" on public.payments;
 create policy "payments_update_own"
   on public.payments
   for update
-  using (user_id = auth.uid())
-  with check (user_id = auth.uid());
+  using (
+    user_id = auth.uid()
+    and exists (
+      select 1 from public.students
+      where students.id = payments.student_id
+        and students.user_id = auth.uid()
+        and students.archived_at is null
+    )
+  )
+  with check (
+    user_id = auth.uid()
+    and exists (
+      select 1 from public.students
+      where students.id = payments.student_id
+        and students.user_id = auth.uid()
+        and students.archived_at is null
+    )
+  );
 
 drop policy if exists "payments_delete_own" on public.payments;
 create policy "payments_delete_own"
   on public.payments
   for delete
-  using (user_id = auth.uid());
+  using (
+    user_id = auth.uid()
+    and exists (
+      select 1 from public.students
+      where students.id = payments.student_id
+        and students.user_id = auth.uid()
+        and students.archived_at is null
+    )
+  );
 
 drop policy if exists "payment_allocations_select_own" on public.payment_allocations;
 create policy "payment_allocations_select_own"
@@ -194,17 +260,61 @@ drop policy if exists "payment_allocations_insert_own" on public.payment_allocat
 create policy "payment_allocations_insert_own"
   on public.payment_allocations
   for insert
-  with check (user_id = auth.uid());
+  with check (
+    user_id = auth.uid()
+    and exists (
+      select 1
+      from public.lessons
+      join public.students on students.id = lessons.student_id
+      where lessons.id = payment_allocations.lesson_id
+        and lessons.user_id = auth.uid()
+        and students.user_id = auth.uid()
+        and students.archived_at is null
+    )
+  );
 
 drop policy if exists "payment_allocations_update_own" on public.payment_allocations;
 create policy "payment_allocations_update_own"
   on public.payment_allocations
   for update
-  using (user_id = auth.uid())
-  with check (user_id = auth.uid());
+  using (
+    user_id = auth.uid()
+    and exists (
+      select 1
+      from public.lessons
+      join public.students on students.id = lessons.student_id
+      where lessons.id = payment_allocations.lesson_id
+        and lessons.user_id = auth.uid()
+        and students.user_id = auth.uid()
+        and students.archived_at is null
+    )
+  )
+  with check (
+    user_id = auth.uid()
+    and exists (
+      select 1
+      from public.lessons
+      join public.students on students.id = lessons.student_id
+      where lessons.id = payment_allocations.lesson_id
+        and lessons.user_id = auth.uid()
+        and students.user_id = auth.uid()
+        and students.archived_at is null
+    )
+  );
 
 drop policy if exists "payment_allocations_delete_own" on public.payment_allocations;
 create policy "payment_allocations_delete_own"
   on public.payment_allocations
   for delete
-  using (user_id = auth.uid());
+  using (
+    user_id = auth.uid()
+    and exists (
+      select 1
+      from public.lessons
+      join public.students on students.id = lessons.student_id
+      where lessons.id = payment_allocations.lesson_id
+        and lessons.user_id = auth.uid()
+        and students.user_id = auth.uid()
+        and students.archived_at is null
+    )
+  );

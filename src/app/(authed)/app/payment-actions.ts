@@ -49,6 +49,43 @@ function getMarkUnpaidMode(allocations: AllocationRow[]) {
   return "mixed" as const;
 }
 
+async function verifyActiveOwnedLesson(
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  lessonId: string,
+  userId: string,
+) {
+  const { data: lesson, error: lessonError } = await supabase
+    .from("lessons")
+    .select("id, user_id, student_id, fee_pence")
+    .eq("id", lessonId)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (lessonError || !lesson) {
+    return { lesson: null, error: "Could not find this lesson." };
+  }
+
+  const { data: student, error: studentError } = await supabase
+    .from("students")
+    .select("id, archived_at")
+    .eq("id", lesson.student_id)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (studentError || !student) {
+    return { lesson: null, error: "Could not find this student." };
+  }
+
+  if (student.archived_at) {
+    return {
+      lesson: null,
+      error: "This student is archived. Restore the student before changing payments.",
+    };
+  }
+
+  return { lesson, error: null };
+}
+
 async function insertReceivedPaymentForLesson({
   amountPence,
   lessonId,
@@ -114,20 +151,11 @@ export async function payOutstandingLessonAmount(lessonId: string) {
     return { ok: false, error: "You need to be signed in to record payment." };
   }
 
-  const { data: lesson, error: lessonError } = await supabase
-    .from("lessons")
-    .select("id, user_id, student_id, fee_pence")
-    .eq("id", lessonId)
-    .maybeSingle();
+  const verification = await verifyActiveOwnedLesson(supabase, lessonId, user.id);
+  const lesson = verification.lesson;
 
-  if (lessonError || !lesson) {
-    console.error("Could not load lesson for payment", { lessonId, error: lessonError });
-    return { ok: false, error: "Could not find this lesson." };
-  }
-
-  if (lesson.user_id !== user.id) {
-    console.error("Lesson payment rejected because lesson does not belong to user", { lessonId });
-    return { ok: false, error: "Could not record the payment." };
+  if (!lesson) {
+    return { ok: false, error: verification.error ?? "Could not record the payment." };
   }
 
   if (lesson.fee_pence <= 0) {
@@ -204,6 +232,20 @@ export async function getMarkLessonUnpaidConfirmation(lessonId: string) {
 
 export async function markLessonUnpaid(lessonId: string) {
   const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { ok: false, error: "You need to be signed in to change payments." };
+  }
+
+  const verification = await verifyActiveOwnedLesson(supabase, lessonId, user.id);
+
+  if (!verification.lesson) {
+    return { ok: false, error: verification.error ?? "Could not change this payment." };
+  }
+
   const { data: allocations, error: readError } = await supabase
     .from("payment_allocations")
     .select("id, payment_id, lesson_id, amount_pence, payment:payments(id, amount_pence, source, note)")
@@ -267,14 +309,11 @@ export async function applyAvailableCreditToLesson(lessonId: string) {
     return { ok: false, error: "You need to be signed in to use credit." };
   }
 
-  const { data: lesson, error: lessonError } = await supabase
-    .from("lessons")
-    .select("id, student_id, fee_pence")
-    .eq("id", lessonId)
-    .maybeSingle();
+  const verification = await verifyActiveOwnedLesson(supabase, lessonId, user.id);
+  const lesson = verification.lesson;
 
-  if (lessonError || !lesson) {
-    return { ok: false, error: "Could not find this lesson." };
+  if (!lesson) {
+    return { ok: false, error: verification.error ?? "Could not use available credit." };
   }
 
   const { data: lessonRows, error: lessonsError } = await supabase

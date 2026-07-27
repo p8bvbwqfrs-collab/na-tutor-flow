@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { getCurrencyLabel, type SupportedCurrencyCode } from "@/lib/currency";
 import { autoApplyPaymentToLessons, type AllocationLike, type LessonFeeLike, type PaymentLike } from "@/lib/payments";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { verifyStudentIsActive } from "../../student-actions";
 
 type RecordPaymentFormProps = {
   studentId: string;
@@ -113,6 +114,14 @@ export function RecordPaymentForm({ studentId, currencyCode }: RecordPaymentForm
     }
 
     setIsSaving(true);
+
+    const activeStudent = await verifyStudentIsActive(studentId);
+
+    if (!activeStudent.ok) {
+      setIsSaving(false);
+      setError(activeStudent.error);
+      return;
+    }
 
     const { data: payment, error: paymentError } = await supabase
       .from("payments")
@@ -331,6 +340,14 @@ export function PaymentRecordActions({ studentId, currencyCode, payment }: Payme
     const amountPence = Math.round(amountValue * 100);
     setIsSaving(true);
 
+    const activeStudent = await verifyStudentIsActive(studentId);
+
+    if (!activeStudent.ok) {
+      setIsSaving(false);
+      setError(activeStudent.error);
+      return;
+    }
+
     const { error: updateError } = await supabase
       .from("payments")
       .update({
@@ -376,6 +393,14 @@ export function PaymentRecordActions({ studentId, currencyCode, payment }: Payme
   async function onDelete() {
     setIsDeleting(true);
     setError(null);
+
+    const activeStudent = await verifyStudentIsActive(studentId);
+
+    if (!activeStudent.ok) {
+      setIsDeleting(false);
+      setError(activeStudent.error);
+      return;
+    }
 
     const { error: deleteError } = await supabase.from("payments").delete().eq("id", payment.id);
 

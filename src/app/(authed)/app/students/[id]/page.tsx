@@ -27,6 +27,7 @@ import { LessonSuccessPanel } from "./components/lesson-success-panel";
 import { MonthlySummaryGenerator } from "./components/monthly-summary-generator";
 import { PastLessonsMonthlySection } from "./components/past-lessons-monthly-section";
 import { PaymentsMonthlySection } from "./components/payments-monthly-section";
+import { PermanentStudentDeletion } from "./components/permanent-student-deletion";
 import { PlannedLessonStatusButton } from "./components/planned-lesson-status-button";
 import { ProgressSignalCard } from "./components/progress-signal-card";
 import { StudentArchiveToggle } from "./components/student-archive-toggle";
@@ -42,6 +43,7 @@ type StudentPageProps = {
     lessonCompleted?: string;
     lessonsMonth?: string;
     paymentsMonth?: string;
+    archived?: string;
   }>;
 };
 
@@ -298,25 +300,46 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
       </div>
       <p className="mt-1 text-sm text-zinc-600">Profile, progress, and lesson history.</p>
 
+      {isArchived ? (
+        <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
+          <p className="font-medium text-amber-950">Archived student</p>
+          <p className="mt-1 text-sm text-amber-900">
+            This profile is read-only. Restore the student before editing details, lessons or
+            payments.
+          </p>
+        </div>
+      ) : search.archived === "1" ? (
+        <p
+          role="alert"
+          className="mt-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+        >
+          This student is archived. Restore the student before making changes.
+        </p>
+      ) : null}
+
       <div className="mt-4 flex flex-wrap items-center gap-2">
-        <Link
-          href={`/app/students/${student.id}/new-lesson`}
-          className="rounded-md bg-zinc-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-        >
-          Log lesson
-        </Link>
-        <Link
-          href={`/app/students/${student.id}/schedule-lesson`}
-          className="rounded-md border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 transition-colors hover:bg-zinc-50 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-        >
-          Schedule lesson
-        </Link>
-        <Link
-          href={`/app/students/${student.id}/edit`}
-          className="rounded-md border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 transition-colors hover:bg-zinc-50 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-        >
-          Edit student
-        </Link>
+        {isArchived ? null : (
+          <>
+            <Link
+              href={`/app/students/${student.id}/new-lesson`}
+              className="rounded-md bg-zinc-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+            >
+              Log lesson
+            </Link>
+            <Link
+              href={`/app/students/${student.id}/schedule-lesson`}
+              className="rounded-md border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 transition-colors hover:bg-zinc-50 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+            >
+              Schedule lesson
+            </Link>
+            <Link
+              href={`/app/students/${student.id}/edit`}
+              className="rounded-md border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 transition-colors hover:bg-zinc-50 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+            >
+              Edit student
+            </Link>
+          </>
+        )}
         <StudentArchiveToggle studentId={student.id} isArchived={isArchived} />
       </div>
 
@@ -493,26 +516,33 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
                             {plannedTopic || "No planned topic or note yet."}
                           </p>
                         </div>
-                        <div className="flex flex-wrap items-start gap-2">
-                          <Link
-                            href={`/app/students/${student.id}/lessons/${lesson.id}?mode=complete`}
-                            className="inline-flex min-h-10 items-center justify-center rounded-md bg-zinc-800 px-3 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-                          >
-                            Complete lesson
-                          </Link>
-                          <Link
-                            href={`/app/students/${student.id}/lessons/${lesson.id}`}
-                            className="inline-flex min-h-10 items-center justify-center rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 transition-colors hover:bg-zinc-50 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-                          >
-                            Edit
-                          </Link>
-                          <PlannedLessonStatusButton
-                            lessonId={lesson.id}
-                            nextStatus="cancelled"
-                            label="Cancel lesson"
-                            className="min-h-10 border-rose-200 bg-white text-rose-700 hover:bg-rose-50 hover:text-rose-800"
-                          />
-                        </div>
+                        {isArchived ? (
+                          <span className="text-xs font-medium uppercase tracking-wide text-amber-800">
+                            Read-only
+                          </span>
+                        ) : (
+                          <div className="flex flex-wrap items-start gap-2">
+                            <Link
+                              href={`/app/students/${student.id}/lessons/${lesson.id}?mode=complete`}
+                              className="inline-flex min-h-10 items-center justify-center rounded-md bg-zinc-800 px-3 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                            >
+                              Complete lesson
+                            </Link>
+                            <Link
+                              href={`/app/students/${student.id}/lessons/${lesson.id}`}
+                              className="inline-flex min-h-10 items-center justify-center rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 transition-colors hover:bg-zinc-50 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                            >
+                              Edit
+                            </Link>
+                            <PlannedLessonStatusButton
+                              lessonId={lesson.id}
+                              studentId={student.id}
+                              nextStatus="cancelled"
+                              label="Cancel lesson"
+                              className="min-h-10 border-rose-200 bg-white text-rose-700 hover:bg-rose-50 hover:text-rose-800"
+                            />
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
@@ -543,6 +573,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
           currencyCode={currencyCode}
           initialMonthKey={initialLessonsMonthKey}
           hasLessonsError={Boolean(lessonsError)}
+          readOnly={isArchived}
         />
 
         <PaymentsMonthlySection
@@ -551,8 +582,13 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
           studentCreditPence={studentCreditPence}
           currencyCode={currencyCode}
           initialMonthKey={initialPaymentsMonthKey}
+          readOnly={isArchived}
         />
       </div>
+
+      {isArchived ? (
+        <PermanentStudentDeletion studentId={student.id} studentName={student.student_name} />
+      ) : null}
 
       <div className="mt-6">
         <Link href="/app/students" className="text-sm font-medium text-zinc-900 underline-offset-4 hover:underline">
@@ -560,12 +596,14 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
         </Link>
       </div>
 
-      <Link
-        href={`/app/students/${student.id}/new-lesson`}
-        className="fixed bottom-4 right-4 z-40 inline-flex items-center rounded-full bg-zinc-800 px-4 py-3 text-sm font-medium text-white shadow-lg transition-colors hover:bg-zinc-700 sm:hidden"
-      >
-        + Lesson
-      </Link>
+      {isArchived ? null : (
+        <Link
+          href={`/app/students/${student.id}/new-lesson`}
+          className="fixed bottom-4 right-4 z-40 inline-flex items-center rounded-full bg-zinc-800 px-4 py-3 text-sm font-medium text-white shadow-lg transition-colors hover:bg-zinc-700 sm:hidden"
+        >
+          + Lesson
+        </Link>
+      )}
     </section>
   );
 }

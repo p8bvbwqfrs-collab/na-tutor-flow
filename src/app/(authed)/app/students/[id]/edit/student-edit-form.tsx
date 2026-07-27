@@ -3,6 +3,7 @@
 import { FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { verifyStudentIsActive } from "../../student-actions";
 
 type EditStudentFormProps = {
   studentId: string;
@@ -56,6 +57,14 @@ export function EditStudentForm({
     }
 
     setIsSubmitting(true);
+
+    const activeStudent = await verifyStudentIsActive(studentId);
+
+    if (!activeStudent.ok) {
+      setIsSubmitting(false);
+      setError(activeStudent.error);
+      return;
+    }
 
     const { error: updateError } = await supabase
       .from("students")

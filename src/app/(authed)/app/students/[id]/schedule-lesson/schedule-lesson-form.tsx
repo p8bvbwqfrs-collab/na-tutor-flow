@@ -5,6 +5,7 @@ import { FormEvent, useMemo, useState } from "react";
 import { getCurrencyLabel, type SupportedCurrencyCode } from "@/lib/currency";
 import { getLondonDateTimeInputValues } from "@/lib/datetime";
 import { getSubmittedLessonAtIso } from "@/lib/lesson-scheduling";
+import { verifyStudentIsActive } from "../../student-actions";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { LessonFormSection } from "../components/lesson-form-section";
 
@@ -63,6 +64,14 @@ export function ScheduleLessonForm({
     }
 
     setIsSubmitting(true);
+
+    const activeStudent = await verifyStudentIsActive(studentId);
+
+    if (!activeStudent.ok) {
+      setIsSubmitting(false);
+      setError(activeStudent.error);
+      return;
+    }
 
     let lessonAtIso: string;
 

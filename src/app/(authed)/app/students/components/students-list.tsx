@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { StudentArchiveToggle } from "../[id]/components/student-archive-toggle";
 
 type Student = {
   id: string;
@@ -49,6 +50,7 @@ export function StudentsList({ students }: StudentsListProps) {
         <div className="mt-4 space-y-3 md:hidden">
           {filteredStudents.map((student) => {
             const parentContact = student.parent_contact || student.parent_email;
+            const isArchived = Boolean(student.archived_at);
 
             return (
               <div
@@ -57,6 +59,10 @@ export function StudentsList({ students }: StudentsListProps) {
                 tabIndex={0}
                 onClick={() => router.push(`/app/students/${student.id}`)}
                 onKeyDown={(event) => {
+                  if (event.target !== event.currentTarget) {
+                    return;
+                  }
+
                   if (event.key === "Enter" || event.key === " ") {
                     event.preventDefault();
                     router.push(`/app/students/${student.id}`);
@@ -80,21 +86,36 @@ export function StudentsList({ students }: StudentsListProps) {
                   ) : null}
                 </div>
 
-                <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                  <Link
-                    href={`/app/students/${student.id}/new-lesson`}
-                    onClick={(event) => event.stopPropagation()}
-                    className="inline-flex min-h-10 w-full min-w-0 items-center justify-center rounded-md bg-zinc-800 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-                  >
-                    Log lesson
-                  </Link>
-                  <Link
-                    href={`/app/students/${student.id}/schedule-lesson`}
-                    onClick={(event) => event.stopPropagation()}
-                    className="inline-flex min-h-10 w-full min-w-0 items-center justify-center rounded-md border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-                  >
-                    Schedule lesson
-                  </Link>
+                <div
+                  className="mt-3 grid gap-2 sm:grid-cols-2"
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  {isArchived ? (
+                    <>
+                      <Link
+                        href={`/app/students/${student.id}`}
+                        className="inline-flex min-h-10 w-full min-w-0 items-center justify-center rounded-md bg-zinc-800 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                      >
+                        View
+                      </Link>
+                      <StudentArchiveToggle studentId={student.id} isArchived />
+                    </>
+                  ) : (
+                    <>
+                      <Link
+                        href={`/app/students/${student.id}/new-lesson`}
+                        className="inline-flex min-h-10 w-full min-w-0 items-center justify-center rounded-md bg-zinc-800 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                      >
+                        Log lesson
+                      </Link>
+                      <Link
+                        href={`/app/students/${student.id}/schedule-lesson`}
+                        className="inline-flex min-h-10 w-full min-w-0 items-center justify-center rounded-md border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                      >
+                        Schedule lesson
+                      </Link>
+                    </>
+                  )}
                 </div>
               </div>
             );
@@ -132,18 +153,32 @@ export function StudentsList({ students }: StudentsListProps) {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap justify-end gap-2">
-                      <Link
-                        href={`/app/students/${student.id}/new-lesson`}
-                        className="inline-flex rounded-md bg-zinc-800 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-                      >
-                        Log lesson
-                      </Link>
-                      <Link
-                        href={`/app/students/${student.id}/schedule-lesson`}
-                        className="inline-flex rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-900 underline-offset-4 transition-colors hover:bg-zinc-50 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-                      >
-                        Schedule lesson
-                      </Link>
+                      {student.archived_at ? (
+                        <>
+                          <Link
+                            href={`/app/students/${student.id}`}
+                            className="inline-flex rounded-md bg-zinc-800 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                          >
+                            View
+                          </Link>
+                          <StudentArchiveToggle studentId={student.id} isArchived />
+                        </>
+                      ) : (
+                        <>
+                          <Link
+                            href={`/app/students/${student.id}/new-lesson`}
+                            className="inline-flex rounded-md bg-zinc-800 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                          >
+                            Log lesson
+                          </Link>
+                          <Link
+                            href={`/app/students/${student.id}/schedule-lesson`}
+                            className="inline-flex rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-900 underline-offset-4 transition-colors hover:bg-zinc-50 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                          >
+                            Schedule lesson
+                          </Link>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>
