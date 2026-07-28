@@ -4,7 +4,7 @@ import Link from "next/link";
 import { FormEvent, useMemo, useState } from "react";
 import { getCurrencyLabel, type SupportedCurrencyCode } from "@/lib/currency";
 import { getLondonDateTimeInputValues } from "@/lib/datetime";
-import { getSubmittedLessonAtIso } from "@/lib/lesson-scheduling";
+import { getSubmittedLessonAtIsoFromForm } from "@/lib/lesson-scheduling";
 import { verifyStudentIsActive } from "../../student-actions";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { LessonFormSection } from "../components/lesson-form-section";
@@ -63,6 +63,17 @@ export function ScheduleLessonForm({
       return;
     }
 
+    let lessonAtIso: string;
+
+    try {
+      lessonAtIso = getSubmittedLessonAtIsoFromForm(event.currentTarget);
+    } catch (dateTimeError) {
+      setError(
+        dateTimeError instanceof Error ? dateTimeError.message : "Lesson date and time is invalid.",
+      );
+      return;
+    }
+
     setIsSubmitting(true);
 
     const activeStudent = await verifyStudentIsActive(studentId);
@@ -70,18 +81,6 @@ export function ScheduleLessonForm({
     if (!activeStudent.ok) {
       setIsSubmitting(false);
       setError(activeStudent.error);
-      return;
-    }
-
-    let lessonAtIso: string;
-
-    try {
-      lessonAtIso = getSubmittedLessonAtIso(new FormData(event.currentTarget));
-    } catch (dateTimeError) {
-      setIsSubmitting(false);
-      setError(
-        dateTimeError instanceof Error ? dateTimeError.message : "Lesson date and time is invalid.",
-      );
       return;
     }
 
