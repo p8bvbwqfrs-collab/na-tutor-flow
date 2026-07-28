@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { submitPermanentStudentDeletion } from "@/lib/permanent-student-deletion";
 import { deleteStudentPermanently } from "../../student-actions";
 
 type PermanentStudentDeletionProps = {
@@ -13,11 +13,11 @@ export function PermanentStudentDeletion({
   studentId,
   studentName,
 }: PermanentStudentDeletionProps) {
-  const router = useRouter();
   const dialogRef = useRef<HTMLDivElement>(null);
   const confirmationInputRef = useRef<HTMLInputElement>(null);
   const openButtonRef = useRef<HTMLButtonElement>(null);
   const errorRef = useRef<HTMLParagraphElement>(null);
+  const deletionInFlightRef = useRef(false);
   const [isOpen, setIsOpen] = useState(false);
   const [confirmationName, setConfirmationName] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
@@ -48,22 +48,28 @@ export function PermanentStudentDeletion({
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setError(null);
-    setIsDeleting(true);
 
-    const result = await deleteStudentPermanently({
-      studentId,
-      confirmationName,
-    });
-
-    if (!result.ok) {
-      setIsDeleting(false);
-      setError(result.error);
+    if (deletionInFlightRef.current) {
       return;
     }
 
-    router.replace("/app/students?view=archived&deleted=1");
-    router.refresh();
+    setError(null);
+    setIsDeleting(true);
+
+    const result = await submitPermanentStudentDeletion({
+      inFlight: deletionInFlightRef,
+      deleteStudent: () =>
+        deleteStudentPermanently({
+          studentId,
+          confirmationName,
+        }),
+      navigate: (path) => window.location.replace(path),
+    });
+
+    if (result.status === "error") {
+      setIsDeleting(false);
+      setError(result.error);
+    }
   }
 
   return (
