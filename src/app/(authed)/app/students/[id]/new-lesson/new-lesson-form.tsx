@@ -13,6 +13,7 @@ import {
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { applyAvailableCreditToLesson, payOutstandingLessonAmount } from "../../../payment-actions";
 import { DeleteLessonButton } from "../components/delete-lesson-button";
+import { verifyStudentIsActive } from "../../student-actions";
 import { LessonFormSection } from "../components/lesson-form-section";
 import { LessonSuccessPanel } from "../components/lesson-success-panel";
 import { RatingSelector } from "../components/rating-selector";
@@ -200,6 +201,14 @@ export function NewLessonForm({
       : null;
 
     setIsSubmitting(true);
+
+    const activeStudent = await verifyStudentIsActive(studentId);
+
+    if (!activeStudent.ok) {
+      setIsSubmitting(false);
+      setError(activeStudent.error);
+      return;
+    }
 
     const payload = {
       student_id: studentId,

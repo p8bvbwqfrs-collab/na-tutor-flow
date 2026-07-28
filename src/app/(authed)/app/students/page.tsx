@@ -18,13 +18,13 @@ type Student = {
 };
 
 type StudentsPageProps = {
-  searchParams: Promise<{ view?: string; lessonAction?: string }>;
+  searchParams: Promise<{ view?: string; lessonAction?: string; deleted?: string }>;
 };
 
 export default async function StudentsPage({ searchParams }: StudentsPageProps) {
   noStore();
 
-  const { view, lessonAction } = await searchParams;
+  const { view, lessonAction, deleted } = await searchParams;
   const showArchived = view === "archived";
   const requestedLessonAction =
     lessonAction === "log" || lessonAction === "schedule" ? lessonAction : null;
@@ -57,6 +57,14 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
   return (
     <>
       <section>
+        {deleted === "1" && showArchived ? (
+          <p
+            role="status"
+            className="mb-4 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900"
+          >
+            Student and all associated data were permanently deleted.
+          </p>
+        ) : null}
         <div className="flex flex-col gap-3">
           <div>
             <h1 className="text-xl font-semibold text-zinc-900">Students</h1>

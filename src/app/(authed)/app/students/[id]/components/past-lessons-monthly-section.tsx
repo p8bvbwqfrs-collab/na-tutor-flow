@@ -28,6 +28,7 @@ type PastLessonsMonthlySectionProps = {
   currencyCode: SupportedCurrencyCode;
   initialMonthKey: string;
   hasLessonsError: boolean;
+  readOnly?: boolean;
 };
 
 function cleanLessonText(value: string) {
@@ -45,6 +46,7 @@ export function PastLessonsMonthlySection({
   currencyCode,
   initialMonthKey,
   hasLessonsError,
+  readOnly = false,
 }: PastLessonsMonthlySectionProps) {
   const [selectedMonthKey, setSelectedMonthKey] = useState(initialMonthKey);
   const lessonsForMonth = lessons.filter((lesson) => getMonthKeyLocal(lesson.lesson_at) === selectedMonthKey);
@@ -72,20 +74,22 @@ export function PastLessonsMonthlySection({
             <p className="mt-2 text-sm text-zinc-600">
               Log your first lesson to track progress and generate update messages.
             </p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <Link
-                href={`/app/students/${studentId}/new-lesson`}
-                className="inline-flex rounded-md bg-zinc-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-              >
-                Log lesson
-              </Link>
-              <Link
-                href={`/app/students/${studentId}/schedule-lesson`}
-                className="inline-flex rounded-md border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 transition-colors hover:bg-zinc-50 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-              >
-                Schedule lesson
-              </Link>
-            </div>
+            {!readOnly ? (
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Link
+                  href={`/app/students/${studentId}/new-lesson`}
+                  className="inline-flex rounded-md bg-zinc-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                >
+                  Log lesson
+                </Link>
+                <Link
+                  href={`/app/students/${studentId}/schedule-lesson`}
+                  className="inline-flex rounded-md border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 transition-colors hover:bg-zinc-50 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                >
+                  Schedule lesson
+                </Link>
+              </div>
+            ) : null}
           </div>
         ) : lessonsForMonth.length === 0 ? (
           <p className="mt-4 rounded-md border border-dashed border-zinc-300 bg-zinc-50 px-3 py-2 text-sm text-zinc-600">
@@ -167,7 +171,9 @@ export function PastLessonsMonthlySection({
                           >
                             View notes
                           </Link>
-                          <LessonPaidToggle lessonId={lesson.id} status={paymentStatus} compact />
+                          {!readOnly ? (
+                            <LessonPaidToggle lessonId={lesson.id} status={paymentStatus} compact />
+                          ) : null}
                         </div>
                       </td>
                     </tr>

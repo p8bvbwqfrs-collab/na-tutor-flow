@@ -22,6 +22,7 @@ type PaymentsMonthlySectionProps = {
   studentCreditPence: number;
   currencyCode: SupportedCurrencyCode;
   initialMonthKey: string;
+  readOnly?: boolean;
 };
 
 function getPaymentDateValue(payment: Pick<Payment, "payment_date" | "created_at">) {
@@ -50,6 +51,7 @@ export function PaymentsMonthlySection({
   studentCreditPence,
   currencyCode,
   initialMonthKey,
+  readOnly = false,
 }: PaymentsMonthlySectionProps) {
   const [selectedMonthKey, setSelectedMonthKey] = useState(initialMonthKey);
   const selectedMonthStart = getMonthStartFromKey(selectedMonthKey);
@@ -71,7 +73,7 @@ export function PaymentsMonthlySection({
               Record payments here if you take upfront or bulk payments. Otherwise, just mark lessons as paid.
             </p>
           </div>
-          <RecordPaymentForm studentId={studentId} currencyCode={currencyCode} />
+          {!readOnly ? <RecordPaymentForm studentId={studentId} currencyCode={currencyCode} /> : null}
         </div>
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <div className="rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2">
@@ -114,7 +116,9 @@ export function PaymentsMonthlySection({
                         {formatDateLocal(getPaymentDateValue(payment))} · {getPaymentDetail(payment)}
                       </p>
                     </div>
-                    <PaymentRecordActions studentId={studentId} currencyCode={currencyCode} payment={payment} />
+                    {!readOnly ? (
+                      <PaymentRecordActions studentId={studentId} currencyCode={currencyCode} payment={payment} />
+                    ) : null}
                   </div>
                 </div>
               ))}

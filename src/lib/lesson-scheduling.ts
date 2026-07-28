@@ -12,3 +12,11 @@ export function getSubmittedLessonAtIso(formData: FormValues) {
 
   return londonDateTimeToIso(lessonDate, lessonTime);
 }
+
+export function getSubmittedLessonAtIsoFromForm(form: HTMLFormElement) {
+  if (!(form instanceof HTMLFormElement)) {
+    throw new TypeError("Scheduled lesson submission requires an HTML form element.");
+  }
+
+  return getSubmittedLessonAtIso(new FormData(form));
+}

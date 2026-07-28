@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getLatestStudentFeeAmount } from "@/lib/lesson-fees";
 import { calculateStudentCredit, type AllocationLike, type PaymentLike } from "@/lib/payments";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -28,7 +28,7 @@ export default async function NewLessonPage({ params }: NewLessonPageProps) {
   const [{ data: student, error }, initialFeeAmount, currencyCode] = await Promise.all([
     supabase
       .from("students")
-      .select("id, student_name")
+      .select("id, student_name, archived_at")
       .eq("id", id)
       .maybeSingle(),
     getLatestStudentFeeAmount(supabase, id),
@@ -37,6 +37,10 @@ export default async function NewLessonPage({ params }: NewLessonPageProps) {
 
   if (error || !student) {
     notFound();
+  }
+
+  if (student.archived_at) {
+    redirect(`/app/students/${student.id}?archived=1`);
   }
 
   const [{ data: paymentRows }, { data: lessonRows }] = await Promise.all([

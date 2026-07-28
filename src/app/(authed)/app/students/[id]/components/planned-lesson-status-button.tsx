@@ -3,9 +3,11 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { verifyStudentIsActive } from "../../student-actions";
 
 type PlannedLessonStatusButtonProps = {
   lessonId: string;
+  studentId: string;
   nextStatus: "cancelled" | "planned";
   label: string;
   className?: string;
@@ -13,6 +15,7 @@ type PlannedLessonStatusButtonProps = {
 
 export function PlannedLessonStatusButton({
   lessonId,
+  studentId,
   nextStatus,
   label,
   className,
@@ -25,6 +28,14 @@ export function PlannedLessonStatusButton({
   async function onClick() {
     setError(null);
     setIsUpdating(true);
+
+    const activeStudent = await verifyStudentIsActive(studentId);
+
+    if (!activeStudent.ok) {
+      setIsUpdating(false);
+      setError(activeStudent.error);
+      return;
+    }
 
     const { error: updateError } = await supabase
       .from("lessons")

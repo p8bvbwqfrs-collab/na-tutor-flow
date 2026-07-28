@@ -66,7 +66,7 @@ export default async function ViewLessonPage({ params }: ViewLessonPageProps) {
 
   const [{ data: student, error: studentError }, { data: lesson, error: lessonError }, currencyCode] =
     await Promise.all([
-      supabase.from("students").select("id, student_name").eq("id", id).maybeSingle(),
+      supabase.from("students").select("id, student_name, archived_at").eq("id", id).maybeSingle(),
       supabase
         .from("lessons")
         .select(
@@ -165,18 +165,22 @@ export default async function ViewLessonPage({ params }: ViewLessonPageProps) {
             </p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-start sm:justify-end">
-            <Link
-              href={`/app/students/${student.id}/lessons/${lesson.id}`}
-              className="inline-flex min-h-9 items-center justify-center rounded-md bg-zinc-800 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-            >
-              Edit lesson
-            </Link>
+            {!student.archived_at ? (
+              <Link
+                href={`/app/students/${student.id}/lessons/${lesson.id}`}
+                className="inline-flex min-h-9 items-center justify-center rounded-md bg-zinc-800 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+              >
+                Edit lesson
+              </Link>
+            ) : null}
             <LessonUpdateActions message={parentUpdate} />
-            <DeleteLessonButton
-              lessonId={lesson.id}
-              studentId={student.id}
-              className="inline-flex min-h-9 items-center justify-center rounded-md border border-rose-200 bg-white px-3 py-1.5 text-sm font-medium text-rose-700 transition-colors hover:bg-rose-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-            />
+            {!student.archived_at ? (
+              <DeleteLessonButton
+                lessonId={lesson.id}
+                studentId={student.id}
+                className="inline-flex min-h-9 items-center justify-center rounded-md border border-rose-200 bg-white px-3 py-1.5 text-sm font-medium text-rose-700 transition-colors hover:bg-rose-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+              />
+            ) : null}
           </div>
         </div>
 
@@ -224,9 +228,11 @@ export default async function ViewLessonPage({ params }: ViewLessonPageProps) {
               <h2 className="text-xs font-medium uppercase tracking-wide text-zinc-500">Linked next lesson</h2>
               <Link
                 href={
-                  linkedNextLessonResult.data.status === "planned"
+                  linkedNextLessonResult.data.status === "planned" && !student.archived_at
                     ? `/app/students/${student.id}/lessons/${linkedNextLessonResult.data.id}`
-                    : `/app/students/${student.id}/lessons/${linkedNextLessonResult.data.id}/view`
+                    : linkedNextLessonResult.data.status === "planned"
+                      ? `/app/students/${student.id}`
+                      : `/app/students/${student.id}/lessons/${linkedNextLessonResult.data.id}/view`
                 }
                 className="mt-2 block rounded-md border border-zinc-200 bg-zinc-50 p-3 transition-colors hover:border-zinc-300 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
               >
