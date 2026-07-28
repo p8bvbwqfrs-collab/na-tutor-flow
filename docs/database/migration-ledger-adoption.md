@@ -23,6 +23,7 @@ ledger is empty or untracked.
 | `20260429` | `reconcile_production_schema` | Historical: mark applied | The reconciled nullability, defaults, constraints and grants already match. |
 | `20260727` | `guard_archived_student_writes` | New: execute | Adds archived-student write guards and deletion protection. |
 | `20260728` | `reconcile_authenticated_policy_roles` | New: execute after `20260727` | Reconciles policy roles and removes duplicate or overly broad policies. |
+| `202607290000` | `restore_lessons_next_lesson_id_index` | New: execute after `20260728` | Restores the missing non-unique btree index on `lessons(next_lesson_id)` without a data backfill. The next sortable version is used because extending the existing short `20260728_` prefix would sort before it in the CLI. |
 
 The expected final ledger order is exactly:
 
@@ -37,6 +38,7 @@ The expected final ledger order is exactly:
 20260429
 20260727
 20260728
+202607290000
 ```
 
 ## Required staging project
@@ -79,6 +81,7 @@ Acceptance criterion: the first dry run lists only:
 ```text
 20260727_guard_archived_student_writes.sql
 20260728_reconcile_authenticated_policy_roles.sql
+202607290000_restore_lessons_next_lesson_id_index.sql
 ```
 
 If any historical migration appears, stop. Do not use `--include-all`; correct the
@@ -106,6 +109,21 @@ expected version must appear exactly once in the ledger.
 - another user cannot access or delete the student;
 - an owned archived student can be deleted; and
 - deletion cascades through lessons, payments and allocations.
+
+The final schema must also contain exactly this index definition:
+
+```sql
+CREATE INDEX lessons_next_lesson_id_idx
+ON public.lessons USING btree (next_lesson_id);
+```
+
+It is intentionally non-unique and non-partial. The migration uses
+`CREATE INDEX CONCURRENTLY IF NOT EXISTS`, so it must run outside an explicit
+transaction. Concurrent creation avoids blocking ordinary inserts, updates and
+deletes while the index is built, although it briefly acquires lighter relation
+locks and may wait for long-running transactions. Keep the production maintenance
+window and monitor long-running transactions even though the audited production
+table is currently small.
 
 ## Staging adoption procedure
 
@@ -170,9 +188,9 @@ supabase migration list --linked
 supabase db push --dry-run --linked
 ```
 
-The dry run must list exactly `20260727` and `20260728`, in that order. If it lists
-`20260428` or any other historical migration, stop because replay could modify data
-or conflict with existing objects.
+The dry run must list exactly `20260727`, `20260728` and `202607290000`, in that
+order. If it lists `20260428` or any other historical migration, stop because
+replay could modify data or conflict with existing objects.
 
 ### 4. Apply new migrations and test
 
@@ -187,7 +205,34 @@ supabase test db --linked
 
 The final dry run must report no pending migrations. Run the archived-student
 security cases with disposable staging users and records, then delete those
-disposable records.
+disposable records. Verify the index after application:
+
+```sql
+select
+  index_class.relname as index_name,
+  access_method.amname as method,
+  index_catalog.indisunique,
+  index_catalog.indisvalid,
+  index_catalog.indisready,
+  pg_get_indexdef(index_catalog.indexrelid) as definition,
+  pg_get_expr(index_catalog.indpred, index_catalog.indrelid) as predicate
+from pg_index as index_catalog
+join pg_class as index_class
+  on index_class.oid = index_catalog.indexrelid
+join pg_class as table_class
+  on table_class.oid = index_catalog.indrelid
+join pg_namespace as table_namespace
+  on table_namespace.oid = table_class.relnamespace
+join pg_am as access_method
+  on access_method.oid = index_class.relam
+where table_namespace.nspname = 'public'
+  and table_class.relname = 'lessons'
+  and index_class.relname = 'lessons_next_lesson_id_idx';
+```
+
+The returned definition must be a valid, non-unique, non-partial btree index whose
+only key is `next_lesson_id`. Also confirm `pg_index.indisvalid` and
+`pg_index.indisready` are both true.
 
 ## Failure and rollback
 
@@ -207,6 +252,18 @@ psql "$STAGING_DATABASE_URL" \
 set. Restore the pre-change schema backup (or recreate the exact backed-up policies)
 before applying the `20260727` rollback. Do not improvise policies during an
 incident.
+
+The index migration has an independent, non-blocking rollback:
+
+```sh
+psql "$STAGING_DATABASE_URL" \
+  -v ON_ERROR_STOP=1 \
+  -f supabase/rollback/202607290000_restore_lessons_next_lesson_id_index.sql
+```
+
+`DROP INDEX CONCURRENTLY` must also run outside an explicit transaction. Reapply
+`202607290000_restore_lessons_next_lesson_id_index.sql` after rollback if the
+application still relies on efficient self-reference lookups.
 
 If a ledger version is marked incorrectly but its SQL was not applied, repair only
 that exact version after comparing the live schema:
@@ -229,17 +286,19 @@ authorisation to run it.
 2. Take and verify a production database backup.
 3. Capture the production schema-only dump and migration ledger.
 4. Re-run the structural comparison against `supabase/schema.sql`.
-5. Resolve the known missing `lessons.next_lesson_id` index deliberately; do not
-   replay the historical migration merely to create it.
-6. Mark the eight verified historical versions applied.
-7. Require a dry run showing only `20260727` and `20260728`.
-8. Apply those two migrations.
+5. Mark the eight verified historical versions applied.
+6. Require a dry run showing only `20260727`, `20260728` and `202607290000`.
+7. Confirm no long-running transactions would delay concurrent index creation.
+8. Apply those three migrations in the approved maintenance window. Do not wrap
+   the concurrent index migration in an explicit transaction.
 9. Confirm the final ledger and an empty dry run.
-10. Deploy the matching application commit through the normal production process.
-11. Smoke-test active writes, archived read-only views, restoration, deletion
+10. Verify `lessons_next_lesson_id_idx` is valid and ready with the exact expected
+    definition.
+11. Deploy the matching application commit through the normal production process.
+12. Smoke-test active writes, archived read-only views, restoration, deletion
     confirmation, ownership rejection and cascade behaviour using approved test
     records only.
-12. Monitor API errors, PostgreSQL logs and authentication failures.
+13. Monitor API errors, PostgreSQL logs, index validity and authentication failures.
 
 Emergency application rollback: redeploy the previously known-good application
 version. Emergency database rollback: restore the verified backup, or restore the
