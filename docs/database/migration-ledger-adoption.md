@@ -55,6 +55,48 @@ count, so a staging project may fit without an upgrade. Confirm the organisation
 actual plan and billing page before creation. Creating or activating a cloud project
 requires separate approval.
 
+## Cloud staging rehearsal evidence
+
+The complete adoption rehearsal passed on 2026-07-28 against the approved staging
+project only:
+
+- Project: `tutor-tool-staging`
+- Project ref: `jdisqhgeutvslclkpqzr`
+- Region: `eu-west-1`
+- Starting state: active and healthy, zero public tables, no migration ledger and
+  no customer data
+- Baseline: `supabase/schema.sql` applied directly to the empty project, then
+  restored to the verified production-like pre-guard policy shape; the sequence
+  index was removed before adoption
+- Historical ledger adoption: exactly `20260224`, `20260225`, `20260324`,
+  `20260407`, `202604080000`, `202604080001`, `20260428` and `20260429` marked
+  applied without executing their migration SQL
+- First dry run: exactly `20260727`, `20260728` and `202607290000`, in order
+- Forward application: those three migrations applied successfully in that order
+- Final ledger: all 11 expected versions present exactly once
+- Second dry run: remote database up to date with no pending migrations
+- Index: valid and ready, non-unique, non-partial btree on
+  `public.lessons(next_lesson_id)` with the expected name
+- Security matrix: active writes, active deletion rejection, archived related-write
+  rejection, restoration, cross-user isolation, owned archived deletion and
+  lesson/payment/allocation cascades all passed
+- Rollback: the archived-control rollback test passed; `20260727` and `20260728`
+  were reapplied directly and the complete security matrix passed again
+- Cleanup: zero students, lessons, payments, allocations, user settings or
+  disposable `@example.test` authentication users remained
+- Application checks: 25 repository tests, TypeScript `--noEmit`, production build,
+  targeted ESLint and `git diff --check` all passed
+
+The latest CLI used Management API database queries, so the rehearsal required no
+database password or connection string. After the three migrations applied, the
+CLI warned that it could not cache its local migration catalog because its Docker
+client path was unavailable in that invocation. Remote ledger, schema, security
+tests and the second dry run independently confirmed successful application, so
+this warning did not affect staging.
+
+No billing prompt, upgrade, production write, production data read, application
+deployment or cloud-project creation occurred during this rehearsal.
+
 ## Local rehearsal
 
 Start Docker, then from the repository root run:
