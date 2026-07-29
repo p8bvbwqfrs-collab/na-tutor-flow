@@ -56,10 +56,16 @@ export default function PrivacyPage() {
 
         <section className="rounded-lg border border-zinc-200 bg-white p-4 sm:p-6">
           <h2 className="text-lg font-medium text-zinc-900">Data ownership</h2>
-          <p className="mt-3 text-sm leading-6 text-zinc-600">
-            You retain ownership of the data you add to Tutor Flow, including lesson notes and
-            student information.
-          </p>
+          <div className="mt-3 space-y-3 text-sm leading-6 text-zinc-600">
+            <p>
+              You retain ownership of the data you add to Tutor Flow, including lesson notes and
+              student information.
+            </p>
+            <p>
+              You can download a portable copy of your account data or permanently delete your
+              account and its saved data from Settings.
+            </p>
+          </div>
         </section>
 
         <section className="rounded-lg border border-zinc-200 bg-white p-4 sm:p-6">

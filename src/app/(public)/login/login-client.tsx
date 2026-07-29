@@ -16,6 +16,7 @@ export function LoginClient({ mode: authMode }: LoginClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialError = searchParams.get("error");
+  const accountWasDeleted = searchParams.get("account_deleted") === "1";
   const [showOtpFallback, setShowOtpFallback] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -405,6 +406,15 @@ export function LoginClient({ mode: authMode }: LoginClientProps) {
           ? "Sign in with your email and password."
           : "Create your account with your email and password."}
       </p>
+
+      {accountWasDeleted ? (
+        <p
+          role="status"
+          className="mt-4 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900"
+        >
+          Your Tutor Flow account and its saved data were permanently deleted.
+        </p>
+      ) : null}
 
       <form
         onSubmit={onPrimarySubmit}
