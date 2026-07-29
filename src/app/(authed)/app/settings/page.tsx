@@ -1,17 +1,27 @@
 import { headers } from "next/headers";
 import { canUseCalendarFeeds, generateCalendarFeedToken } from "@/lib/calendar-feed";
-import { getUserCurrencyCode } from "@/lib/user-settings";
+import {
+  getUserCalendarFeedVersion,
+  getUserCurrencyCode,
+} from "@/lib/user-settings";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { CopyFeedLinkButton } from "./components/copy-feed-link-button";
+import { CalendarFeedControls } from "./components/calendar-feed-controls";
 import { CurrencySettingsForm } from "./components/currency-settings-form";
 
-export default async function SettingsPage() {
+type SettingsPageProps = {
+  searchParams: Promise<{ calendar_reset?: string }>;
+};
+
+export default async function SettingsPage({ searchParams }: SettingsPageProps) {
   const supabase = await createSupabaseServerClient();
   const headerStore = await headers();
-  const [userResult, currencyCode] = await Promise.all([
-    supabase.auth.getUser(),
-    getUserCurrencyCode(supabase),
-  ]);
+  const [userResult, currencyCode, calendarFeedVersion, resolvedSearchParams] =
+    await Promise.all([
+      supabase.auth.getUser(),
+      getUserCurrencyCode(supabase),
+      getUserCalendarFeedVersion(supabase),
+      searchParams,
+    ]);
   const user = userResult.data.user;
   const host = headerStore.get("x-forwarded-host") ?? headerStore.get("host");
   const protocol = headerStore.get("x-forwarded-proto") ?? "https";
@@ -19,7 +29,11 @@ export default async function SettingsPage() {
   const feedsAvailable = Boolean(user?.id && baseUrl && canUseCalendarFeeds());
   const tutoringFeedUrl =
     feedsAvailable && user?.id
-      ? `${baseUrl}/api/calendar/tutoring?token=${generateCalendarFeedToken(user.id, "tutoring")}`
+      ? `${baseUrl}/api/calendar/tutoring?token=${generateCalendarFeedToken(
+          user.id,
+          "tutoring",
+          calendarFeedVersion,
+        )}`
       : "";
   const tutoringWebcalUrl = tutoringFeedUrl.replace(/^https?:\/\//, "webcal://");
   const isLocalHost =
@@ -34,6 +48,15 @@ export default async function SettingsPage() {
       <p className="mt-1 text-sm text-zinc-600">
         Manage your account, preferences and calendar connection.
       </p>
+
+      {resolvedSearchParams.calendar_reset === "1" ? (
+        <p
+          role="status"
+          className="mt-4 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900"
+        >
+          Your private calendar link was reset. Subscribe again wherever you want calendar updates.
+        </p>
+      ) : null}
 
       <div className="mt-5 space-y-4">
         <section className="rounded-lg border border-zinc-200 bg-white p-4">
@@ -72,23 +95,15 @@ export default async function SettingsPage() {
               <p className="mt-2 text-sm text-zinc-600">
                 View upcoming and completed lessons in a read-only calendar subscription.
               </p>
-              <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-start sm:gap-3">
-                <a
-                  href={feedsAvailable ? addToCalendarUrl : "#"}
-                  className="inline-flex min-h-10 min-w-[8.5rem] items-center justify-center rounded-md bg-zinc-800 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 aria-disabled:pointer-events-none aria-disabled:cursor-not-allowed aria-disabled:bg-zinc-300"
-                  aria-disabled={!feedsAvailable}
-                >
-                  Subscribe in calendar app
-                </a>
-                <CopyFeedLinkButton
-                  url={tutoringFeedUrl}
-                  label="Copy calendar link"
-                  unavailable={!feedsAvailable}
-                />
-              </div>
+              <CalendarFeedControls
+                feedUrl={tutoringFeedUrl}
+                subscribeUrl={addToCalendarUrl}
+                unavailable={!feedsAvailable}
+              />
               <p className="mt-1 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900">
                 This is a private calendar link. Anyone with the link may be able to view your
-                lesson schedule, so do not share it.
+                lesson schedule, so do not share it. Reset it here if you think someone else has
+                access.
               </p>
               <details className="mt-3 text-sm text-zinc-600">
                 <summary className="cursor-pointer select-none text-sm font-medium text-zinc-700 hover:text-zinc-900">

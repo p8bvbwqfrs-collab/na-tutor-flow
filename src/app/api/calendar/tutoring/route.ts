@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { addDefaultDuration, buildCalendarFeed, verifyCalendarFeedToken } from "@/lib/calendar-feed";
+import {
+  addDefaultDuration,
+  buildCalendarFeed,
+  isCalendarFeedTokenCurrent,
+  normalizeCalendarFeedVersion,
+  verifyCalendarFeedToken,
+} from "@/lib/calendar-feed";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 type FeedLessonRow = {
@@ -55,21 +61,38 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Missing token." }, { status: 401 });
   }
 
-  const userId = verifyCalendarFeedToken(token, "tutoring");
+  const tokenPayload = verifyCalendarFeedToken(token, "tutoring");
 
-  if (!userId) {
+  if (!tokenPayload) {
     return NextResponse.json({ error: "Invalid token." }, { status: 401 });
   }
 
   try {
     const supabase = createSupabaseAdminClient();
+    const { data: settings, error: settingsError } = await supabase
+      .from("user_settings")
+      .select("calendar_feed_version")
+      .eq("user_id", tokenPayload.userId)
+      .maybeSingle();
+
+    if (settingsError) {
+      return NextResponse.json({ error: "Could not verify calendar feed." }, { status: 500 });
+    }
+
+    const currentTokenVersion = normalizeCalendarFeedVersion(
+      settings?.calendar_feed_version,
+    );
+
+    if (!isCalendarFeedTokenCurrent(tokenPayload, currentTokenVersion)) {
+      return NextResponse.json({ error: "Invalid token." }, { status: 401 });
+    }
 
     const { data, error } = await supabase
       .from("lessons")
       .select(
         "id, lesson_at, topics, improve, homework, effort, confidence, status, student:students!lessons_student_id_fkey(student_name)",
       )
-      .eq("user_id", userId)
+      .eq("user_id", tokenPayload.userId)
       .neq("status", "cancelled")
       .order("lesson_at", { ascending: true });
 
