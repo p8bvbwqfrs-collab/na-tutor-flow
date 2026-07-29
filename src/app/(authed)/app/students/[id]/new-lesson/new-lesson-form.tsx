@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatCurrencyFromMinorUnits, getCurrencyLabel, type SupportedCurrencyCode } from "@/lib/currency";
 import { getCompletedLessonUpdateStorageKey } from "@/lib/lesson-completion";
@@ -141,6 +141,13 @@ export function NewLessonForm({
   const [error, setError] = useState<string | null>(null);
   const [savedLesson, setSavedLesson] = useState<SavedLessonState | null>(null);
   const [postSaveWarning, setPostSaveWarning] = useState<string | null>(null);
+  const errorRef = useRef<HTMLParagraphElement>(null);
+
+  useEffect(() => {
+    if (error) {
+      errorRef.current?.focus();
+    }
+  }, [error]);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -667,9 +674,11 @@ export function NewLessonForm({
 
       {error ? (
         <p
+          ref={errorRef}
           id={formErrorId}
           role="alert"
-          className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-900"
+          tabIndex={-1}
+          className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-900 outline-none"
         >
           {error}
         </p>
