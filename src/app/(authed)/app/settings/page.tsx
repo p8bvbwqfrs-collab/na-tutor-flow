@@ -6,6 +6,7 @@ import {
 } from "@/lib/user-settings";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { CalendarFeedControls } from "./components/calendar-feed-controls";
+import { AccountDataExportControls } from "./components/account-data-export-controls";
 import { CurrencySettingsForm } from "./components/currency-settings-form";
 
 type SettingsPageProps = {
@@ -127,6 +128,15 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
               </details>
             </div>
           </div>
+        </section>
+
+        <section className="rounded-lg border border-zinc-200 bg-white p-4">
+          <h2 className="text-lg font-medium text-zinc-900">Your data</h2>
+          <p className="mt-1 text-sm leading-6 text-zinc-600">
+            Download a portable copy of the information you have saved in Tutor Flow. The export
+            includes active and archived students, all lesson states, payments and preferences.
+          </p>
+          <AccountDataExportControls />
         </section>
       </div>
     </section>
