@@ -2,6 +2,14 @@ import { createHmac, timingSafeEqual } from "crypto";
 
 export type CalendarFeedType = "tutoring";
 
+export const INITIAL_CALENDAR_FEED_VERSION = 1;
+
+export type CalendarFeedTokenPayload = {
+  userId: string;
+  feedType: CalendarFeedType;
+  tokenVersion: number;
+};
+
 type CalendarEvent = {
   id: string;
   title: string;
@@ -19,28 +27,45 @@ function base64UrlDecode(value: string) {
 }
 
 export function getCalendarFeedSecret() {
-  return process.env.CALENDAR_FEED_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || null;
+  return process.env.CALENDAR_FEED_SECRET || null;
 }
 
 export function canUseCalendarFeeds() {
   return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY && getCalendarFeedSecret());
 }
 
-export function generateCalendarFeedToken(userId: string, feedType: CalendarFeedType) {
+export function normalizeCalendarFeedVersion(value: unknown) {
+  return typeof value === "number" && Number.isSafeInteger(value) && value >= 1
+    ? value
+    : INITIAL_CALENDAR_FEED_VERSION;
+}
+
+export function generateCalendarFeedToken(
+  userId: string,
+  feedType: CalendarFeedType,
+  tokenVersion = INITIAL_CALENDAR_FEED_VERSION,
+) {
   const secret = getCalendarFeedSecret();
 
   if (!secret) {
     throw new Error("Missing calendar feed signing secret.");
   }
 
-  const payload = JSON.stringify({ userId, feedType });
+  const payload = JSON.stringify({
+    userId,
+    feedType,
+    tokenVersion: normalizeCalendarFeedVersion(tokenVersion),
+  });
   const payloadEncoded = base64UrlEncode(payload);
   const signature = createHmac("sha256", secret).update(payloadEncoded).digest("base64url");
 
   return `${payloadEncoded}.${signature}`;
 }
 
-export function verifyCalendarFeedToken(token: string, expectedFeedType: CalendarFeedType) {
+export function verifyCalendarFeedToken(
+  token: string,
+  expectedFeedType: CalendarFeedType,
+): CalendarFeedTokenPayload | null {
   const secret = getCalendarFeedSecret();
 
   if (!secret) {
@@ -68,16 +93,28 @@ export function verifyCalendarFeedToken(token: string, expectedFeedType: Calenda
     const payload = JSON.parse(base64UrlDecode(payloadEncoded)) as {
       userId?: string;
       feedType?: string;
+      tokenVersion?: unknown;
     };
 
     if (!payload.userId || payload.feedType !== expectedFeedType) {
       return null;
     }
 
-    return payload.userId;
+    return {
+      userId: payload.userId,
+      feedType: expectedFeedType,
+      tokenVersion: normalizeCalendarFeedVersion(payload.tokenVersion),
+    };
   } catch {
     return null;
   }
+}
+
+export function isCalendarFeedTokenCurrent(
+  payload: CalendarFeedTokenPayload,
+  currentVersion: unknown,
+) {
+  return payload.tokenVersion === normalizeCalendarFeedVersion(currentVersion);
 }
 
 function escapeIcsText(value: string) {

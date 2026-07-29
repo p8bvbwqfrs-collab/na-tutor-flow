@@ -20,6 +20,7 @@ create table if not exists public.students (
 create table if not exists public.user_settings (
   user_id uuid primary key references auth.users(id) on delete cascade,
   currency_code text not null default 'GBP' check (currency_code in ('GBP', 'USD', 'EUR', 'AUD')),
+  calendar_feed_version integer not null default 1 check (calendar_feed_version >= 1),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -119,6 +120,49 @@ drop trigger if exists set_lessons_user_id on public.lessons;
 create trigger set_lessons_user_id
 before insert on public.lessons
 for each row execute function public.set_user_id();
+
+create or replace function public.rotate_calendar_feed_version()
+returns integer
+language plpgsql
+security invoker
+set search_path = ''
+as $$
+declare
+  next_version integer;
+begin
+  if auth.uid() is null then
+    raise exception using
+      errcode = '42501',
+      message = 'Authentication is required.';
+  end if;
+
+  insert into public.user_settings (
+    user_id,
+    calendar_feed_version
+  )
+  values (
+    auth.uid(),
+    2
+  )
+  on conflict (user_id)
+  do update
+    set calendar_feed_version = public.user_settings.calendar_feed_version + 1,
+        updated_at = now()
+    where public.user_settings.user_id = auth.uid()
+  returning calendar_feed_version into next_version;
+
+  if next_version is null then
+    raise exception using
+      errcode = '42501',
+      message = 'Calendar feed settings could not be updated.';
+  end if;
+
+  return next_version;
+end;
+$$;
+
+revoke all on function public.rotate_calendar_feed_version() from public, anon;
+grant execute on function public.rotate_calendar_feed_version() to authenticated, service_role;
 
 drop policy if exists "students_select_own" on public.students;
 create policy "students_select_own"
