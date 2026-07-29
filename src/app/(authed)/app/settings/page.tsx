@@ -6,6 +6,7 @@ import {
 } from "@/lib/user-settings";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { CalendarFeedControls } from "./components/calendar-feed-controls";
+import { AccountDeletionControls } from "./components/account-deletion-controls";
 import { AccountDataExportControls } from "./components/account-data-export-controls";
 import { CurrencySettingsForm } from "./components/currency-settings-form";
 
@@ -137,6 +138,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
             includes active and archived students, all lesson states, payments and preferences.
           </p>
           <AccountDataExportControls />
+          {user?.email ? <AccountDeletionControls accountEmail={user.email} /> : null}
         </section>
       </div>
     </section>

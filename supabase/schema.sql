@@ -5,7 +5,7 @@ create extension if not exists pgcrypto;
 
 create table if not exists public.students (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null default auth.uid() references auth.users(id),
+  user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
   student_name text not null,
   subject text,
   parent_name text,
@@ -27,7 +27,7 @@ create table if not exists public.user_settings (
 
 create table if not exists public.lessons (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null default auth.uid() references auth.users(id),
+  user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
   student_id uuid not null references public.students(id) on delete cascade,
   next_lesson_id uuid references public.lessons(id) on delete set null,
   lesson_at timestamptz not null,
