@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { EmailOtpType } from "@supabase/supabase-js";
+import { safeAuthNextPath } from "@/lib/account-security";
 import { createSupabaseRouteHandlerClient } from "@/lib/supabase/server";
 
 export async function GET(request: NextRequest) {
@@ -15,7 +16,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  const safeNext = next.startsWith("/") ? next : "/app/dashboard";
+  const safeNext = safeAuthNextPath(next);
   const successUrl = new URL(safeNext, requestUrl.origin);
   const { supabase, response } = createSupabaseRouteHandlerClient(request);
 

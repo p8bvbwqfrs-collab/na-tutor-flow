@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
@@ -13,6 +13,30 @@ export default function ResetPasswordPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const errorRef = useRef<HTMLParagraphElement>(null);
+
+  useEffect(() => {
+    if (error) {
+      errorRef.current?.focus();
+    }
+  }, [error]);
+
+  useEffect(() => {
+    function clearSensitiveResetState() {
+      setPassword("");
+      setConfirmPassword("");
+      setMessage(null);
+      setError(null);
+    }
+
+    window.addEventListener("pagehide", clearSensitiveResetState);
+    window.addEventListener("popstate", clearSensitiveResetState);
+
+    return () => {
+      window.removeEventListener("pagehide", clearSensitiveResetState);
+      window.removeEventListener("popstate", clearSensitiveResetState);
+    };
+  }, []);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -107,9 +131,11 @@ export default function ResetPasswordPage() {
 
         {error ? (
           <p
+            ref={errorRef}
             id="reset-password-error"
             role="alert"
-            className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-900"
+            tabIndex={-1}
+            className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-900 outline-none"
           >
             {error}
           </p>
