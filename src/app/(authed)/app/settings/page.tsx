@@ -6,12 +6,13 @@ import {
 } from "@/lib/user-settings";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { CalendarFeedControls } from "./components/calendar-feed-controls";
+import { AccountSecurityControls } from "./components/account-security-controls";
 import { AccountDeletionControls } from "./components/account-deletion-controls";
 import { AccountDataExportControls } from "./components/account-data-export-controls";
 import { CurrencySettingsForm } from "./components/currency-settings-form";
 
 type SettingsPageProps = {
-  searchParams: Promise<{ calendar_reset?: string }>;
+  searchParams: Promise<{ calendar_reset?: string; email_changed?: string }>;
 };
 
 export default async function SettingsPage({ searchParams }: SettingsPageProps) {
@@ -60,6 +61,15 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
         </p>
       ) : null}
 
+      {resolvedSearchParams.email_changed === "1" ? (
+        <p
+          role="status"
+          className="mt-4 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900"
+        >
+          Your sign-in email address was updated.
+        </p>
+      ) : null}
+
       <div className="mt-5 space-y-4">
         <section className="rounded-lg border border-zinc-200 bg-white p-4">
           <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
@@ -69,6 +79,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
               <span className="break-all font-medium text-zinc-900">{user?.email ?? "No email available"}</span>
             </div>
           </div>
+          {user?.email ? <AccountSecurityControls accountEmail={user.email} /> : null}
         </section>
 
         <section className="rounded-lg border border-zinc-200 bg-white p-4">
