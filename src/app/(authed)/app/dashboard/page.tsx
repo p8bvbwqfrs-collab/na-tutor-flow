@@ -241,9 +241,6 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const unpaidTotalPence = derivedLessons.reduce((sum, lesson) => {
     return sum + Math.max(0, lesson.fee_pence - getPaidAllocatedAmountForLesson(lesson.id, paymentAllocations));
   }, 0);
-  const paidLessonsCount = derivedLessons.filter(
-    (lesson) => calculateLessonPaymentStatus(lesson, paymentAllocations) === "paid",
-  ).length;
   const unpaidLessonsCount = derivedLessons.filter(
     (lesson) => lesson.fee_pence - getPaidAllocatedAmountForLesson(lesson.id, paymentAllocations) > 0,
   ).length;
@@ -366,7 +363,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         )
       ) : null}
 
-      <div className="mt-6 grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
+      <div className="mt-6 grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
         <div className="rounded-lg border border-blue-200 bg-blue-50/50 p-3 sm:p-4">
           <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Active students</p>
           <p className="mt-1.5 text-2xl font-semibold text-blue-900 sm:mt-2">{activeStudentsCount}</p>
@@ -378,14 +375,13 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           </p>
         </div>
         <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-3 sm:p-4">
-          <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Unpaid total</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Outstanding</p>
           <p className="mt-1.5 text-2xl font-semibold text-amber-900 sm:mt-2">
             {formatCurrencyFromMinorUnits(unpaidTotalPence, currencyCode)}
           </p>
-        </div>
-        <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-3 sm:p-4">
-          <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Unpaid lessons</p>
-          <p className="mt-1.5 text-2xl font-semibold text-amber-900 sm:mt-2">{unpaidLessonsCount}</p>
+          <p className="mt-1 text-xs text-zinc-600">
+            Across {unpaidLessonsCount} {unpaidLessonsCount === 1 ? "lesson" : "lessons"}.
+          </p>
         </div>
       </div>
 
@@ -533,11 +529,11 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         </section>
       </div>
 
-      <div className="mt-6 grid gap-4 lg:grid-cols-3">
-        <div className="rounded-lg border border-zinc-200 bg-white p-4 lg:col-span-2">
+      <div className="mt-6">
+        <div className="rounded-lg border border-zinc-200 bg-white p-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <h2 className="text-lg font-medium text-zinc-900">Earnings over time</h2>
+              <h2 className="text-lg font-medium text-zinc-900">Paid lesson income</h2>
               <p className="mt-1 text-sm text-zinc-600">{rangeLabel}</p>
               <p className="mt-1 text-sm font-medium text-zinc-900">
                 {formatCurrencyFromMinorUnits(selectedRangeEarningsPence, currencyCode)}
@@ -565,19 +561,6 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           )}
         </div>
 
-        <div className="rounded-lg border border-zinc-200 bg-white p-4">
-          <h2 className="text-lg font-medium text-zinc-900">Paid vs unpaid</h2>
-          <div className="mt-4 space-y-3">
-            <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2">
-              <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Paid lessons</p>
-              <p className="mt-1 text-xl font-semibold text-emerald-900">{paidLessonsCount}</p>
-            </div>
-            <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2">
-              <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Unpaid lessons</p>
-              <p className="mt-1 text-xl font-semibold text-amber-900">{unpaidLessonsCount}</p>
-            </div>
-          </div>
-        </div>
       </div>
 
       <div className="mt-6 rounded-lg border border-zinc-200 bg-white p-4">

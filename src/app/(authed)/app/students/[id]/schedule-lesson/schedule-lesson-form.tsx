@@ -7,6 +7,7 @@ import { getLondonDateTimeInputValues } from "@/lib/datetime";
 import { getSubmittedLessonAtIsoFromForm } from "@/lib/lesson-scheduling";
 import { verifyStudentIsActive } from "../../student-actions";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { applyAvailableCreditToLesson } from "../../../payment-actions";
 import { LessonFormSection } from "../components/lesson-form-section";
 
 type ScheduleLessonFormProps = {
@@ -41,11 +42,13 @@ export function ScheduleLessonForm({
   const [fee, setFee] = useState(initialLesson?.feeAmount ?? "0.00");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [warning, setWarning] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
+    setWarning(null);
 
     if (!lessonDate || !lessonTime) {
       setError("Lesson date and time is required.");
@@ -97,17 +100,25 @@ export function ScheduleLessonForm({
       status: "planned",
     };
 
-    const { error: submitError } = isEditMode
-      ? await supabase.from("lessons").update(payload).eq("id", lessonId)
-      : await supabase.from("lessons").insert(payload);
+    const lessonMutation = isEditMode
+      ? await supabase.from("lessons").update(payload).eq("id", lessonId).select("id").single()
+      : await supabase.from("lessons").insert(payload).select("id").single();
 
-    setIsSubmitting(false);
-
-    if (submitError) {
-      setError(submitError.message || "We couldn’t save this scheduled lesson. Please try again.");
+    if (lessonMutation.error || !lessonMutation.data?.id) {
+      setIsSubmitting(false);
+      setError(lessonMutation.error?.message || "We couldn’t save this scheduled lesson. Please try again.");
       return;
     }
 
+    if (payload.fee_pence > 0) {
+      const creditResult = await applyAvailableCreditToLesson(lessonMutation.data.id);
+
+      if (!creditResult.ok) {
+        setWarning("The lesson was scheduled, but existing credit could not be applied automatically.");
+      }
+    }
+
+    setIsSubmitting(false);
     setSaved(true);
   }
 
@@ -123,6 +134,11 @@ export function ScheduleLessonForm({
               ? "The lesson details have been updated."
               : "The lesson now appears in the calendar and upcoming lessons."}
           </p>
+          {warning ? (
+            <p role="alert" className="mt-3 rounded-md border border-amber-200 bg-white px-3 py-2 text-sm text-amber-900">
+              {warning}
+            </p>
+          ) : null}
           <div className="mt-3 grid min-w-0 gap-2 sm:grid-cols-2">
             <Link
               href={`/app/students/${studentId}`}

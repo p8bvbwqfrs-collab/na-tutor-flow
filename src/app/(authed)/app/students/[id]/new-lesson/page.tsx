@@ -84,7 +84,6 @@ export default async function NewLessonPage({ params }: NewLessonPageProps) {
           effort: 3,
           confidence: 3,
           feeAmount: initialFeeAmount,
-          paid: false,
           availableCreditPence,
         }}
       />

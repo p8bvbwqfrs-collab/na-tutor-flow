@@ -9,9 +9,6 @@ import { PaymentRecordActions, RecordPaymentForm } from "./record-payment-form";
 
 type Payment = PaymentLike & {
   payment_date: string | null;
-  covers_from: string | null;
-  covers_to: string | null;
-  sessions_covered: number | null;
   note: string | null;
   created_at: string;
 };
@@ -19,6 +16,7 @@ type Payment = PaymentLike & {
 type PaymentsMonthlySectionProps = {
   studentId: string;
   payments: Payment[];
+  outstandingAmountPence: number;
   studentCreditPence: number;
   currencyCode: SupportedCurrencyCode;
   initialMonthKey: string;
@@ -48,6 +46,7 @@ function getPaymentDetail(payment: Pick<Payment, "note" | "source">) {
 export function PaymentsMonthlySection({
   studentId,
   payments,
+  outstandingAmountPence,
   studentCreditPence,
   currencyCode,
   initialMonthKey,
@@ -70,22 +69,34 @@ export function PaymentsMonthlySection({
           <div>
             <h2 className="text-lg font-medium text-zinc-900">Payments</h2>
             <p className="mt-1 text-sm text-zinc-600">
-              Record payments here if you take upfront or bulk payments. Otherwise, just mark lessons as paid.
+              Mark individual lessons as paid from their lesson record. Use an upfront payment when
+              a student pays for several lessons at once.
             </p>
           </div>
           {!readOnly ? <RecordPaymentForm studentId={studentId} currencyCode={currencyCode} /> : null}
         </div>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <div className="rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2">
-            <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Credit available</p>
-            <p className="mt-1 text-sm font-semibold text-zinc-900">
-              {formatCurrencyFromMinorUnits(studentCreditPence, currencyCode)}
+        <div className={`mt-4 grid gap-3 sm:grid-cols-2 ${studentCreditPence > 0 ? "lg:grid-cols-3" : ""}`}>
+          <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2">
+            <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Outstanding</p>
+            <p className="mt-1 text-sm font-semibold text-amber-900">
+              {formatCurrencyFromMinorUnits(outstandingAmountPence, currencyCode)}
             </p>
-            <p className="mt-1 text-xs text-zinc-600">Received but not yet used for lessons.</p>
+            <p className="mt-1 text-xs text-zinc-600">Still due for completed lessons.</p>
           </div>
-          <div className="rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2">
-            <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Payments received</p>
-            <p className="mt-1 text-sm font-semibold text-zinc-900">
+          {studentCreditPence > 0 ? (
+            <div className="rounded-md border border-blue-200 bg-blue-50 px-3 py-2">
+              <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Credit available</p>
+              <p className="mt-1 text-sm font-semibold text-blue-900">
+                {formatCurrencyFromMinorUnits(studentCreditPence, currencyCode)}
+              </p>
+              <p className="mt-1 text-xs text-zinc-600">
+                Already received and ready for the next outstanding lesson.
+              </p>
+            </div>
+          ) : null}
+          <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2">
+            <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Received</p>
+            <p className="mt-1 text-sm font-semibold text-emerald-900">
               {formatCurrencyFromMinorUnits(paymentsForSelectedMonthPence, currencyCode)}
             </p>
             <p className="mt-1 text-xs text-zinc-600">{formatMonthLocal(selectedMonthStart)}</p>
@@ -116,7 +127,7 @@ export function PaymentsMonthlySection({
                         {formatDateLocal(getPaymentDateValue(payment))} · {getPaymentDetail(payment)}
                       </p>
                     </div>
-                    {!readOnly ? (
+                    {!readOnly && payment.source === "recorded_payment" ? (
                       <PaymentRecordActions studentId={studentId} currencyCode={currencyCode} payment={payment} />
                     ) : null}
                   </div>

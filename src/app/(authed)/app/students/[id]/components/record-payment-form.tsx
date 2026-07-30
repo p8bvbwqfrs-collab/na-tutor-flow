@@ -15,9 +15,6 @@ type RecordPaymentFormProps = {
 type PaymentRow = PaymentLike & {
   id: string;
   payment_date?: string | null;
-  covers_from?: string | null;
-  covers_to?: string | null;
-  sessions_covered?: number | null;
   note?: string | null;
 };
 
@@ -41,8 +38,13 @@ async function applyPaymentToStudentLessons(
   studentId: string,
   payment: PaymentRow,
 ) {
-  const { data: lessonIdData } = await supabase.from("lessons").select("id").eq("student_id", studentId);
-  const lessonIds = ((lessonIdData ?? []) as Array<{ id: string }>).map((lesson) => lesson.id);
+  const lessonIdsResult = await supabase.from("lessons").select("id").eq("student_id", studentId);
+
+  if (lessonIdsResult.error) {
+    throw lessonIdsResult.error;
+  }
+
+  const lessonIds = ((lessonIdsResult.data ?? []) as Array<{ id: string }>).map((lesson) => lesson.id);
   const lessonsResult = await supabase
     .from("lessons")
     .select("id, lesson_at, fee_pence")
@@ -55,7 +57,11 @@ async function applyPaymentToStudentLessons(
           .from("payment_allocations")
           .select("payment_id, lesson_id, amount_pence, payment:payments(id, amount_pence, source, note)")
           .in("lesson_id", lessonIds)
-      : { data: [] };
+      : { data: [], error: null };
+
+  if (lessonsResult.error || allocationsResult.error) {
+    throw lessonsResult.error ?? allocationsResult.error;
+  }
 
   const lessons = (lessonsResult.data ?? []) as LessonFeeLike[];
   const allocations = ((allocationsResult.data ?? []) as AllocationRow[]).map((allocation) => ({
@@ -85,11 +91,7 @@ export function RecordPaymentForm({ studentId, currencyCode }: RecordPaymentForm
   const [isOpen, setIsOpen] = useState(false);
   const [amount, setAmount] = useState("");
   const [paymentDate, setPaymentDate] = useState(new Date().toISOString().slice(0, 10));
-  const [coversFrom, setCoversFrom] = useState("");
-  const [coversTo, setCoversTo] = useState("");
-  const [sessionsCovered, setSessionsCovered] = useState("");
   const [note, setNote] = useState("");
-  const [autoApply, setAutoApply] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -100,18 +102,12 @@ export function RecordPaymentForm({ studentId, currencyCode }: RecordPaymentForm
     setMessage(null);
 
     const amountValue = Number(amount);
-    if (!Number.isFinite(amountValue) || amountValue < 0) {
-      setError("Amount must be 0 or more.");
+    if (!Number.isFinite(amountValue) || amountValue <= 0) {
+      setError("Amount must be greater than 0.");
       return;
     }
 
     const amountPence = Math.round(amountValue * 100);
-    const sessionsValue = sessionsCovered ? Number(sessionsCovered) : null;
-
-    if (sessionsValue !== null && (!Number.isInteger(sessionsValue) || sessionsValue < 0)) {
-      setError("Sessions covered must be a whole number.");
-      return;
-    }
 
     setIsSaving(true);
 
@@ -130,9 +126,6 @@ export function RecordPaymentForm({ studentId, currencyCode }: RecordPaymentForm
         amount_pence: amountPence,
         status: "paid",
         payment_date: paymentDate || null,
-        covers_from: coversFrom || null,
-        covers_to: coversTo || null,
-        sessions_covered: sessionsValue,
         source: "recorded_payment",
         note: note.trim() || null,
       })
@@ -145,7 +138,7 @@ export function RecordPaymentForm({ studentId, currencyCode }: RecordPaymentForm
       return;
     }
 
-    if (autoApply && amountPence > 0) {
+    if (amountPence > 0) {
       try {
         await applyPaymentToStudentLessons(supabase, studentId, payment as PaymentRow);
       } catch {
@@ -159,9 +152,6 @@ export function RecordPaymentForm({ studentId, currencyCode }: RecordPaymentForm
     setIsSaving(false);
     setAmount("");
     setNote("");
-    setSessionsCovered("");
-    setCoversFrom("");
-    setCoversTo("");
     setPaymentDate(new Date().toISOString().slice(0, 10));
     setMessage("Payment recorded.");
     setIsOpen(false);
@@ -174,11 +164,11 @@ export function RecordPaymentForm({ studentId, currencyCode }: RecordPaymentForm
         <button
           type="button"
           onClick={() => setIsOpen(true)}
-          className="inline-flex min-h-10 items-center justify-center rounded-md bg-blue-700 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+          className="inline-flex min-h-10 w-full items-center justify-center rounded-md bg-blue-700 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
         >
-          Record payment
+          Record upfront payment
         </button>
-        {message ? <p className="text-xs font-medium text-emerald-700">{message}</p> : null}
+        {message ? <p role="status" className="text-xs font-medium text-emerald-700">{message}</p> : null}
       </div>
     );
   }
@@ -193,7 +183,7 @@ export function RecordPaymentForm({ studentId, currencyCode }: RecordPaymentForm
           <input
             id="payment_amount"
             type="number"
-            min={0}
+            min="0.01"
             step="0.01"
             required
             value={amount}
@@ -213,47 +203,9 @@ export function RecordPaymentForm({ studentId, currencyCode }: RecordPaymentForm
             className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
           />
         </div>
-        <div>
-          <label htmlFor="sessions_covered" className="block text-sm font-medium text-zinc-700">
-            Sessions covered
-          </label>
-          <input
-            id="sessions_covered"
-            type="number"
-            min={0}
-            step={1}
-            value={sessionsCovered}
-            onChange={(event) => setSessionsCovered(event.target.value)}
-            className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
-          />
-        </div>
-        <div>
-          <label htmlFor="covers_from" className="block text-sm font-medium text-zinc-700">
-            Covers from
-          </label>
-          <input
-            id="covers_from"
-            type="date"
-            value={coversFrom}
-            onChange={(event) => setCoversFrom(event.target.value)}
-            className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
-          />
-        </div>
-        <div>
-          <label htmlFor="covers_to" className="block text-sm font-medium text-zinc-700">
-            Covers to
-          </label>
-          <input
-            id="covers_to"
-            type="date"
-            value={coversTo}
-            onChange={(event) => setCoversTo(event.target.value)}
-            className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
-          />
-        </div>
         <div className="sm:col-span-2">
           <label htmlFor="payment_note" className="block text-sm font-medium text-zinc-700">
-            Note
+            Note (optional)
           </label>
           <input
             id="payment_note"
@@ -264,31 +216,26 @@ export function RecordPaymentForm({ studentId, currencyCode }: RecordPaymentForm
         </div>
       </div>
 
-      <label className="mt-3 inline-flex items-center gap-2 text-sm text-zinc-700">
-        <input
-          type="checkbox"
-          checked={autoApply}
-          onChange={(event) => setAutoApply(event.target.checked)}
-          className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
-        />
-        Apply to lessons automatically
-      </label>
+      <p className="mt-3 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-900">
+        Tutor Flow will pay the oldest outstanding lessons first. Any money left over will remain as
+        credit for this student.
+      </p>
 
-      {error ? <p className="mt-3 text-sm text-rose-800">{error}</p> : null}
-      {message ? <p className="mt-3 text-sm text-emerald-700">{message}</p> : null}
+      {error ? <p role="alert" className="mt-3 text-sm text-rose-800">{error}</p> : null}
+      {message ? <p role="status" className="mt-3 text-sm text-emerald-700">{message}</p> : null}
 
-      <div className="mt-4 flex flex-wrap gap-2">
+      <div className="mt-4 grid gap-2 sm:flex sm:flex-wrap">
         <button
           type="submit"
           disabled={isSaving}
-          className="inline-flex min-h-10 items-center justify-center rounded-md bg-blue-700 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-zinc-400"
+          className="inline-flex min-h-10 w-full items-center justify-center rounded-md bg-blue-700 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-zinc-400 sm:w-auto"
         >
           {isSaving ? "Saving..." : "Save payment"}
         </button>
         <button
           type="button"
           onClick={() => setIsOpen(false)}
-          className="inline-flex min-h-10 items-center justify-center rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+          className="inline-flex min-h-10 w-full items-center justify-center rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
         >
           Cancel
         </button>
@@ -309,13 +256,7 @@ export function PaymentRecordActions({ studentId, currencyCode, payment }: Payme
   const [isEditing, setIsEditing] = useState(false);
   const [amount, setAmount] = useState(toAmountValue(payment.amount_pence));
   const [paymentDate, setPaymentDate] = useState(payment.payment_date ?? "");
-  const [coversFrom, setCoversFrom] = useState(payment.covers_from ?? "");
-  const [coversTo, setCoversTo] = useState(payment.covers_to ?? "");
-  const [sessionsCovered, setSessionsCovered] = useState(
-    typeof payment.sessions_covered === "number" ? String(payment.sessions_covered) : "",
-  );
   const [note, setNote] = useState(payment.note ?? "");
-  const [autoApply, setAutoApply] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
@@ -326,14 +267,8 @@ export function PaymentRecordActions({ studentId, currencyCode, payment }: Payme
     setError(null);
 
     const amountValue = Number(amount);
-    if (!Number.isFinite(amountValue) || amountValue < 0) {
-      setError("Amount must be 0 or more.");
-      return;
-    }
-
-    const sessionsValue = sessionsCovered ? Number(sessionsCovered) : null;
-    if (sessionsValue !== null && (!Number.isInteger(sessionsValue) || sessionsValue < 0)) {
-      setError("Sessions covered must be a whole number.");
+    if (!Number.isFinite(amountValue) || amountValue <= 0) {
+      setError("Amount must be greater than 0.");
       return;
     }
 
@@ -353,10 +288,6 @@ export function PaymentRecordActions({ studentId, currencyCode, payment }: Payme
       .update({
         amount_pence: amountPence,
         payment_date: paymentDate || null,
-        covers_from: coversFrom || null,
-        covers_to: coversTo || null,
-        sessions_covered: sessionsValue,
-        source: "recorded_payment",
         note: note.trim() || null,
         updated_at: new Date().toISOString(),
       })
@@ -368,9 +299,19 @@ export function PaymentRecordActions({ studentId, currencyCode, payment }: Payme
       return;
     }
 
-    await supabase.from("payment_allocations").delete().eq("payment_id", payment.id);
+    const { error: allocationDeleteError } = await supabase
+      .from("payment_allocations")
+      .delete()
+      .eq("payment_id", payment.id);
 
-    if (autoApply && amountPence > 0) {
+    if (allocationDeleteError) {
+      setIsSaving(false);
+      setError("Payment was updated, but its lesson coverage could not be refreshed.");
+      router.refresh();
+      return;
+    }
+
+    if (amountPence > 0) {
       try {
         await applyPaymentToStudentLessons(supabase, studentId, {
           ...payment,
@@ -425,8 +366,9 @@ export function PaymentRecordActions({ studentId, currencyCode, payment }: Payme
             <input
               id={`payment_amount_${payment.id}`}
               type="number"
-              min={0}
+              min="0.01"
               step="0.01"
+              required
               value={amount}
               onChange={(event) => setAmount(event.target.value)}
               className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
@@ -444,47 +386,9 @@ export function PaymentRecordActions({ studentId, currencyCode, payment }: Payme
               className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
             />
           </div>
-          <div>
-            <label htmlFor={`sessions_${payment.id}`} className="block text-xs font-medium text-zinc-600">
-              Sessions covered
-            </label>
-            <input
-              id={`sessions_${payment.id}`}
-              type="number"
-              min={0}
-              step={1}
-              value={sessionsCovered}
-              onChange={(event) => setSessionsCovered(event.target.value)}
-              className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
-            />
-          </div>
-          <div>
-            <label htmlFor={`covers_from_${payment.id}`} className="block text-xs font-medium text-zinc-600">
-              Covers from
-            </label>
-            <input
-              id={`covers_from_${payment.id}`}
-              type="date"
-              value={coversFrom}
-              onChange={(event) => setCoversFrom(event.target.value)}
-              className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
-            />
-          </div>
-          <div>
-            <label htmlFor={`covers_to_${payment.id}`} className="block text-xs font-medium text-zinc-600">
-              Covers to
-            </label>
-            <input
-              id={`covers_to_${payment.id}`}
-              type="date"
-              value={coversTo}
-              onChange={(event) => setCoversTo(event.target.value)}
-              className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
-            />
-          </div>
           <div className="sm:col-span-2">
             <label htmlFor={`note_${payment.id}`} className="block text-xs font-medium text-zinc-600">
-              Note
+              Note (optional)
             </label>
             <input
               id={`note_${payment.id}`}
@@ -494,28 +398,22 @@ export function PaymentRecordActions({ studentId, currencyCode, payment }: Payme
             />
           </div>
         </div>
-        <label className="mt-3 inline-flex items-center gap-2 text-sm text-zinc-700">
-          <input
-            type="checkbox"
-            checked={autoApply}
-            onChange={(event) => setAutoApply(event.target.checked)}
-            className="h-4 w-4 rounded border-zinc-300 text-zinc-900"
-          />
-          Apply to lessons automatically
-        </label>
-        {error ? <p className="mt-2 text-sm text-rose-800">{error}</p> : null}
-        <div className="mt-3 flex flex-wrap gap-2">
+        <p className="mt-3 text-xs text-zinc-600">
+          Changes will be reapplied to the oldest outstanding lessons automatically.
+        </p>
+        {error ? <p role="alert" className="mt-2 text-sm text-rose-800">{error}</p> : null}
+        <div className="mt-3 grid gap-2 sm:flex sm:flex-wrap">
           <button
             type="submit"
             disabled={isSaving}
-            className="inline-flex min-h-9 items-center justify-center rounded-md bg-blue-700 px-3 py-1.5 text-sm font-medium text-white disabled:bg-zinc-400"
+            className="inline-flex min-h-9 w-full items-center justify-center rounded-md bg-blue-700 px-3 py-1.5 text-sm font-medium text-white disabled:bg-zinc-400 sm:w-auto"
           >
             {isSaving ? "Saving..." : "Save"}
           </button>
           <button
             type="button"
             onClick={() => setIsEditing(false)}
-            className="inline-flex min-h-9 items-center justify-center rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm text-zinc-900"
+            className="inline-flex min-h-9 w-full items-center justify-center rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm text-zinc-900 sm:w-auto"
           >
             Cancel
           </button>
@@ -542,7 +440,7 @@ export function PaymentRecordActions({ studentId, currencyCode, payment }: Payme
         >
           Delete
         </button>
-        {error ? <p className="basis-full text-xs text-rose-800">{error}</p> : null}
+        {error ? <p role="alert" className="basis-full text-xs text-rose-800">{error}</p> : null}
       </div>
       {isConfirmingDelete ? (
         <div className="mt-3 rounded-md border border-rose-200 bg-rose-50 p-3">
@@ -550,12 +448,12 @@ export function PaymentRecordActions({ studentId, currencyCode, payment }: Payme
           <p className="mt-1 text-sm text-rose-800">
             This will remove this payment and any lesson coverage linked to it.
           </p>
-          <div className="mt-3 flex flex-wrap gap-2">
+          <div className="mt-3 grid gap-2 sm:flex sm:flex-wrap">
             <button
               type="button"
               onClick={onDelete}
               disabled={isDeleting}
-              className="inline-flex min-h-9 items-center justify-center rounded-md border border-rose-200 bg-white px-3 py-1.5 text-sm font-medium text-rose-700 transition-colors hover:bg-rose-100 disabled:text-rose-300"
+              className="inline-flex min-h-9 w-full items-center justify-center rounded-md border border-rose-200 bg-white px-3 py-1.5 text-sm font-medium text-rose-700 transition-colors hover:bg-rose-100 disabled:text-rose-300 sm:w-auto"
             >
               {isDeleting ? "Deleting..." : "Delete payment"}
             </button>
@@ -563,7 +461,7 @@ export function PaymentRecordActions({ studentId, currencyCode, payment }: Payme
               type="button"
               onClick={() => setIsConfirmingDelete(false)}
               disabled={isDeleting}
-              className="inline-flex min-h-9 items-center justify-center rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 disabled:text-zinc-400"
+              className="inline-flex min-h-9 w-full items-center justify-center rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 disabled:text-zinc-400 sm:w-auto"
             >
               Keep payment
             </button>

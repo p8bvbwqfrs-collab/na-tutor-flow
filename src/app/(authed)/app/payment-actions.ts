@@ -182,8 +182,23 @@ export async function payOutstandingLessonAmount(lessonId: string) {
     return { ok: true };
   }
 
+  const creditResult = await applyAvailableCreditToLesson(lessonId);
+
+  if (!creditResult.ok) {
+    return {
+      ok: false,
+      error: creditResult.error ?? "Could not apply the student's available credit.",
+    };
+  }
+
+  const remainingPence = creditResult.remainingPence ?? outstandingPence;
+
+  if (remainingPence <= 0) {
+    return { ok: true };
+  }
+
   return insertReceivedPaymentForLesson({
-    amountPence: outstandingPence,
+    amountPence: remainingPence,
     lessonId,
     studentId: lesson.student_id,
     userId: user.id,

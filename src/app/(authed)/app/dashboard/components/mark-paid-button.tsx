@@ -40,7 +40,7 @@ export function MarkPaidButton({ lessonId }: MarkPaidButtonProps) {
         disabled={isUpdating || marked}
         className="inline-flex min-h-9 w-full items-center justify-center whitespace-nowrap rounded-md border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-900 transition-colors hover:bg-emerald-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-zinc-100 disabled:text-zinc-600 sm:w-auto"
       >
-        {isUpdating ? "Saving..." : marked ? "Marked" : "Mark paid"}
+        {isUpdating ? "Saving..." : marked ? "Marked as paid" : "Mark as paid"}
       </button>
       {error ? <p role="alert" className="text-xs text-rose-900">{error}</p> : null}
     </div>
