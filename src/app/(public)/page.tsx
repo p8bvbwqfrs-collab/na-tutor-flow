@@ -48,6 +48,44 @@ const features = [
   },
 ];
 
+const reassurances = [
+  {
+    title: "Built by a tutor",
+    copy: "Designed around the real admin that follows a private lesson.",
+  },
+  {
+    title: "Your data stays yours",
+    copy: "Export your account data or permanently delete it from Settings.",
+  },
+  {
+    title: "Simple from day one",
+    copy: "Start with one student and add the rest when you are ready.",
+  },
+] as const;
+
+const faqs = [
+  {
+    question: "Who is Tutor Flow for?",
+    answer:
+      "Tutor Flow is designed for independent tutors who want one straightforward place for lesson records, scheduling, parent updates, and payment tracking.",
+  },
+  {
+    question: "How much does it cost?",
+    answer:
+      "Tutor Flow is currently free to get started. It is an early-stage product, so the service and its features will continue to develop.",
+  },
+  {
+    question: "What happens to the information I add?",
+    answer:
+      "You retain ownership of your student and lesson data. You can download a portable copy or permanently delete your account and saved data from Settings.",
+  },
+  {
+    question: "Is the maths-tutoring service part of the software?",
+    answer:
+      "No. Tutor Flow is the software product for tutors. The maths-tutoring page describes a separate private tuition service offered by the builder.",
+  },
+] as const;
+
 function FeatureIcon({ icon }: { icon: string }) {
   const commonProps = {
     className: "h-5 w-5 text-zinc-400",
@@ -108,7 +146,7 @@ export default function HomePage() {
       <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white p-6 sm:p-8 lg:p-10">
         <div className="grid gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-center lg:gap-10 xl:gap-12">
           <div className="mx-auto max-w-xl text-center lg:mx-0 lg:text-left">
-            <p className="whitespace-nowrap text-sm font-semibold uppercase tracking-[0.18em] text-zinc-500">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500 sm:text-sm sm:tracking-[0.18em]">
               Built for independent tutors
             </p>
             <h1 className="mx-auto mt-3 max-w-[24ch] text-balance text-3xl font-semibold tracking-tight text-zinc-900 sm:text-5xl lg:mx-0">
@@ -179,6 +217,46 @@ export default function HomePage() {
         </div>
       </section>
 
+      <section className="rounded-lg border border-zinc-200 bg-white p-5 sm:p-6" aria-labelledby="trust-heading">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:items-start">
+          <div className="max-w-xl">
+            <p className="text-sm font-semibold uppercase tracking-[0.14em] text-zinc-500">
+              Free to get started
+            </p>
+            <h2 id="trust-heading" className="mt-2 text-xl font-semibold text-zinc-900">
+              A practical tool, without the heavy setup
+            </h2>
+            <p className="mt-2 text-sm leading-6 text-zinc-600">
+              Create an account and try the core Tutor Flow workflow. The product is still
+              developing, with a focus on keeping everyday tutor admin clear and manageable.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm">
+              <Link
+                href="/about"
+                className="font-medium text-zinc-800 underline decoration-zinc-300 underline-offset-4 hover:decoration-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+              >
+                Why I built it
+              </Link>
+              <Link
+                href="/privacy"
+                className="font-medium text-zinc-800 underline decoration-zinc-300 underline-offset-4 hover:decoration-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+              >
+                Read the privacy policy
+              </Link>
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-3">
+            {reassurances.map((item) => (
+              <article key={item.title} className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
+                <h3 className="text-sm font-semibold text-zinc-900">{item.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-zinc-600">{item.copy}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section className="rounded-lg border border-zinc-200 bg-white p-5 sm:p-6">
         <h2 className="text-xl font-semibold text-zinc-900">Free resources for tutors</h2>
         <p className="mt-2 text-sm leading-6 text-zinc-600">
@@ -206,10 +284,37 @@ export default function HomePage() {
         </div>
       </section>
 
+      <section className="rounded-lg border border-zinc-200 bg-white p-5 sm:p-6" aria-labelledby="faq-heading">
+        <div className="max-w-2xl">
+          <h2 id="faq-heading" className="text-xl font-semibold text-zinc-900">
+            Questions before you start
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-zinc-600">
+            The essentials about the product, your data, and the separate tutoring service.
+          </p>
+        </div>
+        <div className="mt-5 divide-y divide-zinc-200 border-y border-zinc-200">
+          {faqs.map((item) => (
+            <details key={item.question} className="group py-4">
+              <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 rounded-md text-sm font-semibold text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 [&::-webkit-details-marker]:hidden">
+                {item.question}
+                <span
+                  className="text-lg font-normal text-zinc-500 transition-transform group-open:rotate-45"
+                  aria-hidden="true"
+                >
+                  +
+                </span>
+              </summary>
+              <p className="max-w-3xl pb-1 pr-8 text-sm leading-6 text-zinc-600">{item.answer}</p>
+            </details>
+          ))}
+        </div>
+      </section>
+
       <section className="rounded-lg border border-zinc-200 bg-white p-6 text-center sm:p-8">
         <h2 className="text-2xl font-semibold text-zinc-900">Start using Tutor Flow in minutes</h2>
         <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-zinc-600">
-          Log lessons, track payments, and send updates — all in one place.
+          Create your free account, add one student, and see how the workflow fits your tutoring.
         </p>
         <Link
           href="/signup"

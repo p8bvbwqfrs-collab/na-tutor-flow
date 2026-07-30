@@ -23,6 +23,12 @@ export default function PublicLayout({
           </Link>
           <nav className="flex items-center gap-1" aria-label="Primary navigation">
             <Link
+              href="/how-it-works"
+              className="hidden rounded-md px-2 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 hover:text-zinc-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:inline-flex sm:px-3"
+            >
+              How it works
+            </Link>
+            <Link
               href="/maths-tutor"
               className="rounded-md px-2 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 hover:text-zinc-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:px-3"
             >
