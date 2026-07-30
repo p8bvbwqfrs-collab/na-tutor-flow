@@ -128,7 +128,7 @@ function DashboardPreview() {
               <p className="font-medium text-zinc-900">Harris</p>
               <p className="text-xs text-zinc-500">Tue 8 Apr · 16:00</p>
             </div>
-            <span className="rounded-md bg-zinc-800 px-2.5 py-1 text-xs font-medium text-white">
+            <span className="rounded-md bg-blue-700 px-2.5 py-1 text-xs font-medium text-white">
               Complete
             </span>
           </div>
@@ -301,7 +301,7 @@ export default function HowItWorksPage() {
         <div className="mt-5">
           <Link
             href="/login"
-            className="inline-flex min-h-11 items-center justify-center rounded-md bg-zinc-800 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+            className="inline-flex min-h-11 items-center justify-center rounded-md bg-blue-700 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
           >
             Get started
           </Link>

@@ -126,7 +126,7 @@ export function ScheduleLessonForm({
           <div className="mt-3 grid min-w-0 gap-2 sm:grid-cols-2">
             <Link
               href={`/app/students/${studentId}`}
-              className="inline-flex min-h-11 w-full min-w-0 items-center justify-center rounded-md bg-zinc-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+              className="inline-flex min-h-11 w-full min-w-0 items-center justify-center rounded-md bg-blue-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
             >
               Back to student
             </Link>
@@ -234,7 +234,7 @@ export function ScheduleLessonForm({
         {isEditMode && lessonId ? (
           <Link
             href={`/app/students/${studentId}/lessons/${lessonId}?mode=complete`}
-            className="inline-flex min-h-11 w-full min-w-0 items-center justify-center rounded-md bg-zinc-800 px-4 py-2 text-center text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+            className="inline-flex min-h-11 w-full min-w-0 items-center justify-center rounded-md bg-blue-700 px-4 py-2 text-center text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
           >
             Complete lesson
           </Link>

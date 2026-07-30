@@ -3,6 +3,10 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { formatDayHeadingLocal, formatTimeLocal } from "@/lib/datetime";
+import {
+  getLessonStatusClassName,
+  getLessonStatusLabel,
+} from "@/lib/status-styles";
 
 type CalendarGridLesson = {
   id: string;
@@ -26,10 +30,6 @@ type CalendarGridProps = {
   lessons: CalendarGridLesson[];
   todayKey: string;
 };
-
-function getStatusLabel(status: CalendarGridLesson["status"]) {
-  return status === "planned" ? "Planned" : "Completed";
-}
 
 export function CalendarGrid({
   monthCells,
@@ -83,7 +83,6 @@ export function CalendarGrid({
           const dayLessons = lessonsByDate.get(cell.key) ?? [];
           const isToday = cell.key === todayKey;
           const isSelected = cell.key === selectedDayKey;
-          const mobileVisibleLessons = dayLessons.slice(0, 1);
           const desktopVisibleLessons = dayLessons.slice(0, 2);
           const hasLessons = dayLessons.length > 0;
           const containerTone = isSelected
@@ -124,10 +123,10 @@ export function CalendarGrid({
                     <span
                       className={`h-1.5 w-1.5 rounded-full ${
                         isSelected
-                          ? "bg-zinc-700"
+                          ? "bg-blue-700"
                           : dayLessons.some((lesson) => lesson.status === "planned")
-                            ? "bg-sky-500/70"
-                            : "bg-zinc-400"
+                            ? "bg-blue-500"
+                            : "bg-emerald-500"
                       }`}
                     />
                   ) : null}
@@ -164,26 +163,26 @@ export function CalendarGrid({
                       }
                       className={`block rounded-md border px-2 py-1 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 ${
                         lesson.status === "planned"
-                          ? "border-sky-100 bg-sky-50/70 hover:border-sky-200 hover:bg-sky-50"
-                          : "border-zinc-200 bg-white hover:border-zinc-300 hover:bg-zinc-50"
+                          ? "border-blue-200 bg-blue-50/70 hover:border-blue-300 hover:bg-blue-50"
+                          : "border-emerald-200 bg-emerald-50/50 hover:border-emerald-300 hover:bg-emerald-50"
                       }`}
                     >
                       <p
                         className={`truncate text-xs font-medium ${
-                          lesson.status === "planned" ? "text-sky-900" : "text-zinc-900"
+                          lesson.status === "planned" ? "text-blue-950" : "text-emerald-950"
                         }`}
                       >
                         {lesson.studentName}
                       </p>
                       <p
                         className={`mt-0.5 text-xs ${
-                          lesson.status === "planned" ? "text-sky-800" : "text-zinc-600"
+                          lesson.status === "planned" ? "text-blue-800" : "text-emerald-800"
                         }`}
                       >
                         {formatTimeLocal(lesson.lessonAt)}
                       </p>
                       {lesson.status === "planned" ? (
-                        <p className="mt-0.5 truncate text-xs text-sky-700">
+                        <p className="mt-0.5 truncate text-xs text-blue-700">
                           {lesson.topics && lesson.topics !== "Planned lesson"
                             ? lesson.topics
                             : "Planned lesson"}
@@ -220,12 +219,20 @@ export function CalendarGrid({
                         ? `/app/students/${lesson.studentId}/lessons/${lesson.id}`
                         : `/app/students/${lesson.studentId}/lessons/${lesson.id}/view`
                     }
-                    className="block rounded-lg border border-zinc-200 bg-zinc-50 p-3 transition-colors hover:border-zinc-300 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                    className={`block rounded-lg border p-3 transition-colors hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 ${
+                      lesson.status === "planned"
+                        ? "border-blue-200 bg-blue-50/70 hover:border-blue-300"
+                        : "border-emerald-200 bg-emerald-50/60 hover:border-emerald-300"
+                    }`}
                   >
                     <p className="text-sm font-medium text-zinc-900">
                       {formatTimeLocal(lesson.lessonAt)} · {lesson.studentName}
                     </p>
-                    <p className="mt-1 text-sm text-zinc-600">{getStatusLabel(lesson.status)}</p>
+                    <span
+                      className={`mt-2 inline-flex rounded-full border px-2 py-0.5 text-xs font-medium ${getLessonStatusClassName(lesson.status)}`}
+                    >
+                      {getLessonStatusLabel(lesson.status)}
+                    </span>
                   </Link>
                 );
               })}

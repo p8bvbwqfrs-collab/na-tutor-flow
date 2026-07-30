@@ -69,7 +69,7 @@ export function StudentTrendChart({ title, points }: StudentTrendChartProps) {
         })}
 
         {points.length > 1 ? (
-          <polyline fill="none" stroke="#27272a" strokeWidth="1.75" points={path} />
+          <polyline fill="none" stroke="#1d4ed8" strokeWidth="1.75" points={path} />
         ) : null}
 
         {points.map((point, index) => {
@@ -80,7 +80,7 @@ export function StudentTrendChart({ title, points }: StudentTrendChartProps) {
 
           return (
             <g key={`${point.label}-${index}`}>
-              <circle cx={x} cy={y} r="2.8" fill="#27272a" />
+              <circle cx={x} cy={y} r="2.8" fill="#1d4ed8" />
               {shouldShowLabel ? (
                 <text x={x} y={plotBottom + 15} textAnchor="middle" className="fill-zinc-500 text-[10px]">
                   {point.label}

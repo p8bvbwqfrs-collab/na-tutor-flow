@@ -78,7 +78,7 @@ export function PastLessonsMonthlySection({
               <div className="mt-3 flex flex-wrap gap-2">
                 <Link
                   href={`/app/students/${studentId}/new-lesson`}
-                  className="inline-flex rounded-md bg-zinc-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                  className="inline-flex rounded-md bg-blue-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
                 >
                   Log lesson
                 </Link>
@@ -157,7 +157,7 @@ export function PastLessonsMonthlySection({
                       <td className="whitespace-nowrap px-3 py-4 align-middle">
                         <Link href={`/app/students/${studentId}/lessons/${lesson.id}/view`} className="block">
                           <span
-                            className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${getPaymentStatusClassName(paymentStatus)}`}
+                            className={`inline-flex rounded-full border px-2 py-1 text-xs font-medium ${getPaymentStatusClassName(paymentStatus)}`}
                           >
                             {getPaymentStatusLabel(paymentStatus)}
                           </span>
@@ -167,7 +167,7 @@ export function PastLessonsMonthlySection({
                         <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:flex-nowrap sm:items-center">
                           <Link
                             href={`/app/students/${studentId}/lessons/${lesson.id}/view`}
-                            className="inline-flex min-h-9 w-full items-center justify-center whitespace-nowrap rounded-md bg-zinc-800 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
+                            className="inline-flex min-h-9 w-full items-center justify-center whitespace-nowrap rounded-md bg-blue-700 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
                           >
                             View notes
                           </Link>

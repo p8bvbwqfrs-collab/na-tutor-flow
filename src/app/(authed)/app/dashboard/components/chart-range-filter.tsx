@@ -24,7 +24,7 @@ export function ChartRangeFilter({ selected }: ChartRangeFilterProps) {
             href={option.value === "6m" ? "/app/dashboard" : `/app/dashboard?range=${option.value}`}
             className={`rounded-md border px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 ${
               isSelected
-                ? "border-zinc-800 bg-zinc-800 text-white"
+                ? "border-blue-700 bg-blue-700 text-white"
                 : "border-zinc-200 bg-white text-zinc-900 hover:bg-zinc-50 hover:underline"
             }`}
             aria-current={isSelected ? "page" : undefined}

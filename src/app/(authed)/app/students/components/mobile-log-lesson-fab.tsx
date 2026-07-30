@@ -79,7 +79,7 @@ export function MobileLogLessonFab({ students }: MobileLogLessonFabProps) {
                 <button
                   type="button"
                   onClick={() => setAction("log")}
-                  className="inline-flex min-h-11 w-full items-center justify-center rounded-md bg-zinc-800 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700"
+                  className="inline-flex min-h-11 w-full items-center justify-center rounded-md bg-blue-700 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-600"
                 >
                   Log lesson
                 </button>
@@ -106,7 +106,7 @@ export function MobileLogLessonFab({ students }: MobileLogLessonFabProps) {
               return next;
             })
           }
-          className="inline-flex items-center rounded-full bg-zinc-800 px-4 py-3 text-sm font-medium text-white shadow-lg transition-colors hover:bg-zinc-700"
+          className="inline-flex items-center rounded-full bg-blue-700 px-4 py-3 text-sm font-medium text-white shadow-lg transition-colors hover:bg-blue-600"
         >
           + Lesson
         </button>

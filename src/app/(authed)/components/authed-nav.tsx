@@ -76,13 +76,13 @@ export function AuthedNav() {
               aria-busy={isDestinationPending || undefined}
               className={`inline-flex min-h-9 items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 ${
                 isActive
-                  ? "bg-zinc-100 text-zinc-900"
+                  ? "bg-blue-50 text-blue-900 ring-1 ring-inset ring-blue-200"
                   : "text-zinc-900 hover:bg-zinc-50 hover:underline"
               } ${isNavigating ? "cursor-wait" : ""}`}
             >
               {showProgress && isDestinationPending ? (
                 <span
-                  className="h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-700"
+                    className="h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-blue-200 border-t-blue-700"
                   aria-hidden="true"
                 />
               ) : null}
@@ -94,8 +94,8 @@ export function AuthedNav() {
 
       {showProgress && isNavigating && pendingHref ? (
         <>
-          <div className="absolute -bottom-3 left-0 h-0.5 w-full overflow-hidden bg-zinc-100" aria-hidden="true">
-            <div className="h-full w-1/3 animate-pulse rounded-full bg-zinc-500" />
+          <div className="absolute -bottom-3 left-0 h-0.5 w-full overflow-hidden bg-blue-50" aria-hidden="true">
+            <div className="h-full w-1/3 animate-pulse rounded-full bg-blue-600" />
           </div>
           <p className="sr-only" role="status" aria-live="polite">
             Loading {navItems.find((item) => item.href === pendingHref)?.label ?? "page"}…

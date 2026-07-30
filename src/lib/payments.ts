@@ -89,14 +89,14 @@ export function getPaymentStatusLabel(status: LessonPaymentStatus) {
 
 export function getPaymentStatusClassName(status: LessonPaymentStatus) {
   if (status === "paid") {
-    return "bg-emerald-100 text-emerald-800";
+    return "border-emerald-200 bg-emerald-50 text-emerald-800";
   }
 
   if (status === "part-paid") {
-    return "bg-sky-100 text-sky-800";
+    return "border-blue-200 bg-blue-50 text-blue-800";
   }
 
-  return "bg-amber-100 text-amber-800";
+  return "border-amber-200 bg-amber-50 text-amber-900";
 }
 
 export function autoApplyPaymentToLessons(

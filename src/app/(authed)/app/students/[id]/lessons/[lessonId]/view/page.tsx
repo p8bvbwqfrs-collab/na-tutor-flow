@@ -158,7 +158,7 @@ export default async function ViewLessonPage({ params }: ViewLessonPageProps) {
             <p className="mt-1 flex flex-wrap items-center gap-2 text-sm font-medium text-zinc-900">
               <span>{formatDateLocal(lesson.lesson_at)} at {formatTimeLocal(lesson.lesson_at)}</span>
               <span
-                className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${getPaymentStatusClassName(paymentStatus)}`}
+                className={`inline-flex rounded-full border px-2 py-1 text-xs font-medium ${getPaymentStatusClassName(paymentStatus)}`}
               >
                 {getPaymentStatusLabel(paymentStatus)}
               </span>
@@ -168,7 +168,7 @@ export default async function ViewLessonPage({ params }: ViewLessonPageProps) {
             {!student.archived_at ? (
               <Link
                 href={`/app/students/${student.id}/lessons/${lesson.id}`}
-                className="inline-flex min-h-9 items-center justify-center rounded-md bg-zinc-800 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                className="inline-flex min-h-9 items-center justify-center rounded-md bg-blue-700 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
               >
                 Edit lesson
               </Link>
@@ -274,7 +274,7 @@ export default async function ViewLessonPage({ params }: ViewLessonPageProps) {
                 </p>
                 <Link
                   href={`/app/students/${student.id}/lessons/${otherLesson.id}/view`}
-                  className="inline-flex min-h-9 shrink-0 items-center justify-center rounded-md bg-zinc-800 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                  className="inline-flex min-h-9 shrink-0 items-center justify-center rounded-md bg-blue-700 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
                 >
                   View notes
                 </Link>

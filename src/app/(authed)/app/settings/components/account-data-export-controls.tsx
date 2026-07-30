@@ -25,7 +25,7 @@ export function AccountDataExportControls() {
         ref={openButtonRef}
         type="button"
         onClick={() => setIsOpen(true)}
-        className="mt-4 inline-flex min-h-10 w-full items-center justify-center rounded-md bg-zinc-800 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
+        className="mt-4 inline-flex min-h-10 w-full items-center justify-center rounded-md bg-blue-700 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
       >
         Download my data
       </button>
@@ -104,7 +104,7 @@ export function AccountDataExportControls() {
                   setIsOpen(false);
                   requestAnimationFrame(() => openButtonRef.current?.focus());
                 }}
-                className="inline-flex min-h-10 items-center justify-center rounded-md bg-zinc-800 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                className="inline-flex min-h-10 items-center justify-center rounded-md bg-blue-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
               >
                 Download JSON file
               </a>

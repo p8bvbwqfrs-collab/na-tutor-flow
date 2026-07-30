@@ -74,14 +74,14 @@ export function MonthlyEarningsChart({ data, currencyCode }: MonthlyEarningsChar
         );
       })}
 
-      {points.length > 1 ? <polyline fill="none" stroke="#334155" strokeWidth="1.5" points={pathData} /> : null}
+      {points.length > 1 ? <polyline fill="none" stroke="#1d4ed8" strokeWidth="1.75" points={pathData} /> : null}
 
       {points.map((point, index) => {
         const showLabel =
           index === 0 || index === data.length - 1 || index % xLabelStep === 0;
         return (
           <g key={`${point.month}-${index}`}>
-            <circle cx={point.x} cy={point.y} r="2.6" fill="#334155" />
+            <circle cx={point.x} cy={point.y} r="2.8" fill="#1d4ed8" />
             {showLabel ? (
               <text x={point.x} y={plotBottom + 16} textAnchor="middle" className="fill-zinc-500 text-[10px]">
                 {point.month}
