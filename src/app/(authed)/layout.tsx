@@ -19,7 +19,7 @@ export default function AuthedLayout({
                 className="group inline-flex items-center gap-2 rounded-md px-1 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
                 aria-label="NA's Tutor Flow dashboard"
               >
-                <span className="inline-block h-2.5 w-2.5 rounded-full bg-zinc-800" aria-hidden="true" />
+                <span className="inline-block h-2.5 w-2.5 rounded-full bg-blue-700" aria-hidden="true" />
                 <span className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">NA&apos;s</span>
                 <span className="text-lg font-semibold tracking-tight text-zinc-900 underline-offset-4 group-hover:underline">
                   Tutor Flow

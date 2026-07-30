@@ -75,7 +75,7 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
                 href="/app/students"
                 className={`rounded px-3 py-1.5 text-sm ${
                   !showArchived
-                    ? "bg-zinc-100 font-medium text-zinc-900"
+                    ? "bg-blue-50 font-medium text-blue-900 ring-1 ring-inset ring-blue-200"
                     : "text-zinc-900 hover:underline"
                 }`}
               >
@@ -85,7 +85,7 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
                 href="/app/students?view=archived"
                 className={`rounded px-3 py-1.5 text-sm ${
                   showArchived
-                    ? "bg-zinc-100 font-medium text-zinc-900"
+                    ? "bg-zinc-100 font-medium text-zinc-900 ring-1 ring-inset ring-zinc-200"
                     : "text-zinc-900 hover:underline"
                 }`}
               >
@@ -102,7 +102,7 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
 
           <Link
             href="/app/students/new"
-            className="inline-flex w-fit rounded-md bg-zinc-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+            className="inline-flex w-fit rounded-md bg-blue-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
           >
             Add student
           </Link>
@@ -123,7 +123,7 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
             {!showArchived ? (
               <Link
                 href="/app/students/new"
-                className="mt-4 inline-flex rounded-md bg-zinc-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                className="mt-4 inline-flex rounded-md bg-blue-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
               >
                 Add student
               </Link>
@@ -132,11 +132,11 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
         ) : (
           <div className="mt-6">
             {requestedLessonAction && !showArchived ? (
-              <div className="mb-4 rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3">
-                <p className="text-sm font-medium text-zinc-900">
+              <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
+                <p className="text-sm font-medium text-blue-950">
                   Choose a student to {requestedLessonAction === "log" ? "log a lesson" : "schedule a lesson"}.
                 </p>
-                <p className="mt-1 text-sm text-zinc-600">
+                <p className="mt-1 text-sm text-blue-800">
                   Use the matching action beside the student below.
                 </p>
               </div>

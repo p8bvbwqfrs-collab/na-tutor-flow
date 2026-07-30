@@ -18,7 +18,11 @@ export function LessonPageHeader({
       <div className="min-w-0">
         <h1 className="text-xl font-semibold text-zinc-900">{studentName}</h1>
         <p className="mt-1 text-sm text-zinc-600">{pageLabel}</p>
-        {metaLabel ? <p className="mt-1 text-sm text-zinc-500">{metaLabel}</p> : null}
+        {metaLabel ? (
+          <span className="mt-2 inline-flex rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-800">
+            {metaLabel}
+          </span>
+        ) : null}
       </div>
       <Link
         href={backHref}

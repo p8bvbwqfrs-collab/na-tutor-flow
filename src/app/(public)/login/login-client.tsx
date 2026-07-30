@@ -379,7 +379,7 @@ export function LoginClient({ mode: authMode }: LoginClientProps) {
               type="button"
               onClick={handleResendConfirmationEmail}
               disabled={isResendingConfirmation}
-              className="inline-flex min-h-11 w-full items-center justify-center rounded-md bg-zinc-800 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
+              className="inline-flex min-h-11 w-full items-center justify-center rounded-md bg-blue-700 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
             >
               {isResendingConfirmation ? "Sending..." : "Resend email"}
             </button>
@@ -462,7 +462,7 @@ export function LoginClient({ mode: authMode }: LoginClientProps) {
         <button
           type="submit"
           disabled={isAuthSubmitting || isResetSending || isSending || isVerifying}
-          className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-md bg-zinc-800 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-zinc-400 disabled:text-zinc-100"
+          className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-md bg-blue-700 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-zinc-400 disabled:text-zinc-100"
         >
           {isAuthSubmitting ? (
             <svg
@@ -593,7 +593,7 @@ export function LoginClient({ mode: authMode }: LoginClientProps) {
                     !/^\d{6,8}$/.test(code.trim()) ||
                     !email.trim()
                   }
-                  className="inline-flex w-full items-center justify-center rounded-md bg-zinc-800 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-zinc-400 disabled:text-zinc-100"
+                  className="inline-flex w-full items-center justify-center rounded-md bg-blue-700 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-zinc-400 disabled:text-zinc-100"
                 >
                   {isVerifying ? "Verifying..." : "Verify code"}
                 </button>

@@ -22,6 +22,7 @@ import {
   type AllocationLike,
   type PaymentLike,
 } from "@/lib/payments";
+import { getLessonStatusClassName, getLessonStatusLabel } from "@/lib/status-styles";
 import { CompletedLessonUpdateBanner } from "./components/completed-lesson-update-banner";
 import { LessonSuccessPanel } from "./components/lesson-success-panel";
 import { MonthlySummaryGenerator } from "./components/monthly-summary-generator";
@@ -301,9 +302,9 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
       <p className="mt-1 text-sm text-zinc-600">Profile, progress, and lesson history.</p>
 
       {isArchived ? (
-        <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
-          <p className="font-medium text-amber-950">Archived student</p>
-          <p className="mt-1 text-sm text-amber-900">
+        <div className="mt-4 rounded-lg border border-zinc-300 bg-zinc-100 px-4 py-3">
+          <p className="font-medium text-zinc-950">Archived student</p>
+          <p className="mt-1 text-sm text-zinc-700">
             This profile is read-only. Restore the student before editing details, lessons or
             payments.
           </p>
@@ -311,7 +312,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
       ) : search.archived === "1" ? (
         <p
           role="alert"
-          className="mt-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+          className="mt-4 rounded-md border border-zinc-300 bg-zinc-100 px-4 py-3 text-sm text-zinc-800"
         >
           This student is archived. Restore the student before making changes.
         </p>
@@ -322,7 +323,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
           <>
             <Link
               href={`/app/students/${student.id}/new-lesson`}
-              className="rounded-md bg-zinc-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+              className="rounded-md bg-blue-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
             >
               Log lesson
             </Link>
@@ -403,7 +404,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
                 <div className="flex flex-wrap items-start gap-2 sm:justify-end">
                   <Link
                     href={`/app/students/${student.id}/lessons/${latestCompletedLesson.id}/view`}
-                    className="inline-flex min-h-9 items-center justify-center rounded-md bg-zinc-800 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                    className="inline-flex min-h-9 items-center justify-center rounded-md bg-blue-700 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
                   >
                     View notes
                   </Link>
@@ -494,7 +495,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
                   return (
                     <div
                       key={lesson.id}
-                      className="rounded-lg border border-zinc-200 bg-zinc-50 p-4"
+                      className="rounded-lg border border-blue-200 bg-blue-50/60 p-4"
                     >
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div>
@@ -505,7 +506,12 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
                               <p className="flex flex-wrap items-center gap-2 text-sm font-medium text-zinc-900">
                                 <span>{formatDateLocal(lesson.lesson_at)} at {formatTimeLocal(lesson.lesson_at)}</span>
                                 <span
-                                  className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${getPaymentStatusClassName(paymentStatus)}`}
+                                  className={`inline-flex rounded-full border px-2 py-1 text-xs font-medium ${getLessonStatusClassName(lesson.status)}`}
+                                >
+                                  {getLessonStatusLabel(lesson.status)}
+                                </span>
+                                <span
+                                  className={`inline-flex rounded-full border px-2 py-1 text-xs font-medium ${getPaymentStatusClassName(paymentStatus)}`}
                                 >
                                   {getPaymentStatusLabel(paymentStatus)}
                                 </span>
@@ -517,14 +523,14 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
                           </p>
                         </div>
                         {isArchived ? (
-                          <span className="text-xs font-medium uppercase tracking-wide text-amber-800">
+                          <span className="inline-flex rounded-full border border-zinc-300 bg-zinc-100 px-2 py-1 text-xs font-medium text-zinc-700">
                             Read-only
                           </span>
                         ) : (
                           <div className="flex flex-wrap items-start gap-2">
                             <Link
                               href={`/app/students/${student.id}/lessons/${lesson.id}?mode=complete`}
-                              className="inline-flex min-h-10 items-center justify-center rounded-md bg-zinc-800 px-3 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                              className="inline-flex min-h-10 items-center justify-center rounded-md bg-blue-700 px-3 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
                             >
                               Complete lesson
                             </Link>
@@ -599,7 +605,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
       {isArchived ? null : (
         <Link
           href={`/app/students/${student.id}/new-lesson`}
-          className="fixed bottom-4 right-4 z-40 inline-flex items-center rounded-full bg-zinc-800 px-4 py-3 text-sm font-medium text-white shadow-lg transition-colors hover:bg-zinc-700 sm:hidden"
+          className="fixed bottom-4 right-4 z-40 inline-flex items-center rounded-full bg-blue-700 px-4 py-3 text-sm font-medium text-white shadow-lg transition-colors hover:bg-blue-600 sm:hidden"
         >
           + Lesson
         </Link>

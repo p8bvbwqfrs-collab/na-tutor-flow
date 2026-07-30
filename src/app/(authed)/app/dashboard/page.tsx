@@ -15,6 +15,7 @@ import {
   type AllocationLike,
   type PaymentLike,
 } from "@/lib/payments";
+import { getLessonStatusClassName, getLessonStatusLabel } from "@/lib/status-styles";
 import { getUserCurrencyCode } from "@/lib/user-settings";
 import { MarkPaidButton } from "./components/mark-paid-button";
 import { MonthlyEarningsChart } from "./components/monthly-earnings-chart";
@@ -322,7 +323,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             </p>
             <Link
               href={dashboardActions[0].href}
-              className="mt-4 inline-flex min-h-11 w-full min-w-0 items-center justify-center rounded-md bg-zinc-800 px-4 py-2 text-center text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
+              className="mt-4 inline-flex min-h-11 w-full min-w-0 items-center justify-center rounded-md bg-blue-700 px-4 py-2 text-center text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
             >
               {dashboardActions[0].label}
             </Link>
@@ -341,7 +342,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             <div className="mt-4 grid min-w-0 gap-2 sm:flex sm:flex-wrap">
               <Link
                 href={dashboardActions[0].href}
-                className="inline-flex min-h-11 w-full min-w-0 items-center justify-center rounded-md bg-zinc-800 px-4 py-2 text-center text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
+                className="inline-flex min-h-11 w-full min-w-0 items-center justify-center rounded-md bg-blue-700 px-4 py-2 text-center text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
               >
                 {dashboardActions[0].label}
               </Link>
@@ -358,7 +359,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             <h2 className="text-sm font-medium text-zinc-700">Quick actions</h2>
             <div className="mt-2 grid min-w-0 grid-cols-1 gap-2 sm:flex sm:flex-wrap">
               <Link href={dashboardActions[0].href} className="inline-flex min-h-10 w-full min-w-0 items-center justify-center rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto">{dashboardActions[0].label}</Link>
-              <Link href={dashboardActions[1].href} className="inline-flex min-h-10 w-full min-w-0 items-center justify-center rounded-md bg-zinc-800 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto">{dashboardActions[1].label}</Link>
+              <Link href={dashboardActions[1].href} className="inline-flex min-h-10 w-full min-w-0 items-center justify-center rounded-md bg-blue-700 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto">{dashboardActions[1].label}</Link>
               <Link href={dashboardActions[2].href} className="inline-flex min-h-10 w-full min-w-0 items-center justify-center rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto">{dashboardActions[2].label}</Link>
             </div>
           </nav>
@@ -366,25 +367,25 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       ) : null}
 
       <div className="mt-6 grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
-        <div className="rounded-lg border border-zinc-200 bg-white p-3 sm:p-4">
+        <div className="rounded-lg border border-blue-200 bg-blue-50/50 p-3 sm:p-4">
           <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Active students</p>
-          <p className="mt-1.5 text-2xl font-semibold text-zinc-900 sm:mt-2">{activeStudentsCount}</p>
+          <p className="mt-1.5 text-2xl font-semibold text-blue-900 sm:mt-2">{activeStudentsCount}</p>
         </div>
-        <div className="rounded-lg border border-zinc-200 bg-white p-3 sm:p-4">
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50/50 p-3 sm:p-4">
           <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Received this month</p>
-          <p className="mt-1.5 text-2xl font-semibold text-zinc-900 sm:mt-2">
+          <p className="mt-1.5 text-2xl font-semibold text-emerald-900 sm:mt-2">
             {formatCurrencyFromMinorUnits(receivedThisMonthPence, currencyCode)}
           </p>
         </div>
-        <div className="rounded-lg border border-zinc-200 bg-white p-3 sm:p-4">
+        <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-3 sm:p-4">
           <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Unpaid total</p>
-          <p className="mt-1.5 text-2xl font-semibold text-zinc-900 sm:mt-2">
+          <p className="mt-1.5 text-2xl font-semibold text-amber-900 sm:mt-2">
             {formatCurrencyFromMinorUnits(unpaidTotalPence, currencyCode)}
           </p>
         </div>
-        <div className="rounded-lg border border-zinc-200 bg-white p-3 sm:p-4">
+        <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-3 sm:p-4">
           <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Unpaid lessons</p>
-          <p className="mt-1.5 text-2xl font-semibold text-zinc-900 sm:mt-2">{unpaidLessonsCount}</p>
+          <p className="mt-1.5 text-2xl font-semibold text-amber-900 sm:mt-2">{unpaidLessonsCount}</p>
         </div>
       </div>
 
@@ -409,7 +410,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
               {recentLessons.map((lesson) => (
                 <div
                   key={lesson.id}
-                  className="rounded-lg border border-zinc-200 bg-zinc-50 p-3 transition-colors hover:border-zinc-300 hover:bg-white"
+                  className="rounded-lg border border-emerald-200 bg-emerald-50/50 p-3 transition-colors hover:border-emerald-300 hover:bg-emerald-50"
                 >
                   {(() => {
                     const paymentStatus = calculateLessonPaymentStatus(lesson, paymentAllocations);
@@ -421,7 +422,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                         </p>
                         <span className="text-sm text-zinc-600">{formatDateTimeLocal(lesson.lesson_at)}</span>
                         <span
-                          className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${getPaymentStatusClassName(paymentStatus)}`}
+                          className={`inline-flex rounded-full border px-2 py-1 text-xs font-medium ${getPaymentStatusClassName(paymentStatus)}`}
                         >
                           {getPaymentStatusLabel(paymentStatus)}
                         </span>
@@ -436,7 +437,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                   <div className="mt-2 flex flex-wrap items-start gap-2">
                     <Link
                       href={`/app/students/${lesson.student_id}/lessons/${lesson.id}/view`}
-                      className="inline-flex min-h-9 items-center justify-center rounded-md bg-zinc-800 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                      className="inline-flex min-h-9 items-center justify-center rounded-md bg-blue-700 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
                     >
                       View notes
                     </Link>
@@ -486,7 +487,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
               {upcomingLessons.map((lesson) => (
                 <div
                   key={lesson.id}
-                  className="rounded-lg border border-zinc-200 bg-zinc-50 p-3 transition-colors hover:border-zinc-300 hover:bg-white"
+                  className="rounded-lg border border-blue-200 bg-blue-50/60 p-3 transition-colors hover:border-blue-300 hover:bg-blue-50"
                 >
                   <Link
                     href={`/app/students/${lesson.student_id}/lessons/${lesson.id}`}
@@ -503,7 +504,12 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                             </p>
                             <span className="text-sm text-zinc-600">{formatDateTimeLocal(lesson.lesson_at)}</span>
                             <span
-                              className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${getPaymentStatusClassName(paymentStatus)}`}
+                              className={`inline-flex rounded-full border px-2 py-1 text-xs font-medium ${getLessonStatusClassName(lesson.status)}`}
+                            >
+                              {getLessonStatusLabel(lesson.status)}
+                            </span>
+                            <span
+                              className={`inline-flex rounded-full border px-2 py-1 text-xs font-medium ${getPaymentStatusClassName(paymentStatus)}`}
                             >
                               {getPaymentStatusLabel(paymentStatus)}
                             </span>
@@ -515,7 +521,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                   <div className="mt-2">
                     <Link
                       href={`/app/students/${lesson.student_id}/lessons/${lesson.id}?mode=complete`}
-                      className="inline-flex min-h-9 items-center justify-center rounded-md bg-zinc-800 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                      className="inline-flex min-h-9 items-center justify-center rounded-md bg-blue-700 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
                     >
                       Complete lesson
                     </Link>
@@ -562,13 +568,13 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         <div className="rounded-lg border border-zinc-200 bg-white p-4">
           <h2 className="text-lg font-medium text-zinc-900">Paid vs unpaid</h2>
           <div className="mt-4 space-y-3">
-            <div className="rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2">
+            <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2">
               <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Paid lessons</p>
-              <p className="mt-1 text-xl font-semibold text-zinc-900">{paidLessonsCount}</p>
+              <p className="mt-1 text-xl font-semibold text-emerald-900">{paidLessonsCount}</p>
             </div>
-            <div className="rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2">
+            <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2">
               <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Unpaid lessons</p>
-              <p className="mt-1 text-xl font-semibold text-zinc-900">{unpaidLessonsCount}</p>
+              <p className="mt-1 text-xl font-semibold text-amber-900">{unpaidLessonsCount}</p>
             </div>
           </div>
         </div>
@@ -651,7 +657,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                         <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-start">
                           <Link
                             href={`/app/students/${lesson.student_id}/lessons/${lesson.id}/view`}
-                            className="inline-flex min-h-9 w-full items-center justify-center whitespace-nowrap rounded-md bg-zinc-800 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
+                            className="inline-flex min-h-9 w-full items-center justify-center whitespace-nowrap rounded-md bg-blue-700 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
                           >
                             View notes
                           </Link>

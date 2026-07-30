@@ -174,7 +174,7 @@ export function RecordPaymentForm({ studentId, currencyCode }: RecordPaymentForm
         <button
           type="button"
           onClick={() => setIsOpen(true)}
-          className="inline-flex min-h-10 items-center justify-center rounded-md bg-zinc-800 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+          className="inline-flex min-h-10 items-center justify-center rounded-md bg-blue-700 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
         >
           Record payment
         </button>
@@ -281,7 +281,7 @@ export function RecordPaymentForm({ studentId, currencyCode }: RecordPaymentForm
         <button
           type="submit"
           disabled={isSaving}
-          className="inline-flex min-h-10 items-center justify-center rounded-md bg-zinc-800 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-zinc-400"
+          className="inline-flex min-h-10 items-center justify-center rounded-md bg-blue-700 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-zinc-400"
         >
           {isSaving ? "Saving..." : "Save payment"}
         </button>
@@ -508,7 +508,7 @@ export function PaymentRecordActions({ studentId, currencyCode, payment }: Payme
           <button
             type="submit"
             disabled={isSaving}
-            className="inline-flex min-h-9 items-center justify-center rounded-md bg-zinc-800 px-3 py-1.5 text-sm font-medium text-white disabled:bg-zinc-400"
+            className="inline-flex min-h-9 items-center justify-center rounded-md bg-blue-700 px-3 py-1.5 text-sm font-medium text-white disabled:bg-zinc-400"
           >
             {isSaving ? "Saving..." : "Save"}
           </button>
