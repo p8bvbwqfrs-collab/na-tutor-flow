@@ -58,7 +58,6 @@ type Lesson = {
   improve: string | null;
   homework: string | null;
   fee_pence: number;
-  paid: boolean;
   confidence: number;
   effort: number;
   status: "planned" | "completed" | "cancelled" | null;
@@ -66,9 +65,6 @@ type Lesson = {
 
 type Payment = PaymentLike & {
   payment_date: string | null;
-  covers_from: string | null;
-  covers_to: string | null;
-  sessions_covered: number | null;
   note: string | null;
   created_at: string;
 };
@@ -130,7 +126,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
     supabase
       .from("lessons")
       .select(
-        "id, lesson_at, topics, topic_tags, went_well, parent_note, improve, homework, fee_pence, paid, confidence, effort, status",
+        "id, lesson_at, topics, topic_tags, went_well, parent_note, improve, homework, fee_pence, confidence, effort, status",
       )
       .eq("student_id", id)
       .order("lesson_at", { ascending: false });
@@ -138,7 +134,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
   const fallbackLessonsQuery = () =>
     supabase
       .from("lessons")
-      .select("id, lesson_at, topics, went_well, parent_note, improve, homework, fee_pence, paid, confidence, effort, status")
+      .select("id, lesson_at, topics, went_well, parent_note, improve, homework, fee_pence, confidence, effort, status")
       .eq("student_id", id)
       .order("lesson_at", { ascending: false });
 
@@ -152,7 +148,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
     lessonsQuery(),
     supabase
       .from("payments")
-      .select("id, amount_pence, payment_date, covers_from, covers_to, sessions_covered, source, note, created_at")
+      .select("id, amount_pence, payment_date, source, note, created_at")
       .eq("student_id", id)
       .order("created_at", { ascending: false }),
     getUserCurrencyCode(supabase),
@@ -585,6 +581,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
         <PaymentsMonthlySection
           studentId={student.id}
           payments={payments}
+          outstandingAmountPence={outstandingAmountPence}
           studentCreditPence={studentCreditPence}
           currencyCode={currencyCode}
           initialMonthKey={initialPaymentsMonthKey}

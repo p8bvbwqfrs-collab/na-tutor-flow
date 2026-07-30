@@ -6,10 +6,7 @@ import { useRouter } from "next/navigation";
 import { formatCurrencyFromMinorUnits, getCurrencyLabel, type SupportedCurrencyCode } from "@/lib/currency";
 import { getCompletedLessonUpdateStorageKey } from "@/lib/lesson-completion";
 import { formatParentUpdate } from "@/lib/parent-update";
-import {
-  getPaymentStatusLabel,
-  type LessonPaymentStatus,
-} from "@/lib/payments";
+import type { LessonPaymentStatus } from "@/lib/payments";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { applyAvailableCreditToLesson, payOutstandingLessonAmount } from "../../../payment-actions";
 import { DeleteLessonButton } from "../components/delete-lesson-button";
@@ -37,7 +34,6 @@ type LessonFormProps = {
     effort: number;
     confidence: number;
     feeAmount: string;
-    paid: boolean;
     paymentStatus?: LessonPaymentStatus;
     availableCreditPence?: number;
     outstandingPence?: number;
@@ -125,11 +121,10 @@ export function NewLessonForm({
   const [effort, setEffort] = useState(String(initialLesson?.effort ?? 3));
   const [confidence, setConfidence] = useState(String(initialLesson?.confidence ?? 3));
   const [fee, setFee] = useState(initialLesson?.feeAmount ?? "0.00");
-  const [paid, setPaid] = useState(initialLesson?.paid ?? false);
+  const [markPaidOnSave, setMarkPaidOnSave] = useState(false);
   const paymentStatus = initialLesson?.paymentStatus ?? "unpaid";
   const availableCreditPence = initialLesson?.availableCreditPence ?? 0;
   const outstandingPence = initialLesson?.outstandingPence ?? 0;
-  const [useCreditOnSave, setUseCreditOnSave] = useState(false);
   const isAlreadyCovered = paymentStatus === "paid";
   const feePreviewValue = Number(fee);
   const feePreviewPence = Number.isFinite(feePreviewValue) ? Math.max(0, Math.round(feePreviewValue * 100)) : 0;
@@ -137,6 +132,7 @@ export function NewLessonForm({
   const initialFeePence = Number.isFinite(initialFeeValue) ? Math.max(0, Math.round(initialFeeValue * 100)) : 0;
   const existingAllocatedPence = Math.max(0, initialFeePence - outstandingPence);
   const creditOutstandingPence = lessonId ? Math.max(0, feePreviewPence - existingAllocatedPence) : feePreviewPence;
+  const shouldAutoApplyCredit = !isEditMode || completionMode || markPaidOnSave;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [savedLesson, setSavedLesson] = useState<SavedLessonState | null>(null);
@@ -229,7 +225,9 @@ export function NewLessonForm({
       effort: effortValue,
       confidence: confidenceValue,
       fee_pence: feePence,
-      paid,
+      // Payment status is derived from payment allocations. Keep the legacy
+      // column false so it cannot drift away from the payment ledger.
+      paid: false,
       status: saveStatus,
     };
 
@@ -239,9 +237,8 @@ export function NewLessonForm({
 
     const submitError = lessonMutation.error;
 
-    setIsSubmitting(false);
-
     if (submitError) {
+      setIsSubmitting(false);
       setError(submitError.message || "We couldn’t save this lesson. Please try again.");
       return;
     }
@@ -249,24 +246,25 @@ export function NewLessonForm({
     const savedLessonId = isEditMode ? lessonId : lessonMutation.data?.id;
 
     if (!savedLessonId) {
+      setIsSubmitting(false);
       setError("The lesson was saved, but we couldn’t finish the next step. Please refresh and try again.");
       return;
     }
 
-    if (useCreditOnSave && feePence > 0) {
-      const creditResult = await applyAvailableCreditToLesson(savedLessonId);
-
-      if (!creditResult.ok) {
-        setError(creditResult.error ?? "The lesson was saved, but the credit could not be used.");
-        return;
-      }
-    }
-
-    if (paid && feePence > 0) {
+    if (markPaidOnSave && feePence > 0) {
       const paymentResult = await payOutstandingLessonAmount(savedLessonId);
 
       if (!paymentResult.ok) {
+        setIsSubmitting(false);
         setError(paymentResult.error ?? "The lesson was saved, but the payment could not be recorded.");
+        return;
+      }
+    } else if (shouldAutoApplyCredit && feePence > 0) {
+      const creditResult = await applyAvailableCreditToLesson(savedLessonId);
+
+      if (!creditResult.ok) {
+        setIsSubmitting(false);
+        setError(creditResult.error ?? "The lesson was saved, but the credit could not be used.");
         return;
       }
     }
@@ -320,6 +318,16 @@ export function NewLessonForm({
         } else {
           nextLessonScheduled = true;
         }
+
+        if (resolvedNextLessonId && nextLessonScheduled) {
+          const nextLessonCreditResult = await applyAvailableCreditToLesson(resolvedNextLessonId);
+
+          if (!nextLessonCreditResult.ok) {
+            nextLessonSaveWarning =
+              "Both lessons were saved, but existing credit could not be applied to the next lesson.";
+            setPostSaveWarning(nextLessonSaveWarning);
+          }
+        }
       }
     }
 
@@ -334,6 +342,8 @@ export function NewLessonForm({
       confidence: confidenceValue,
       nextLessonAt: nextLessonScheduled ? nextLessonAtIso : null,
     };
+
+    setIsSubmitting(false);
 
     if (completionMode && !nextLessonSaveWarning) {
       const parentUpdateMessage = formatParentUpdate(studentName, nextSavedLesson);
@@ -578,38 +588,40 @@ export function NewLessonForm({
                   <label className="inline-flex items-center gap-2 text-sm font-medium text-zinc-900">
                     <input
                       type="checkbox"
-                      checked={paid}
-                      onChange={(event) => setPaid(event.target.checked)}
+                      checked={markPaidOnSave}
+                      onChange={(event) => setMarkPaidOnSave(event.target.checked)}
                       className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
                     />
-                    Paid now
+                    Mark this lesson as paid
                   </label>
                   <p className="mt-1 text-xs text-zinc-600">
-                    {paid
-                      ? "Record a payment for the outstanding amount."
-                      : paymentStatus === "part-paid"
-                        ? `Payment: ${getPaymentStatusLabel(paymentStatus)}. Leave unticked to keep the remaining amount unpaid.`
-                        : "Leave unticked to keep this lesson unpaid."}
+                    {markPaidOnSave
+                      ? "Existing credit will be used first, then any remaining amount will be recorded as received."
+                      : "Leave unticked if payment has not been received yet."}
                   </p>
-                  {availableCreditPence > 0 && creditOutstandingPence > 0 ? (
+                  {availableCreditPence > 0 && creditOutstandingPence > 0 && shouldAutoApplyCredit ? (
                     <div className="mt-3 rounded-md border border-emerald-200 bg-white p-3">
-                      <p className="text-xs text-zinc-600">
-                        Credit available: {formatCurrencyFromMinorUnits(availableCreditPence, currencyCode)}
+                      <p className="text-sm font-medium text-emerald-900">
+                        Existing credit will be applied automatically
                       </p>
-                      <label className="mt-2 inline-flex items-center gap-2 text-sm font-medium text-emerald-900">
-                        <input
-                          type="checkbox"
-                          checked={useCreditOnSave}
-                          onChange={(event) => setUseCreditOnSave(event.target.checked)}
-                          className="h-4 w-4 rounded border-zinc-300 text-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
-                        />
-                        Use available credit for this lesson
-                      </label>
-                      <p className="mt-1 text-xs text-zinc-600">Use money already recorded for this student.</p>
+                      <p className="mt-1 text-xs text-zinc-600">
+                        {formatCurrencyFromMinorUnits(
+                          Math.min(availableCreditPence, creditOutstandingPence),
+                          currencyCode,
+                        )}{" "}
+                        already received for this student will be used first.
+                      </p>
                       {availableCreditPence < creditOutstandingPence ? (
                         <p className="mt-2 text-xs text-zinc-600">
-                          Remaining after credit:{" "}
-                          {formatCurrencyFromMinorUnits(creditOutstandingPence - availableCreditPence, currencyCode)} unpaid.
+                          {markPaidOnSave
+                            ? `${formatCurrencyFromMinorUnits(
+                                creditOutstandingPence - availableCreditPence,
+                                currencyCode,
+                              )} will be recorded as received when you save.`
+                            : `${formatCurrencyFromMinorUnits(
+                                creditOutstandingPence - availableCreditPence,
+                                currencyCode,
+                              )} will remain outstanding.`}
                         </p>
                       ) : null}
                     </div>

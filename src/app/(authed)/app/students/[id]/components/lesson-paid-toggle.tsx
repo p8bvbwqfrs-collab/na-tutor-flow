@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   getMarkLessonUnpaidConfirmation,
@@ -20,20 +20,14 @@ export function LessonPaidToggle({
   compact = false,
 }: LessonPaidToggleProps) {
   const router = useRouter();
-  const [paymentStatus, setPaymentStatus] = useState(status);
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    setPaymentStatus(status);
-    setError(null);
-  }, [status]);
 
   async function onToggle() {
     setError(null);
     setIsUpdating(true);
 
-    if (paymentStatus === "paid") {
+    if (status === "paid") {
       const confirmation = await getMarkLessonUnpaidConfirmation(lessonId);
       const confirmed = window.confirm(
         confirmation.message ||
@@ -54,7 +48,6 @@ export function LessonPaidToggle({
         return;
       }
 
-      setPaymentStatus("unpaid");
       router.refresh();
       return;
     }
@@ -68,7 +61,6 @@ export function LessonPaidToggle({
       return;
     }
 
-    setPaymentStatus("paid");
     router.refresh();
   }
 
@@ -79,12 +71,12 @@ export function LessonPaidToggle({
         onClick={onToggle}
         disabled={isUpdating}
         className={`inline-flex min-h-9 w-full items-center justify-center whitespace-nowrap rounded-md border px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-zinc-100 disabled:text-zinc-500 sm:w-auto ${
-          paymentStatus === "paid"
+          status === "paid"
             ? "border-amber-200 bg-amber-50 text-amber-900 hover:bg-amber-100"
             : "border-emerald-200 bg-emerald-50 text-emerald-900 hover:bg-emerald-100"
         }`}
       >
-        {isUpdating ? "Saving..." : paymentStatus === "paid" ? "Mark unpaid" : "Mark paid"}
+        {isUpdating ? "Saving..." : status === "paid" ? "Undo payment" : "Mark as paid"}
       </button>
       {compact ? (
         error ? <p className="text-xs text-rose-700">{error}</p> : null
