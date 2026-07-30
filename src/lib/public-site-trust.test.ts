@@ -10,6 +10,10 @@ const publicLayoutSource = readFileSync(
   new URL("../app/(public)/layout.tsx", import.meta.url),
   "utf8",
 );
+const footerSource = readFileSync(
+  new URL("../components/site-footer.tsx", import.meta.url),
+  "utf8",
+);
 
 test("homepage answers core signup trust questions without invented social proof", () => {
   assert.match(homepageSource, /Free to get started/);
@@ -34,17 +38,15 @@ test("homepage trust copy remains readable at narrow mobile widths", () => {
   assert.match(homepageSource, /sm:grid-cols-3/);
 });
 
-test("homepage distinguishes the software from the separate tutoring service", () => {
-  assert.match(homepageSource, /Is the maths-tutoring service part of the software\?/);
-  assert.match(homepageSource, /Tutor Flow is the software product for tutors/);
-  assert.match(homepageSource, /separate private tuition service/);
+test("maths tutoring is referenced only from the public footer", () => {
+  assert.doesNotMatch(homepageSource, /maths.tutor/i);
+  assert.doesNotMatch(publicLayoutSource, /maths.tutor/i);
+  assert.match(footerSource, /href="\/maths-tutor"/);
+  assert.match(footerSource, /Maths tutoring/);
 });
 
-test("public navigation exposes product explanation before the separate service", () => {
+test("public navigation exposes the product explanation", () => {
   const howItWorksPosition = publicLayoutSource.indexOf('href="/how-it-works"');
-  const mathsTutorPosition = publicLayoutSource.indexOf('href="/maths-tutor"');
 
   assert.notEqual(howItWorksPosition, -1);
-  assert.notEqual(mathsTutorPosition, -1);
-  assert.ok(howItWorksPosition < mathsTutorPosition);
 });

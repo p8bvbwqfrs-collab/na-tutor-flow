@@ -79,11 +79,6 @@ const faqs = [
     answer:
       "You retain ownership of your student and lesson data. You can download a portable copy or permanently delete your account and saved data from Settings.",
   },
-  {
-    question: "Is the maths-tutoring service part of the software?",
-    answer:
-      "No. Tutor Flow is the software product for tutors. The maths-tutoring page describes a separate private tuition service offered by the builder.",
-  },
 ] as const;
 
 function FeatureIcon({ icon }: { icon: string }) {
@@ -290,7 +285,7 @@ export default function HomePage() {
             Questions before you start
           </h2>
           <p className="mt-2 text-sm leading-6 text-zinc-600">
-            The essentials about the product, your data, and the separate tutoring service.
+            The essentials about the product and your data.
           </p>
         </div>
         <div className="mt-5 divide-y divide-zinc-200 border-y border-zinc-200">
