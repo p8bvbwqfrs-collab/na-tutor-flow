@@ -178,7 +178,6 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     {
       key: "overdue",
       title: "Needs completing",
-      description: "The scheduled date has passed. Complete, reschedule or cancel these lessons.",
       lessons: plannedLessonPartitions.overdue.slice(0, 3),
       total: plannedLessonPartitions.overdue.length,
       cardClassName: "border-amber-200 bg-amber-50/70 hover:border-amber-300 hover:bg-amber-50",
@@ -187,7 +186,6 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     {
       key: "today",
       title: "Today’s lessons",
-      description: "Open a lesson after the session to complete the notes and next steps.",
       lessons: plannedLessonPartitions.today.slice(0, 3),
       total: plannedLessonPartitions.today.length,
       cardClassName: "border-blue-300 bg-blue-50 hover:border-blue-400",
@@ -196,7 +194,6 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     {
       key: "upcoming",
       title: "Next lessons",
-      description: "Your next scheduled lessons after today.",
       lessons: plannedLessonPartitions.upcoming.slice(0, 3),
       total: plannedLessonPartitions.upcoming.length,
       cardClassName: "border-blue-200 bg-blue-50/60 hover:border-blue-300 hover:bg-blue-50",
@@ -345,14 +342,13 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             No scheduled lessons yet.
           </p>
         ) : (
-          <div className="mt-4 grid gap-5 lg:grid-cols-3">
+          <div className="mt-4 space-y-5">
             {plannedLessonSections.map((section) => (
               <section key={section.key} aria-labelledby={`dashboard-${section.key}-lessons`}>
                 <h3 id={`dashboard-${section.key}-lessons`} className="text-sm font-semibold text-zinc-900">
                   {section.title}
                 </h3>
-                <p className="mt-1 text-xs leading-5 text-zinc-600">{section.description}</p>
-                <div className="mt-2 space-y-3">
+                <div className="mt-2 space-y-2">
                   {section.lessons.map((lesson) => {
                     const paymentStatus = calculateLessonPaymentStatus(lesson, paymentAllocations);
 
@@ -361,46 +357,50 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                         key={lesson.id}
                         className={`rounded-lg border p-3 transition-colors ${section.cardClassName}`}
                       >
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p className="min-w-0 text-sm font-medium text-zinc-900">
-                            {getStudentName(lesson.student) ?? "Unknown student"}
-                          </p>
-                          <span className="text-sm text-zinc-600">{formatDateTimeLocal(lesson.lesson_at)}</span>
-                          <span
-                            className={`inline-flex rounded-full border px-2 py-1 text-xs font-medium ${section.badgeClassName}`}
-                          >
-                            {section.key === "overdue"
-                              ? "Needs completing"
-                              : section.key === "today"
-                                ? "Today"
-                                : "Upcoming"}
-                          </span>
-                          <span
-                            className={`inline-flex rounded-full border px-2 py-1 text-xs font-medium ${getPaymentStatusClassName(paymentStatus)}`}
-                          >
-                            {getPaymentStatusLabel(paymentStatus)}
-                          </span>
-                        </div>
-                        <div className="mt-3 grid gap-2 sm:flex sm:flex-wrap">
-                          <Link
-                            href={`/app/students/${lesson.student_id}/lessons/${lesson.id}?mode=complete`}
-                            className="inline-flex min-h-10 w-full items-center justify-center rounded-md bg-blue-700 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
-                          >
-                            Complete lesson
-                          </Link>
-                          <Link
-                            href={`/app/students/${lesson.student_id}/lessons/${lesson.id}`}
-                            className="inline-flex min-h-10 w-full items-center justify-center rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
-                          >
-                            Reschedule
-                          </Link>
-                          <PlannedLessonStatusButton
-                            lessonId={lesson.id}
-                            studentId={lesson.student_id}
-                            nextStatus="cancelled"
-                            label="Cancel lesson"
-                            className="min-h-10 w-full border-rose-200 bg-white text-rose-700 hover:bg-rose-50 hover:text-rose-800 sm:w-auto"
-                          />
+                        <div className="md:flex md:items-center md:justify-between md:gap-4">
+                          <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <p className="min-w-0 text-sm font-medium text-zinc-900">
+                                {getStudentName(lesson.student) ?? "Unknown student"}
+                              </p>
+                              <span className="text-sm text-zinc-600">{formatDateTimeLocal(lesson.lesson_at)}</span>
+                              <span
+                                className={`inline-flex rounded-full border px-2 py-1 text-xs font-medium ${section.badgeClassName}`}
+                              >
+                                {section.key === "overdue"
+                                  ? "Needs completing"
+                                  : section.key === "today"
+                                    ? "Today"
+                                    : "Upcoming"}
+                              </span>
+                              <span
+                                className={`inline-flex rounded-full border px-2 py-1 text-xs font-medium ${getPaymentStatusClassName(paymentStatus)}`}
+                              >
+                                {getPaymentStatusLabel(paymentStatus)}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="mt-3 grid gap-2 sm:flex sm:flex-wrap md:mt-0 md:flex-nowrap md:justify-end">
+                            <Link
+                              href={`/app/students/${lesson.student_id}/lessons/${lesson.id}?mode=complete`}
+                              className="inline-flex min-h-10 w-full items-center justify-center whitespace-nowrap rounded-md bg-blue-700 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
+                            >
+                              Complete lesson
+                            </Link>
+                            <Link
+                              href={`/app/students/${lesson.student_id}/lessons/${lesson.id}`}
+                              className="inline-flex min-h-10 w-full items-center justify-center whitespace-nowrap rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
+                            >
+                              Reschedule
+                            </Link>
+                            <PlannedLessonStatusButton
+                              lessonId={lesson.id}
+                              studentId={lesson.student_id}
+                              nextStatus="cancelled"
+                              label="Cancel lesson"
+                              className="min-h-10 w-full whitespace-nowrap border-rose-200 bg-white text-rose-700 hover:bg-rose-50 hover:text-rose-800 sm:w-auto"
+                            />
+                          </div>
                         </div>
                       </div>
                     );

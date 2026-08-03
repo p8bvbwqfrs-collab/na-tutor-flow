@@ -282,9 +282,7 @@ ${buildSummarySection("Homework / follow-up", summaryInputs.homework)}`;
 
   return (
     <section className="rounded-lg border border-zinc-200 bg-white p-4">
-      <div
-        className={`flex flex-col gap-3 ${hideHeader ? "" : "sm:flex-row sm:items-start sm:justify-between"}`}
-      >
+      <div>
         {!hideHeader ? (
           <div>
             <h2 className="text-lg font-medium text-zinc-900">Monthly summary</h2>
@@ -295,11 +293,11 @@ ${buildSummarySection("Homework / follow-up", summaryInputs.homework)}`;
         ) : null}
         {availableMonths.length > 0 ? (
           <div
-            className={`flex flex-col gap-3 ${
-              hideHeader ? "sm:flex-row sm:items-end" : "sm:flex-row sm:items-end sm:justify-end"
+            className={`rounded-lg border border-zinc-200 bg-zinc-50 p-3 sm:flex sm:items-end sm:gap-3 ${
+              hideHeader ? "" : "mt-4"
             }`}
           >
-            <div>
+            <div className="min-w-0 sm:w-56">
               <label htmlFor="summary_month" className="block text-sm font-medium text-zinc-700">
                 Month
               </label>
@@ -311,7 +309,7 @@ ${buildSummarySection("Homework / follow-up", summaryInputs.homework)}`;
                   setCopied(false);
                   setStatus(null);
                 }}
-                className="mt-1 min-w-44 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+                className="mt-1 min-h-10 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
               >
                 {monthOptions.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -323,7 +321,7 @@ ${buildSummarySection("Homework / follow-up", summaryInputs.homework)}`;
             <button
               type="button"
               onClick={generateSummary}
-              className="inline-flex min-h-10 items-center justify-center rounded-md bg-blue-700 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+              className="mt-3 inline-flex min-h-10 w-full items-center justify-center rounded-md bg-blue-700 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:mt-0 sm:w-auto"
             >
               Generate summary
             </button>

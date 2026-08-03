@@ -132,10 +132,10 @@ test("the dashboard groups timeframe reporting and payment actions under Money",
   assert.doesNotMatch(dashboardSource, /Paid vs unpaid/);
 });
 
-test("student profiles reuse the same timeframe payment summary", () => {
+test("student profiles reuse the same timeframe money summary", () => {
   const studentSource = readFileSync("src/app/(authed)/app/students/[id]/page.tsx", "utf8");
 
-  assert.match(studentSource, /Payment summary/);
+  assert.match(studentSource, />\s*Money\s*</);
   assert.match(studentSource, /Outstanding now/);
   assert.match(studentSource, /Last payment/);
   assert.match(studentSource, /ChartRangeFilter/);
