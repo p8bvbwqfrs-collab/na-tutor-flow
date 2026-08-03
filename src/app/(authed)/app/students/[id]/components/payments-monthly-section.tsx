@@ -60,7 +60,7 @@ export function PaymentsMonthlySection({
   );
 
   return (
-    <section>
+    <section id="payment-history" className="scroll-mt-24">
       <div className="rounded-lg border border-zinc-200 bg-white p-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>

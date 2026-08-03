@@ -336,6 +336,19 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
 
   const chronologicalLessons = [...completedLessons].reverse();
   const latestCompletedLesson = completedLessons[0] ?? null;
+  const attentionLesson =
+    plannedLessonPartitions.overdue[0] ??
+    plannedLessonPartitions.today[0] ??
+    plannedLessonPartitions.upcoming[0] ??
+    null;
+  const attentionLessonLabel =
+    plannedLessonPartitions.overdue.length > 0
+      ? "Needs completing"
+      : plannedLessonPartitions.today.length > 0
+        ? "Today’s lesson"
+        : attentionLesson
+          ? "Next lesson"
+          : "Next lesson";
   const learningTrendPoints = chronologicalLessons.slice(-10).map((lesson) => ({
     label: formatShortDateLocal(lesson.lesson_at),
     confidence: lesson.confidence,
@@ -371,20 +384,20 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
         </p>
       ) : null}
 
-      <div className="mt-4 flex flex-wrap items-center gap-2">
+      <div className="mt-4 grid gap-2 sm:flex sm:flex-wrap sm:items-center">
         {isArchived ? (
           <StudentArchiveToggle studentId={student.id} isArchived />
         ) : (
           <>
             <Link
               href={`/app/students/${student.id}/new-lesson`}
-              className="rounded-md bg-blue-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+              className="inline-flex min-h-10 w-full items-center justify-center whitespace-nowrap rounded-md bg-blue-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
             >
               Log lesson
             </Link>
             <Link
               href={`/app/students/${student.id}/schedule-lesson`}
-              className="rounded-md border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 transition-colors hover:bg-zinc-50 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+              className="inline-flex min-h-10 w-full items-center justify-center whitespace-nowrap rounded-md border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 transition-colors hover:bg-zinc-50 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
             >
               Schedule lesson
             </Link>
@@ -405,28 +418,34 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
         <CompletedLessonUpdateBanner studentId={student.id} />
       ) : null}
 
-      <section className="mt-6">
-        <div className="rounded-lg border border-zinc-200 bg-white p-4 sm:p-5">
-          {latestCompletedLesson ? (
-            <>
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div className="min-w-0">
-                  <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:gap-3">
-                    <h2 className="text-lg font-medium text-zinc-900">Latest notes</h2>
-                    <p className="text-sm text-zinc-500">
-                      {formatDateLocal(latestCompletedLesson.lesson_at)} at {formatTimeLocal(latestCompletedLesson.lesson_at)}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex flex-wrap items-start gap-2 sm:justify-end">
+      <section className="mt-6" aria-labelledby="student-overview-heading">
+        <h2 id="student-overview-heading" className="text-lg font-medium text-zinc-900">
+          At a glance
+        </h2>
+        <p className="mt-1 text-sm text-zinc-600">
+          The next update, payment position and lesson for this student.
+        </p>
+        <div className="mt-3 grid gap-3 md:grid-cols-3">
+          <article className="flex min-w-0 flex-col rounded-lg border border-blue-200 bg-blue-50/60 p-4">
+            <h3 className="text-xs font-medium uppercase tracking-wide text-zinc-600">Parent update</h3>
+            {latestCompletedLesson ? (
+              <>
+                <p className="mt-2 break-words text-base font-semibold text-zinc-900">Ready to share</p>
+                <p className="mt-1 text-sm text-zinc-600">
+                  From {formatDateLocal(latestCompletedLesson.lesson_at)}
+                </p>
+                {isArchived ? (
                   <Link
-                    href={`/app/students/${student.id}/lessons/${latestCompletedLesson.id}/view`}
-                    className="inline-flex min-h-9 items-center justify-center rounded-md bg-blue-700 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                    href="#latest-parent-update"
+                    className="mt-4 inline-flex min-h-10 w-full items-center justify-center whitespace-nowrap rounded-md border border-blue-200 bg-white px-3 py-2 text-sm font-medium text-blue-800 transition-colors hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
                   >
-                    View notes
+                    View update
                   </Link>
+                ) : (
                   <LessonUpdateActions
                     reserveFeedbackSpace={false}
+                    className="mt-4"
+                    buttonClassName="inline-flex min-h-10 w-full items-center justify-center whitespace-nowrap rounded-md bg-blue-700 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
                     message={formatParentUpdate(student.student_name, {
                       lessonAt: latestCompletedLesson.lesson_at,
                       topics: latestCompletedLesson.topics ?? "",
@@ -438,10 +457,103 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
                       confidence: latestCompletedLesson.confidence,
                     })}
                   />
+                )}
+              </>
+            ) : (
+              <>
+                <p className="mt-2 text-base font-semibold text-zinc-900">No update yet</p>
+                <p className="mt-1 text-sm text-zinc-600">Log a lesson to create the first parent update.</p>
+                {!isArchived ? (
+                  <Link
+                    href={`/app/students/${student.id}/new-lesson`}
+                    className="mt-4 inline-flex min-h-10 w-full items-center justify-center whitespace-nowrap rounded-md bg-blue-700 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                  >
+                    Log lesson
+                  </Link>
+                ) : null}
+              </>
+            )}
+          </article>
+
+          <article className="flex min-w-0 flex-col rounded-lg border border-amber-200 bg-amber-50/60 p-4">
+            <h3 className="text-xs font-medium uppercase tracking-wide text-zinc-600">Outstanding</h3>
+            {hasStudentFinancialError ? (
+              <p className="mt-2 text-sm font-medium text-rose-800">Could not load the current balance.</p>
+            ) : (
+              <>
+                <p className="mt-2 break-words text-xl font-semibold text-amber-900">
+                  {formatCurrencyFromMinorUnits(outstandingAmountPence, currencyCode)}
+                </p>
+                <p className="mt-1 text-sm text-zinc-600">
+                  {outstandingAmountPence > 0 ? "Currently owed" : "Nothing owed now"}
+                </p>
+              </>
+            )}
+            <Link
+              href={outstandingAmountPence > 0 && !isArchived ? "#payment-history" : "#money"}
+              className="mt-4 inline-flex min-h-10 w-full items-center justify-center whitespace-nowrap rounded-md border border-amber-300 bg-white px-3 py-2 text-sm font-medium text-amber-900 transition-colors hover:bg-amber-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+            >
+              {outstandingAmountPence > 0 && !isArchived ? "Record payment" : "View money"}
+            </Link>
+          </article>
+
+          <article className="flex min-w-0 flex-col rounded-lg border border-zinc-200 bg-white p-4">
+            <h3 className="text-xs font-medium uppercase tracking-wide text-zinc-600">{attentionLessonLabel}</h3>
+            {attentionLesson ? (
+              <>
+                <p className="mt-2 text-base font-semibold text-zinc-900">
+                  {formatDateLocal(attentionLesson.lesson_at)}
+                </p>
+                <p className="mt-1 text-sm text-zinc-600">{formatTimeLocal(attentionLesson.lesson_at)}</p>
+                <Link
+                  href="#student-schedule"
+                  className="mt-4 inline-flex min-h-10 w-full items-center justify-center whitespace-nowrap rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                >
+                  View lesson
+                </Link>
+              </>
+            ) : (
+              <>
+                <p className="mt-2 text-base font-semibold text-zinc-900">Not scheduled</p>
+                <p className="mt-1 text-sm text-zinc-600">There is no upcoming lesson.</p>
+                {!isArchived ? (
+                  <Link
+                    href={`/app/students/${student.id}/schedule-lesson`}
+                    className="mt-4 inline-flex min-h-10 w-full items-center justify-center whitespace-nowrap rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                  >
+                    Schedule lesson
+                  </Link>
+                ) : null}
+              </>
+            )}
+          </article>
+        </div>
+      </section>
+
+      <section id="latest-parent-update" className="mt-6 scroll-mt-24">
+        <div className="rounded-lg border border-zinc-200 bg-white p-4 sm:p-5">
+          {latestCompletedLesson ? (
+            <>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:gap-3">
+                    <h2 className="text-lg font-medium text-zinc-900">Latest parent update</h2>
+                    <p className="text-sm text-zinc-500">
+                      {formatDateLocal(latestCompletedLesson.lesson_at)} at {formatTimeLocal(latestCompletedLesson.lesson_at)}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-start gap-2 sm:justify-end">
+                  <Link
+                    href={`/app/students/${student.id}/lessons/${latestCompletedLesson.id}/view`}
+                    className="inline-flex min-h-9 items-center justify-center whitespace-nowrap rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                  >
+                    View lesson notes
+                  </Link>
                 </div>
               </div>
 
-              {/* Latest notes stays focused on next-session useful details; full notes live on the lesson page. */}
+              {/* The parent update stays focused on shareable, next-session useful details; full notes live on the lesson page. */}
               <div className="mt-2 rounded-lg border border-zinc-200 bg-neutral-50 p-3">
                 <p className="line-clamp-2 break-words text-sm font-medium leading-6 text-zinc-900 sm:line-clamp-3 sm:text-[15px]">
                   {cleanLessonText(latestCompletedLesson.topics) || "No focus captured yet."}
@@ -484,7 +596,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
             </>
           ) : (
             <>
-              <h2 className="text-lg font-medium text-zinc-900">Latest notes</h2>
+              <h2 className="text-lg font-medium text-zinc-900">Latest parent update</h2>
               <div className="mt-4 rounded-md border border-dashed border-zinc-300 bg-zinc-50 p-4">
                 <p className="text-sm font-medium text-zinc-900">No lesson notes yet.</p>
                 <p className="mt-2 text-sm text-zinc-600">
@@ -498,7 +610,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
 
       <div className="mt-6 space-y-6">
         {plannedLessons.length > 0 ? (
-          <div className="space-y-4">
+          <div id="student-schedule" className="scroll-mt-24 space-y-4">
             {plannedLessonSections.map((section) => (
               <section key={section.key} className="rounded-lg border border-zinc-200 bg-white p-4">
                 <h2 className="text-lg font-medium text-zinc-900">{section.title}</h2>
@@ -538,13 +650,13 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
                             <div className="mt-3 grid gap-2 sm:flex sm:flex-wrap sm:items-center">
                               <Link
                                 href={`/app/students/${student.id}/lessons/${lesson.id}?mode=complete`}
-                                className="inline-flex min-h-10 w-full items-center justify-center rounded-md bg-blue-700 px-3 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
+                                className="inline-flex min-h-10 w-full items-center justify-center whitespace-nowrap rounded-md bg-blue-700 px-3 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
                               >
                                 Complete lesson
                               </Link>
                               <Link
                                 href={`/app/students/${student.id}/lessons/${lesson.id}`}
-                                className="inline-flex min-h-10 w-full items-center justify-center rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 transition-colors hover:bg-zinc-50 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
+                                className="inline-flex min-h-10 w-full items-center justify-center whitespace-nowrap rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 transition-colors hover:bg-zinc-50 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
                               >
                                 Reschedule
                               </Link>
@@ -553,7 +665,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
                                 studentId={student.id}
                                 nextStatus="cancelled"
                                 label="Cancel lesson"
-                                className="min-h-10 w-full border-rose-200 bg-white text-rose-700 hover:bg-rose-50 hover:text-rose-800 sm:w-auto"
+                                className="min-h-10 w-full whitespace-nowrap border-rose-200 bg-white text-rose-700 hover:bg-rose-50 hover:text-rose-800 sm:w-auto"
                               />
                             </div>
                           )}
@@ -617,7 +729,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
           readOnly={isArchived}
         />
 
-        <section className="rounded-lg border border-zinc-200 bg-white p-4 sm:p-5" aria-labelledby="student-money-heading">
+        <section id="money" className="scroll-mt-24 rounded-lg border border-zinc-200 bg-white p-4 sm:p-5" aria-labelledby="student-money-heading">
           <h2 id="student-money-heading" className="text-lg font-medium text-zinc-900">
             Money
           </h2>
