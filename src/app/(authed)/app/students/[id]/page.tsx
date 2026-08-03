@@ -206,7 +206,6 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
     {
       key: "overdue",
       title: "Needs completing",
-      description: "The scheduled date has passed. Complete, reschedule or cancel these lessons.",
       lessons: plannedLessonPartitions.overdue,
       cardClassName: "border-amber-200 bg-amber-50/70",
       badgeClassName: "border-amber-300 bg-amber-100 text-amber-900",
@@ -215,7 +214,6 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
     {
       key: "today",
       title: "Today’s lessons",
-      description: "Complete the lesson after the session to capture notes and next steps.",
       lessons: plannedLessonPartitions.today,
       cardClassName: "border-blue-300 bg-blue-50",
       badgeClassName: "border-blue-300 bg-blue-100 text-blue-900",
@@ -224,7 +222,6 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
     {
       key: "upcoming",
       title: "Next lessons",
-      description: "Scheduled lessons after today.",
       lessons: plannedLessonPartitions.upcoming,
       cardClassName: "border-blue-200 bg-blue-50/60",
       badgeClassName: "border-blue-200 bg-blue-50 text-blue-800",
@@ -339,13 +336,10 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
 
   const chronologicalLessons = [...completedLessons].reverse();
   const latestCompletedLesson = completedLessons[0] ?? null;
-  const confidenceTrendPoints = chronologicalLessons.map((lesson) => ({
+  const learningTrendPoints = chronologicalLessons.slice(-10).map((lesson) => ({
     label: formatShortDateLocal(lesson.lesson_at),
-    value: lesson.confidence,
-  }));
-  const effortTrendPoints = chronologicalLessons.map((lesson) => ({
-    label: formatShortDateLocal(lesson.lesson_at),
-    value: lesson.effort,
+    confidence: lesson.confidence,
+    effort: lesson.effort,
   }));
 
   return (
@@ -378,7 +372,9 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
       ) : null}
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
-        {isArchived ? null : (
+        {isArchived ? (
+          <StudentArchiveToggle studentId={student.id} isArchived />
+        ) : (
           <>
             <Link
               href={`/app/students/${student.id}/new-lesson`}
@@ -392,15 +388,8 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
             >
               Schedule lesson
             </Link>
-            <Link
-              href={`/app/students/${student.id}/edit`}
-              className="rounded-md border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 transition-colors hover:bg-zinc-50 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-            >
-              Edit student
-            </Link>
           </>
         )}
-        <StudentArchiveToggle studentId={student.id} isArchived={isArchived} />
       </div>
 
       {lessonUpdated === "1" ? (
@@ -415,93 +404,6 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
       {lessonCompleted === "1" ? (
         <CompletedLessonUpdateBanner studentId={student.id} />
       ) : null}
-
-      <section className="mt-6" aria-labelledby="student-money-heading">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h2 id="student-money-heading" className="text-lg font-medium text-zinc-900">
-              Payment summary
-            </h2>
-            <p className="mt-1 text-sm text-zinc-600">
-              Received and completed figures use the selected timeframe. Outstanding is what is owed now.
-            </p>
-          </div>
-          <ChartRangeFilter selected={selectedRange} basePath={`/app/students/${student.id}`} />
-        </div>
-
-        {hasStudentFinancialError ? (
-          <p
-            role="alert"
-            className="mt-4 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-900"
-          >
-            Could not load this student&apos;s payment summary.
-          </p>
-        ) : (
-          <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <div className="min-w-0 rounded-lg border border-emerald-200 bg-emerald-50/50 p-3 sm:p-4">
-              <p className="text-xs font-medium uppercase tracking-wide text-zinc-600">Received</p>
-              <p className="mt-1.5 break-words text-xl font-semibold text-emerald-900 sm:text-2xl">
-                {formatCurrencyFromMinorUnits(receivedInRangePence, currencyCode)}
-              </p>
-              <p className="mt-1 text-xs text-zinc-600">{rangeLabel}</p>
-            </div>
-            <div className="min-w-0 rounded-lg border border-amber-200 bg-amber-50/50 p-3 sm:p-4">
-              <p className="text-xs font-medium uppercase tracking-wide text-zinc-600">Outstanding now</p>
-              <p className="mt-1.5 break-words text-xl font-semibold text-amber-900 sm:text-2xl">
-                {formatCurrencyFromMinorUnits(outstandingAmountPence, currencyCode)}
-              </p>
-              <p className="mt-1 text-xs text-zinc-600">Current balance</p>
-            </div>
-            <div className="min-w-0 rounded-lg border border-blue-200 bg-blue-50/50 p-3 sm:p-4">
-              <p className="text-xs font-medium uppercase tracking-wide text-zinc-600">Completed lessons</p>
-              <p className="mt-1.5 text-xl font-semibold text-blue-900 sm:text-2xl">
-                {completedLessonsInRange.length}
-              </p>
-              <p className="mt-1 text-xs text-zinc-600">{rangeLabel}</p>
-            </div>
-            <div className="min-w-0 rounded-lg border border-zinc-200 bg-white p-3 sm:p-4">
-              <p className="text-xs font-medium uppercase tracking-wide text-zinc-600">Last payment</p>
-              {lastPayment ? (
-                <>
-                  <p className="mt-1.5 break-words text-xl font-semibold text-zinc-900 sm:text-2xl">
-                    {formatCurrencyFromMinorUnits(lastPayment.amount_pence, currencyCode)}
-                  </p>
-                  <p className="mt-1 text-xs text-zinc-600">
-                    {formatDateLocal(lastPayment.payment_date ?? lastPayment.created_at)}
-                  </p>
-                </>
-              ) : (
-                <p className="mt-2 text-sm font-medium text-zinc-600">No payments yet</p>
-              )}
-            </div>
-          </div>
-        )}
-      </section>
-
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <div className="rounded-lg border border-zinc-200 bg-white p-4">
-          <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Last lesson</p>
-          <p className="mt-2 text-sm font-semibold text-zinc-900">{latestLessonDate}</p>
-        </div>
-        <div className="rounded-lg border border-zinc-200 bg-white p-4">
-          <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Total lessons</p>
-          <p className="mt-2 text-2xl font-semibold text-zinc-900">{totalLessons}</p>
-        </div>
-        <div className="rounded-lg border border-zinc-200 bg-white p-4">
-          <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Average confidence</p>
-          <p className="mt-2 text-2xl font-semibold text-zinc-900">{avgConfidence}</p>
-        </div>
-        <div className="rounded-lg border border-zinc-200 bg-white p-4">
-          <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Average student effort</p>
-          <p className="mt-2 text-2xl font-semibold text-zinc-900">{avgEffort}</p>
-        </div>
-        <ProgressSignalCard
-          label={progressSignal.label}
-          detail={progressSignal.detail}
-          explanation={progressExplanation}
-          tone={progressTone}
-        />
-      </div>
 
       <section className="mt-6">
         <div className="rounded-lg border border-zinc-200 bg-white p-4 sm:p-5">
@@ -600,8 +502,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
             {plannedLessonSections.map((section) => (
               <section key={section.key} className="rounded-lg border border-zinc-200 bg-white p-4">
                 <h2 className="text-lg font-medium text-zinc-900">{section.title}</h2>
-                <p className="mt-1 text-sm text-zinc-600">{section.description}</p>
-                <div className="mt-4 space-y-3">
+                <div className="mt-3 space-y-3">
                   {section.lessons.map((lesson) => {
                     const plannedTopic =
                       lesson.topics && lesson.topics !== "Planned lesson" ? cleanLessonText(lesson.topics) : null;
@@ -612,31 +513,29 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
                         key={lesson.id}
                         className={`rounded-lg border p-4 ${section.cardClassName}`}
                       >
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                          <div>
-                            <p className="flex flex-wrap items-center gap-2 text-sm font-medium text-zinc-900">
-                              <span>{formatDateLocal(lesson.lesson_at)} at {formatTimeLocal(lesson.lesson_at)}</span>
-                              <span
-                                className={`inline-flex rounded-full border px-2 py-1 text-xs font-medium ${section.badgeClassName}`}
-                              >
-                                {section.badgeLabel}
-                              </span>
-                              <span
-                                className={`inline-flex rounded-full border px-2 py-1 text-xs font-medium ${getPaymentStatusClassName(paymentStatus)}`}
-                              >
-                                {getPaymentStatusLabel(paymentStatus)}
-                              </span>
-                            </p>
-                            <p className="mt-1 text-sm text-zinc-600">
-                              {plannedTopic || "No planned topic or note yet."}
-                            </p>
-                          </div>
+                        <div>
+                          <p className="flex flex-wrap items-center gap-2 text-sm font-medium text-zinc-900">
+                            <span>{formatDateLocal(lesson.lesson_at)} at {formatTimeLocal(lesson.lesson_at)}</span>
+                            <span
+                              className={`inline-flex rounded-full border px-2 py-1 text-xs font-medium ${section.badgeClassName}`}
+                            >
+                              {section.badgeLabel}
+                            </span>
+                            <span
+                              className={`inline-flex rounded-full border px-2 py-1 text-xs font-medium ${getPaymentStatusClassName(paymentStatus)}`}
+                            >
+                              {getPaymentStatusLabel(paymentStatus)}
+                            </span>
+                          </p>
+                          <p className="mt-1 text-sm text-zinc-600">
+                            {plannedTopic || "No planned topic or note yet."}
+                          </p>
                           {isArchived ? (
-                            <span className="inline-flex rounded-full border border-zinc-300 bg-zinc-100 px-2 py-1 text-xs font-medium text-zinc-700">
+                            <span className="mt-3 inline-flex rounded-full border border-zinc-300 bg-zinc-100 px-2 py-1 text-xs font-medium text-zinc-700">
                               Read-only
                             </span>
                           ) : (
-                            <div className="grid gap-2 sm:flex sm:flex-wrap sm:items-start">
+                            <div className="mt-3 grid gap-2 sm:flex sm:flex-wrap sm:items-center">
                               <Link
                                 href={`/app/students/${student.id}/lessons/${lesson.id}?mode=complete`}
                                 className="inline-flex min-h-10 w-full items-center justify-center rounded-md bg-blue-700 px-3 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
@@ -668,18 +567,44 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
           </div>
         ) : null}
 
-        <section>
-          <MonthlySummaryGenerator studentName={student.student_name} lessons={completedLessons} />
+        <section className="rounded-lg border border-zinc-200 bg-white p-4 sm:p-5" aria-labelledby="learning-progress-heading">
+          <h2 id="learning-progress-heading" className="text-lg font-medium text-zinc-900">
+            Learning progress
+          </h2>
+          <p className="mt-1 text-sm text-zinc-600">
+            A concise view of this student&apos;s recent lessons and learning signals.
+          </p>
+          <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-4 border-y border-zinc-200 py-4 lg:grid-cols-4">
+            <div className="min-w-0">
+              <dt className="text-xs font-medium uppercase tracking-wide text-zinc-500">Last lesson</dt>
+              <dd className="mt-1 break-words text-sm font-semibold text-zinc-900">{latestLessonDate}</dd>
+            </div>
+            <div className="min-w-0">
+              <dt className="text-xs font-medium uppercase tracking-wide text-zinc-500">Total lessons</dt>
+              <dd className="mt-1 text-xl font-semibold text-zinc-900">{totalLessons}</dd>
+            </div>
+            <div className="min-w-0">
+              <dt className="text-xs font-medium uppercase tracking-wide text-zinc-500">Avg confidence</dt>
+              <dd className="mt-1 text-xl font-semibold text-zinc-900">{avgConfidence}</dd>
+            </div>
+            <div className="min-w-0">
+              <dt className="text-xs font-medium uppercase tracking-wide text-zinc-500">Avg effort</dt>
+              <dd className="mt-1 text-xl font-semibold text-zinc-900">{avgEffort}</dd>
+            </div>
+          </dl>
+          <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)]">
+            <ProgressSignalCard
+              label={progressSignal.label}
+              detail={progressSignal.detail}
+              explanation={progressExplanation}
+              tone={progressTone}
+            />
+            <StudentTrendChart points={learningTrendPoints} />
+          </div>
         </section>
 
         <section>
-          <div className="rounded-lg border border-zinc-200 bg-white p-4">
-            <h2 className="text-lg font-medium text-zinc-900">Trends</h2>
-            <div className="mt-4 grid gap-3 lg:grid-cols-2">
-              <StudentTrendChart title="Confidence over time" points={confidenceTrendPoints} />
-              <StudentTrendChart title="Student effort over time" points={effortTrendPoints} />
-            </div>
-          </div>
+          <MonthlySummaryGenerator studentName={student.student_name} lessons={completedLessons} />
         </section>
 
         <PastLessonsMonthlySection
@@ -692,16 +617,95 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
           readOnly={isArchived}
         />
 
+        <section className="rounded-lg border border-zinc-200 bg-white p-4 sm:p-5" aria-labelledby="student-money-heading">
+          <h2 id="student-money-heading" className="text-lg font-medium text-zinc-900">
+            Money
+          </h2>
+          <p className="mt-1 text-sm text-zinc-600">
+            Received and completed use the selected timeframe. Outstanding is what is owed now.
+          </p>
+          <div className="mt-3">
+            <ChartRangeFilter selected={selectedRange} basePath={`/app/students/${student.id}`} />
+          </div>
+
+          {hasStudentFinancialError ? (
+            <p
+              role="alert"
+              className="mt-4 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-900"
+            >
+              Could not load this student&apos;s payment summary.
+            </p>
+          ) : (
+            <dl className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+              <div className="min-w-0 rounded-lg border border-emerald-200 bg-emerald-50/50 p-3 sm:p-4">
+                <dt className="text-xs font-medium uppercase tracking-wide text-zinc-600">Received</dt>
+                <dd className="mt-1.5 break-words text-xl font-semibold text-emerald-900 sm:text-2xl">
+                  {formatCurrencyFromMinorUnits(receivedInRangePence, currencyCode)}
+                </dd>
+                <dd className="mt-1 text-xs text-zinc-600">{rangeLabel}</dd>
+              </div>
+              <div className="min-w-0 rounded-lg border border-amber-200 bg-amber-50/50 p-3 sm:p-4">
+                <dt className="text-xs font-medium uppercase tracking-wide text-zinc-600">Outstanding now</dt>
+                <dd className="mt-1.5 break-words text-xl font-semibold text-amber-900 sm:text-2xl">
+                  {formatCurrencyFromMinorUnits(outstandingAmountPence, currencyCode)}
+                </dd>
+                <dd className="mt-1 text-xs text-zinc-600">Current balance</dd>
+              </div>
+              <div className="min-w-0 rounded-lg border border-blue-200 bg-blue-50/50 p-3 sm:p-4">
+                <dt className="text-xs font-medium uppercase tracking-wide text-zinc-600">Completed lessons</dt>
+                <dd className="mt-1.5 text-xl font-semibold text-blue-900 sm:text-2xl">
+                  {completedLessonsInRange.length}
+                </dd>
+                <dd className="mt-1 text-xs text-zinc-600">{rangeLabel}</dd>
+              </div>
+              <div className="min-w-0 rounded-lg border border-zinc-200 bg-white p-3 sm:p-4">
+                <dt className="text-xs font-medium uppercase tracking-wide text-zinc-600">Last payment</dt>
+                {lastPayment ? (
+                  <>
+                    <dd className="mt-1.5 break-words text-xl font-semibold text-zinc-900 sm:text-2xl">
+                      {formatCurrencyFromMinorUnits(lastPayment.amount_pence, currencyCode)}
+                    </dd>
+                    <dd className="mt-1 text-xs text-zinc-600">
+                      {formatDateLocal(lastPayment.payment_date ?? lastPayment.created_at)}
+                    </dd>
+                  </>
+                ) : (
+                  <dd className="mt-2 text-sm font-medium text-zinc-600">No payments yet</dd>
+                )}
+              </div>
+            </dl>
+          )}
+        </section>
+
         <PaymentsMonthlySection
           studentId={student.id}
           payments={payments}
-          outstandingAmountPence={outstandingAmountPence}
           studentCreditPence={studentCreditPence}
           currencyCode={currencyCode}
           initialMonthKey={initialPaymentsMonthKey}
           readOnly={isArchived}
         />
       </div>
+
+      {isArchived ? null : (
+        <section className="mt-6 rounded-lg border border-zinc-200 bg-zinc-50 p-4" aria-labelledby="student-settings-heading">
+          <h2 id="student-settings-heading" className="text-base font-medium text-zinc-900">
+            Student settings
+          </h2>
+          <p className="mt-1 text-sm text-zinc-600">
+            Update this student&apos;s details or move their profile out of the active list.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Link
+              href={`/app/students/${student.id}/edit`}
+              className="inline-flex min-h-10 items-center justify-center rounded-md border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 transition-colors hover:bg-zinc-100 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+            >
+              Edit student
+            </Link>
+            <StudentArchiveToggle studentId={student.id} isArchived={false} />
+          </div>
+        </section>
+      )}
 
       {isArchived ? (
         <PermanentStudentDeletion studentId={student.id} studentName={student.student_name} />
