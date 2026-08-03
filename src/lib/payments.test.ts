@@ -44,7 +44,10 @@ test("money left after outstanding lessons remains as student credit", () => {
     source: "recorded_payment",
   };
   const newAllocations = autoApplyPaymentToLessons(payment, lessons.slice(0, 2), []);
-  const allocations = newAllocations.map((allocation) => ({ ...allocation, payment }));
+  const allocations = newAllocations.map((allocation) => ({
+    ...allocation,
+    payment,
+  }));
 
   assert.equal(calculateStudentCredit([payment], allocations), 2_000);
 });
@@ -66,10 +69,7 @@ test("the tutor-facing payment workflow hides allocation bookkeeping", () => {
     "src/app/(authed)/app/students/[id]/components/record-payment-form.tsx",
     "utf8",
   );
-  const lessonFormSource = readFileSync(
-    "src/app/(authed)/app/students/[id]/new-lesson/new-lesson-form.tsx",
-    "utf8",
-  );
+  const lessonFormSource = readFileSync("src/app/(authed)/app/students/[id]/new-lesson/new-lesson-form.tsx", "utf8");
   const paymentsSectionSource = readFileSync(
     "src/app/(authed)/app/students/[id]/components/payments-monthly-section.tsx",
     "utf8",
@@ -96,12 +96,8 @@ test("the tutor-facing payment workflow hides allocation bookkeeping", () => {
 
 test("marking a lesson paid uses existing credit before recording new money", () => {
   const actionsSource = readFileSync("src/app/(authed)/app/payment-actions.ts", "utf8");
-  const paymentActionStart = actionsSource.indexOf(
-    "export async function payOutstandingLessonAmount",
-  );
-  const paymentActionEnd = actionsSource.indexOf(
-    "export async function markLessonPaid",
-  );
+  const paymentActionStart = actionsSource.indexOf("export async function payOutstandingLessonAmount");
+  const paymentActionEnd = actionsSource.indexOf("export async function markLessonPaid");
   const paymentActionSource = actionsSource.slice(paymentActionStart, paymentActionEnd);
 
   assert.ok(paymentActionStart >= 0);
@@ -112,14 +108,48 @@ test("marking a lesson paid uses existing credit before recording new money", ()
   );
 });
 
-test("the dashboard presents one payment summary and one action queue", () => {
-  const dashboardSource = readFileSync(
-    "src/app/(authed)/app/dashboard/page.tsx",
+test("the dashboard groups timeframe reporting and payment actions under Money", () => {
+  const dashboardSource = readFileSync("src/app/(authed)/app/dashboard/page.tsx", "utf8");
+
+  const moneyHeading = dashboardSource.indexOf('id="money-heading"');
+  const studentHeading = dashboardSource.indexOf('id="student-income-heading"');
+  const incomeHeading = dashboardSource.indexOf('id="income-trend-heading"');
+  const unpaidHeading = dashboardSource.indexOf('id="unpaid-lessons-heading"');
+  const recentHeading = dashboardSource.indexOf('id="recent-activity-heading"');
+
+  assert.ok(moneyHeading >= 0);
+  assert.ok(studentHeading > moneyHeading);
+  assert.ok(incomeHeading > studentHeading);
+  assert.ok(unpaidHeading > incomeHeading);
+  assert.ok(recentHeading > unpaidHeading);
+  assert.match(dashboardSource, /Outstanding now/);
+  assert.match(dashboardSource, /By student/);
+  assert.match(dashboardSource, /Income over time/);
+  assert.match(dashboardSource, /buildIncomeTrendSeries/);
+  assert.match(dashboardSource, /Unpaid lessons/);
+  assert.match(dashboardSource, /Recent activity/);
+  assert.match(dashboardSource, /Received and completed figures use the selected timeframe/);
+  assert.doesNotMatch(dashboardSource, /Paid vs unpaid/);
+});
+
+test("student profiles reuse the same timeframe payment summary", () => {
+  const studentSource = readFileSync("src/app/(authed)/app/students/[id]/page.tsx", "utf8");
+
+  assert.match(studentSource, /Payment summary/);
+  assert.match(studentSource, /Outstanding now/);
+  assert.match(studentSource, /Last payment/);
+  assert.match(studentSource, /ChartRangeFilter/);
+  assert.match(studentSource, /receivedInRangePence/);
+});
+
+test("income periods expose exact values to pointer and keyboard users", () => {
+  const chartSource = readFileSync(
+    "src/app/(authed)/app/dashboard/components/income-trend-chart.tsx",
     "utf8",
   );
 
-  assert.match(dashboardSource, />Outstanding</);
-  assert.match(dashboardSource, />Unpaid lessons</);
-  assert.match(dashboardSource, />Paid lesson income</);
-  assert.doesNotMatch(dashboardSource, /Paid vs unpaid/);
+  assert.match(chartSource, /aria-label={`\$\{point\.accessibleLabel\}: \$\{amountLabel\}`}/);
+  assert.match(chartSource, /tabIndex={0}/);
+  assert.match(chartSource, /group-hover:opacity-100/);
+  assert.match(chartSource, /group-focus-visible:opacity-100/);
 });
