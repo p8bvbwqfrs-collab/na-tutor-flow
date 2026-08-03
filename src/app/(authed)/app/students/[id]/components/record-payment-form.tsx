@@ -3,6 +3,7 @@
 import { FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getCurrencyLabel, type SupportedCurrencyCode } from "@/lib/currency";
+import { getDateKeyLocal } from "@/lib/datetime";
 import { autoApplyPaymentToLessons, type AllocationLike, type LessonFeeLike, type PaymentLike } from "@/lib/payments";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { verifyStudentIsActive } from "../../student-actions";
@@ -10,6 +11,7 @@ import { verifyStudentIsActive } from "../../student-actions";
 type RecordPaymentFormProps = {
   studentId: string;
   currencyCode: SupportedCurrencyCode;
+  timeZone: string;
 };
 
 type PaymentRow = PaymentLike & {
@@ -85,12 +87,12 @@ async function applyPaymentToStudentLessons(
   }
 }
 
-export function RecordPaymentForm({ studentId, currencyCode }: RecordPaymentFormProps) {
+export function RecordPaymentForm({ studentId, currencyCode, timeZone }: RecordPaymentFormProps) {
   const router = useRouter();
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const [isOpen, setIsOpen] = useState(false);
   const [amount, setAmount] = useState("");
-  const [paymentDate, setPaymentDate] = useState(new Date().toISOString().slice(0, 10));
+  const [paymentDate, setPaymentDate] = useState(getDateKeyLocal(new Date(), timeZone));
   const [note, setNote] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -152,7 +154,7 @@ export function RecordPaymentForm({ studentId, currencyCode }: RecordPaymentForm
     setIsSaving(false);
     setAmount("");
     setNote("");
-    setPaymentDate(new Date().toISOString().slice(0, 10));
+    setPaymentDate(getDateKeyLocal(new Date(), timeZone));
     setMessage("Payment recorded.");
     setIsOpen(false);
     router.refresh();

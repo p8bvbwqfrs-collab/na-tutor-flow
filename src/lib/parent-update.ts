@@ -20,8 +20,12 @@ export function splitIntoBulletPoints(input: string) {
     .filter(Boolean);
 }
 
-export function formatParentUpdate(studentName: string, lesson: ParentUpdateLesson) {
-  const dateText = formatShortDateLocal(lesson.lessonAt);
+export function formatParentUpdate(
+  studentName: string,
+  lesson: ParentUpdateLesson,
+  timeZone?: string,
+) {
+  const dateText = formatShortDateLocal(lesson.lessonAt, timeZone);
 
   const focusPoints = splitIntoBulletPoints(lesson.topics);
   const wentWellPoints = splitIntoBulletPoints(lesson.wentWell);
@@ -52,7 +56,7 @@ export function formatParentUpdate(studentName: string, lesson: ParentUpdateLess
   if (lesson.nextLessonAt) {
     lines.push(
       "",
-      `Next lesson scheduled: ${formatShortDateLocal(lesson.nextLessonAt)} at ${formatTimeLocal(lesson.nextLessonAt)}`,
+      `Next lesson scheduled: ${formatShortDateLocal(lesson.nextLessonAt, timeZone)} at ${formatTimeLocal(lesson.nextLessonAt, timeZone)}`,
     );
   }
 

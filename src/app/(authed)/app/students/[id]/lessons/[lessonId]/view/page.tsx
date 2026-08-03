@@ -11,7 +11,7 @@ import {
   type PaymentLike,
 } from "@/lib/payments";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { getUserCurrencyCode } from "@/lib/user-settings";
+import { getUserCurrencyCode, getUserTimeZone } from "@/lib/user-settings";
 import { LessonUpdateActions } from "@/components/lesson-update-actions";
 import { DeleteLessonButton } from "../../../components/delete-lesson-button";
 import { LessonPageHeader } from "../../../components/lesson-page-header";
@@ -64,7 +64,7 @@ export default async function ViewLessonPage({ params }: ViewLessonPageProps) {
   const { id, lessonId } = await params;
   const supabase = await createSupabaseServerClient();
 
-  const [{ data: student, error: studentError }, { data: lesson, error: lessonError }, currencyCode] =
+  const [{ data: student, error: studentError }, { data: lesson, error: lessonError }, currencyCode, timeZone] =
     await Promise.all([
       supabase.from("students").select("id, student_name, archived_at").eq("id", id).maybeSingle(),
       supabase
@@ -76,6 +76,7 @@ export default async function ViewLessonPage({ params }: ViewLessonPageProps) {
         .eq("student_id", id)
         .maybeSingle(),
       getUserCurrencyCode(supabase),
+      getUserTimeZone(supabase),
     ]);
 
   if (studentError || lessonError || !student || !lesson) {
@@ -113,17 +114,21 @@ export default async function ViewLessonPage({ params }: ViewLessonPageProps) {
     .limit(3);
   const otherLessons = (otherLessonsResult.data ?? []) as OtherLesson[];
 
-  const parentUpdate = formatParentUpdate(student.student_name, {
-    lessonAt: lesson.lesson_at,
-    topics: lesson.topics ?? "",
-    wentWell: lesson.went_well ?? "",
-    parentNote: lesson.parent_note ?? "",
-    improve: lesson.improve ?? "",
-    homework: lesson.homework ?? "",
-    effort: lesson.effort,
-    confidence: lesson.confidence,
-    nextLessonAt: linkedNextLessonResult.data?.lesson_at,
-  });
+  const parentUpdate = formatParentUpdate(
+    student.student_name,
+    {
+      lessonAt: lesson.lesson_at,
+      topics: lesson.topics ?? "",
+      wentWell: lesson.went_well ?? "",
+      parentNote: lesson.parent_note ?? "",
+      improve: lesson.improve ?? "",
+      homework: lesson.homework ?? "",
+      effort: lesson.effort,
+      confidence: lesson.confidence,
+      nextLessonAt: linkedNextLessonResult.data?.lesson_at,
+    },
+    timeZone,
+  );
   const details = [
     {
       label: "Effort",
@@ -156,7 +161,7 @@ export default async function ViewLessonPage({ params }: ViewLessonPageProps) {
           <div>
             <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Date/time</p>
             <p className="mt-1 flex flex-wrap items-center gap-2 text-sm font-medium text-zinc-900">
-              <span>{formatDateLocal(lesson.lesson_at)} at {formatTimeLocal(lesson.lesson_at)}</span>
+              <span>{formatDateLocal(lesson.lesson_at, timeZone)} at {formatTimeLocal(lesson.lesson_at, timeZone)}</span>
               <span
                 className={`inline-flex rounded-full border px-2 py-1 text-xs font-medium ${getPaymentStatusClassName(paymentStatus)}`}
               >
@@ -237,7 +242,7 @@ export default async function ViewLessonPage({ params }: ViewLessonPageProps) {
                 className="mt-2 block rounded-md border border-zinc-200 bg-zinc-50 p-3 transition-colors hover:border-zinc-300 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
               >
                 <span className="block text-sm font-medium text-zinc-900">
-                  {formatDateTimeLocal(linkedNextLessonResult.data.lesson_at)}
+                  {formatDateTimeLocal(linkedNextLessonResult.data.lesson_at, timeZone)}
                 </span>
                 {linkedNextLessonResult.data.topics ? (
                   <span className="mt-1 block text-sm text-zinc-600">
@@ -268,7 +273,7 @@ export default async function ViewLessonPage({ params }: ViewLessonPageProps) {
                 key={otherLesson.id}
                 className="grid gap-3 rounded-md border border-zinc-200 bg-zinc-50 p-3 sm:grid-cols-[8rem_minmax(0,1fr)_auto] sm:items-center"
               >
-                <p className="text-sm font-medium text-zinc-900">{formatDateLocal(otherLesson.lesson_at)}</p>
+                <p className="text-sm font-medium text-zinc-900">{formatDateLocal(otherLesson.lesson_at, timeZone)}</p>
                 <p className="min-w-0 line-clamp-2 text-sm text-zinc-600">
                   {otherLesson.topics ? cleanLessonText(otherLesson.topics) : "No focus captured yet."}
                 </p>

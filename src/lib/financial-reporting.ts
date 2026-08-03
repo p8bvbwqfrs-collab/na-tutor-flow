@@ -1,4 +1,10 @@
-import { formatMonthLocal, formatMonthShortLocal, getDateKeyLocal, getMonthKeyLocal } from "@/lib/datetime";
+import {
+  DEFAULT_TIME_ZONE,
+  formatMonthLocal,
+  formatMonthShortLocal,
+  getDateKeyLocal,
+  getMonthKeyLocal,
+} from "@/lib/datetime";
 import { getOutstandingLessonAmount, type AllocationLike } from "@/lib/payments";
 
 export type ReportingRange = "month" | "3m" | "6m" | "12m" | "all";
@@ -64,40 +70,54 @@ export function getReportingRangeLabel(range: ReportingRange) {
   return "All time";
 }
 
-export function getReportingMonthStarts(range: ReportingRange, now = new Date()) {
+function getMonthMarkerKey(value: Date) {
+  return value.toISOString().slice(0, 7);
+}
+
+export function getReportingMonthStarts(
+  range: ReportingRange,
+  now = new Date(),
+  timeZone = DEFAULT_TIME_ZONE,
+) {
   if (range === "all") {
     return null;
   }
 
   const monthCount = range === "month" ? 1 : range === "3m" ? 3 : range === "6m" ? 6 : 12;
-  const [londonYear, londonMonth] = getMonthKeyLocal(now).split("-").map(Number);
+  const [currentYear, currentMonth] = getMonthKeyLocal(now, timeZone).split("-").map(Number);
 
   return Array.from(
     { length: monthCount },
-    (_, index) => new Date(Date.UTC(londonYear, londonMonth - 1 - (monthCount - 1 - index), 1)),
+    (_, index) =>
+      new Date(Date.UTC(currentYear, currentMonth - 1 - (monthCount - 1 - index), 15, 12)),
   );
 }
 
-export function isInReportingRange(value: string | Date, range: ReportingRange, now = new Date()) {
-  const monthStarts = getReportingMonthStarts(range, now);
+export function isInReportingRange(
+  value: string | Date,
+  range: ReportingRange,
+  now = new Date(),
+  timeZone = DEFAULT_TIME_ZONE,
+) {
+  const monthStarts = getReportingMonthStarts(range, now, timeZone);
 
   if (!monthStarts) {
     return true;
   }
 
-  const includedMonths = new Set(monthStarts.map((month) => getMonthKeyLocal(month)));
-  return includedMonths.has(getMonthKeyLocal(value));
+  const includedMonths = new Set(monthStarts.map(getMonthMarkerKey));
+  return includedMonths.has(getMonthKeyLocal(value, timeZone));
 }
 
 export function getPaymentReportingDate(payment: ReportingPayment) {
   return payment.payment_date ?? payment.created_at;
 }
 
-function getMonthSeriesBetween(startInclusive: Date, endInclusive: Date) {
-  const [startYear, startMonth] = getMonthKeyLocal(startInclusive).split("-").map(Number);
-  const [endYear, endMonth] = getMonthKeyLocal(endInclusive).split("-").map(Number);
-  const start = new Date(Date.UTC(startYear, startMonth - 1, 1));
-  const end = new Date(Date.UTC(endYear, endMonth - 1, 1));
+function getMonthSeriesBetween(startInclusive: Date, endInclusive: Date, timeZone: string) {
+  const [startYear, startMonth] = getMonthKeyLocal(startInclusive, timeZone).split("-").map(Number);
+  const [endYear, endMonth] = getMonthKeyLocal(endInclusive, timeZone).split("-").map(Number);
+  const start = new Date(Date.UTC(startYear, startMonth - 1, 15, 12));
+  const end = new Date(Date.UTC(endYear, endMonth - 1, 15, 12));
   const months: Date[] = [];
   const cursor = new Date(start);
 
@@ -109,10 +129,14 @@ function getMonthSeriesBetween(startInclusive: Date, endInclusive: Date) {
   return months;
 }
 
-function buildWeeklyIncomeTrend(payments: ReportingPayment[], now: Date): IncomeTrendSeries {
-  const [year, month, currentDay] = getDateKeyLocal(now).split("-").map(Number);
+function buildWeeklyIncomeTrend(
+  payments: ReportingPayment[],
+  now: Date,
+  timeZone: string,
+): IncomeTrendSeries {
+  const [year, month, currentDay] = getDateKeyLocal(now, timeZone).split("-").map(Number);
   const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
-  const monthName = formatMonthLocal(now);
+  const monthName = formatMonthLocal(now, timeZone);
   const weekBounds = [
     [1, 7],
     [8, 14],
@@ -122,7 +146,10 @@ function buildWeeklyIncomeTrend(payments: ReportingPayment[], now: Date): Income
 
   const points = weekBounds.map(([startDay, endDay], index) => {
     const amountPence = payments.reduce((sum, payment) => {
-      const [paymentYear, paymentMonth, paymentDay] = getDateKeyLocal(getPaymentReportingDate(payment))
+      const [paymentYear, paymentMonth, paymentDay] = getDateKeyLocal(
+        getPaymentReportingDate(payment),
+        timeZone,
+      )
         .split("-")
         .map(Number);
 
@@ -147,19 +174,24 @@ function buildWeeklyIncomeTrend(payments: ReportingPayment[], now: Date): Income
   return { points, viewLabel: "Weekly view" };
 }
 
-function buildMonthlyIncomeTrend(payments: ReportingPayment[], range: ReportingRange, now: Date): IncomeTrendSeries {
-  const fixedMonthStarts = getReportingMonthStarts(range, now);
+function buildMonthlyIncomeTrend(
+  payments: ReportingPayment[],
+  range: ReportingRange,
+  now: Date,
+  timeZone: string,
+): IncomeTrendSeries {
+  const fixedMonthStarts = getReportingMonthStarts(range, now, timeZone);
   const oldestPaymentAt = payments.reduce<Date | null>((oldest, payment) => {
     const paymentDate = new Date(getPaymentReportingDate(payment));
     return !oldest || paymentDate < oldest ? paymentDate : oldest;
   }, null);
-  const monthStarts = fixedMonthStarts ?? (oldestPaymentAt ? getMonthSeriesBetween(oldestPaymentAt, now) : []);
-  const currentMonthKey = getMonthKeyLocal(now);
+  const monthStarts = fixedMonthStarts ?? (oldestPaymentAt ? getMonthSeriesBetween(oldestPaymentAt, now, timeZone) : []);
+  const currentMonthKey = getMonthKeyLocal(now, timeZone);
   const amountsByMonth = new Map<string, number>();
 
-  monthStarts.forEach((month) => amountsByMonth.set(getMonthKeyLocal(month), 0));
+  monthStarts.forEach((month) => amountsByMonth.set(getMonthMarkerKey(month), 0));
   payments.forEach((payment) => {
-    const key = getMonthKeyLocal(getPaymentReportingDate(payment));
+    const key = getMonthKeyLocal(getPaymentReportingDate(payment), timeZone);
     if (amountsByMonth.has(key)) {
       amountsByMonth.set(key, (amountsByMonth.get(key) ?? 0) + payment.amount_pence);
     }
@@ -168,12 +200,12 @@ function buildMonthlyIncomeTrend(payments: ReportingPayment[], range: ReportingR
   return {
     viewLabel: "Monthly view",
     points: monthStarts.map((month) => {
-      const key = getMonthKeyLocal(month);
+      const key = getMonthMarkerKey(month);
       const isCurrent = key === currentMonthKey;
       return {
         key,
-        label: `${formatMonthShortLocal(month)}${isCurrent ? " so far" : ""}`,
-        accessibleLabel: `${formatMonthLocal(month)}${isCurrent ? ", so far" : ""}`,
+        label: `${formatMonthShortLocal(key)}${isCurrent ? " so far" : ""}`,
+        accessibleLabel: `${formatMonthLocal(key)}${isCurrent ? ", so far" : ""}`,
         amountPence: amountsByMonth.get(key) ?? 0,
         state: isCurrent ? "current" : "complete",
       };
@@ -181,7 +213,11 @@ function buildMonthlyIncomeTrend(payments: ReportingPayment[], range: ReportingR
   };
 }
 
-function buildQuarterlyIncomeTrend(payments: ReportingPayment[], now: Date): IncomeTrendSeries {
+function buildQuarterlyIncomeTrend(
+  payments: ReportingPayment[],
+  now: Date,
+  timeZone: string,
+): IncomeTrendSeries {
   const oldestPayment = payments.reduce<Date | null>((oldest, payment) => {
     const paymentDate = new Date(getPaymentReportingDate(payment));
     return !oldest || paymentDate < oldest ? paymentDate : oldest;
@@ -191,8 +227,8 @@ function buildQuarterlyIncomeTrend(payments: ReportingPayment[], now: Date): Inc
     return { points: [], viewLabel: "Quarterly view" };
   }
 
-  const [oldestYear, oldestMonth] = getMonthKeyLocal(oldestPayment).split("-").map(Number);
-  const [currentYear, currentMonth] = getMonthKeyLocal(now).split("-").map(Number);
+  const [oldestYear, oldestMonth] = getMonthKeyLocal(oldestPayment, timeZone).split("-").map(Number);
+  const [currentYear, currentMonth] = getMonthKeyLocal(now, timeZone).split("-").map(Number);
   const startQuarter = Math.floor((oldestMonth - 1) / 3) + 1;
   const currentQuarter = Math.floor((currentMonth - 1) / 3) + 1;
   const quarterKeys: string[] = [];
@@ -210,7 +246,12 @@ function buildQuarterlyIncomeTrend(payments: ReportingPayment[], now: Date): Inc
 
   const amountsByQuarter = new Map(quarterKeys.map((key) => [key, 0]));
   payments.forEach((payment) => {
-    const [paymentYear, paymentMonth] = getMonthKeyLocal(getPaymentReportingDate(payment)).split("-").map(Number);
+    const [paymentYear, paymentMonth] = getMonthKeyLocal(
+      getPaymentReportingDate(payment),
+      timeZone,
+    )
+      .split("-")
+      .map(Number);
     const paymentQuarter = Math.floor((paymentMonth - 1) / 3) + 1;
     const key = `${paymentYear}-Q${paymentQuarter}`;
     if (amountsByQuarter.has(key)) {
@@ -239,21 +280,22 @@ export function buildIncomeTrendSeries(
   payments: ReportingPayment[],
   range: ReportingRange,
   now = new Date(),
+  timeZone = DEFAULT_TIME_ZONE,
 ): IncomeTrendSeries {
   const reportingPayments = payments.filter((payment) =>
-    isInReportingRange(getPaymentReportingDate(payment), range, now),
+    isInReportingRange(getPaymentReportingDate(payment), range, now, timeZone),
   );
 
   if (range === "month") {
-    return buildWeeklyIncomeTrend(reportingPayments, now);
+    return buildWeeklyIncomeTrend(reportingPayments, now, timeZone);
   }
 
-  const monthlySeries = buildMonthlyIncomeTrend(reportingPayments, range, now);
+  const monthlySeries = buildMonthlyIncomeTrend(reportingPayments, range, now, timeZone);
   if (range !== "all" || monthlySeries.points.length <= 18) {
     return monthlySeries;
   }
 
-  return buildQuarterlyIncomeTrend(reportingPayments, now);
+  return buildQuarterlyIncomeTrend(reportingPayments, now, timeZone);
 }
 
 export function buildStudentFinancialSummaries(
@@ -263,6 +305,7 @@ export function buildStudentFinancialSummaries(
   allocations: AllocationLike[],
   range: ReportingRange,
   now = new Date(),
+  timeZone = DEFAULT_TIME_ZONE,
 ) {
   const summaries = new Map(
     students.map((student) => [
@@ -279,7 +322,7 @@ export function buildStudentFinancialSummaries(
   );
 
   payments.forEach((payment) => {
-    if (!isInReportingRange(getPaymentReportingDate(payment), range, now)) {
+    if (!isInReportingRange(getPaymentReportingDate(payment), range, now, timeZone)) {
       return;
     }
 
@@ -297,7 +340,7 @@ export function buildStudentFinancialSummaries(
 
     summary.outstandingPence += getOutstandingLessonAmount(lesson, allocations);
 
-    if (isInReportingRange(lesson.lesson_at, range, now)) {
+    if (isInReportingRange(lesson.lesson_at, range, now, timeZone)) {
       summary.completedLessons += 1;
     }
   });

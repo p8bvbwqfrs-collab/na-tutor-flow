@@ -3,6 +3,7 @@ import { canUseCalendarFeeds, generateCalendarFeedToken } from "@/lib/calendar-f
 import {
   getUserCalendarFeedVersion,
   getUserCurrencyCode,
+  getUserTimeZone,
 } from "@/lib/user-settings";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { CalendarFeedControls } from "./components/calendar-feed-controls";
@@ -10,6 +11,7 @@ import { AccountSecurityControls } from "./components/account-security-controls"
 import { AccountDeletionControls } from "./components/account-deletion-controls";
 import { AccountDataExportControls } from "./components/account-data-export-controls";
 import { CurrencySettingsForm } from "./components/currency-settings-form";
+import { TimeZoneSettingsForm } from "./components/time-zone-settings-form";
 
 type SettingsPageProps = {
   searchParams: Promise<{ calendar_reset?: string; email_changed?: string }>;
@@ -18,10 +20,11 @@ type SettingsPageProps = {
 export default async function SettingsPage({ searchParams }: SettingsPageProps) {
   const supabase = await createSupabaseServerClient();
   const headerStore = await headers();
-  const [userResult, currencyCode, calendarFeedVersion, resolvedSearchParams] =
+  const [userResult, currencyCode, timeZone, calendarFeedVersion, resolvedSearchParams] =
     await Promise.all([
       supabase.auth.getUser(),
       getUserCurrencyCode(supabase),
+      getUserTimeZone(supabase),
       getUserCalendarFeedVersion(supabase),
       searchParams,
     ]);
@@ -89,7 +92,10 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
           </p>
 
           {user ? (
-            <CurrencySettingsForm userId={user.id} initialCurrencyCode={currencyCode} />
+            <>
+              <CurrencySettingsForm userId={user.id} initialCurrencyCode={currencyCode} />
+              <TimeZoneSettingsForm userId={user.id} initialTimeZone={timeZone} />
+            </>
           ) : null}
         </section>
 

@@ -4,10 +4,12 @@ import {
   formatMonthLocal,
   formatWeekdayShortLocal,
   getDateKeyLocal,
+  getMonthBoundsIso,
   getMonthKeyLocal,
 } from "@/lib/datetime";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getPlannedLessonAttention } from "@/lib/lesson-attention";
+import { getUserTimeZone } from "@/lib/user-settings";
 import { CalendarGrid } from "./calendar-grid";
 
 type CalendarPageProps = {
@@ -57,56 +59,64 @@ function parseMonthParam(input: string | undefined) {
     return null;
   }
 
-  return new Date(Date.UTC(year, monthIndex, 1));
+  return input;
 }
 
-function getMonthGrid(monthStart: Date) {
-  const start = new Date(monthStart);
-  const end = new Date(Date.UTC(monthStart.getUTCFullYear(), monthStart.getUTCMonth() + 1, 0));
+function getMonthGrid(monthKey: string) {
+  const [year, month] = monthKey.split("-").map(Number);
+  const start = new Date(Date.UTC(year, month - 1, 1));
+  const end = new Date(Date.UTC(year, month, 0));
   const startOffset = (start.getUTCDay() + 6) % 7;
   const totalDays = end.getUTCDate();
-  const cells: Array<{ date: Date; inMonth: boolean }> = [];
+  const cells: Array<{ dateKey: string; inMonth: boolean }> = [];
 
   for (let i = 0; i < startOffset; i += 1) {
     const date = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), i - startOffset + 1));
-    cells.push({ date, inMonth: false });
+    cells.push({ dateKey: date.toISOString().slice(0, 10), inMonth: false });
   }
 
   for (let day = 1; day <= totalDays; day += 1) {
     const date = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), day));
-    cells.push({ date, inMonth: true });
+    cells.push({ dateKey: date.toISOString().slice(0, 10), inMonth: true });
   }
 
   while (cells.length % 7 !== 0) {
     const nextDay: number = cells.length - (startOffset + totalDays) + 1;
     const date = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + 1, nextDay));
-    cells.push({ date, inMonth: false });
+    cells.push({ dateKey: date.toISOString().slice(0, 10), inMonth: false });
   }
 
   return cells;
 }
 
+function getAdjacentMonthKey(monthKey: string, offset: number) {
+  const [year, month] = monthKey.split("-").map(Number);
+  return new Date(Date.UTC(year, month - 1 + offset, 1)).toISOString().slice(0, 7);
+}
+
 export default async function CalendarPage({ searchParams }: CalendarPageProps) {
   const { month } = await searchParams;
   const now = new Date();
-  const todayKey = getDateKeyLocal(now);
-  const currentMonthKey = getMonthKeyLocal(now);
-  const monthStart = parseMonthParam(month) ?? new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
-  const nextMonthStart = new Date(Date.UTC(monthStart.getUTCFullYear(), monthStart.getUTCMonth() + 1, 1));
-  const prevMonthStart = new Date(Date.UTC(monthStart.getUTCFullYear(), monthStart.getUTCMonth() - 1, 1));
   const supabase = await createSupabaseServerClient();
+  const timeZone = await getUserTimeZone(supabase);
+  const todayKey = getDateKeyLocal(now, timeZone);
+  const currentMonthKey = getMonthKeyLocal(now, timeZone);
+  const selectedMonthKey = parseMonthParam(month) ?? currentMonthKey;
+  const nextMonthKey = getAdjacentMonthKey(selectedMonthKey, 1);
+  const prevMonthKey = getAdjacentMonthKey(selectedMonthKey, -1);
+  const monthBounds = getMonthBoundsIso(selectedMonthKey, timeZone);
 
   const { data, error } = await supabase
     .from("lessons")
     .select("id, student_id, lesson_at, topics, status, student:students!lessons_student_id_fkey(student_name, archived_at)")
-    .gte("lesson_at", monthStart.toISOString())
-    .lt("lesson_at", nextMonthStart.toISOString())
+    .gte("lesson_at", monthBounds.startIso)
+    .lt("lesson_at", monthBounds.endIso)
     .order("lesson_at", { ascending: true });
 
   const lessons = ((data ?? []) as CalendarLessonRow[]).filter((lesson) => lesson.status !== "cancelled");
-  const monthCells = getMonthGrid(monthStart);
+  const monthCells = getMonthGrid(selectedMonthKey);
   const weekdayLabels = Array.from({ length: 7 }, (_, index) =>
-    formatWeekdayShortLocal(new Date(Date.UTC(2026, 2, index + 2))),
+    formatWeekdayShortLocal(`2026-03-${String(index + 2).padStart(2, "0")}`),
   );
   const calendarLessons = lessons.map((lesson) => {
     const student = getStudent(lesson.student);
@@ -120,14 +130,16 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
       studentName: student?.student_name ?? "Student",
       readOnly: Boolean(student?.archived_at),
       attention:
-        lesson.status === "planned" ? getPlannedLessonAttention(lesson.lesson_at, now) : null,
+        lesson.status === "planned"
+          ? getPlannedLessonAttention(lesson.lesson_at, now, timeZone)
+          : null,
     };
   });
   const calendarCells = monthCells.map((cell) => ({
-    key: getDateKeyLocal(cell.date),
-    dateIso: cell.date.toISOString(),
+    key: cell.dateKey,
+    dateIso: cell.dateKey,
     inMonth: cell.inMonth,
-    dayNumber: formatDayNumberLocal(cell.date),
+    dayNumber: formatDayNumberLocal(cell.dateKey),
   }));
 
   return (
@@ -149,7 +161,7 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-lg font-medium text-zinc-900">
-              {formatMonthLocal(monthStart)}
+              {formatMonthLocal(selectedMonthKey)}
             </h2>
             <p className="mt-1 text-sm text-zinc-600">
               Lessons are shown by the date and time saved on each lesson.
@@ -157,7 +169,7 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
           </div>
           <div className="flex items-center gap-2">
             <Link
-              href={`/app/calendar?month=${getMonthKeyLocal(prevMonthStart)}`}
+              href={`/app/calendar?month=${prevMonthKey}`}
               className="rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
             >
               Previous
@@ -169,7 +181,7 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
               Today
             </Link>
             <Link
-              href={`/app/calendar?month=${getMonthKeyLocal(nextMonthStart)}`}
+              href={`/app/calendar?month=${nextMonthKey}`}
               className="rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
             >
               Next
@@ -191,6 +203,7 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
               weekdayLabels={weekdayLabels}
               lessons={calendarLessons}
               todayKey={todayKey}
+              timeZone={timeZone}
             />
 
             {lessons.length === 0 ? (

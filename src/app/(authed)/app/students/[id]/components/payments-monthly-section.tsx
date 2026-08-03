@@ -19,6 +19,7 @@ type PaymentsMonthlySectionProps = {
   studentCreditPence: number;
   currencyCode: SupportedCurrencyCode;
   initialMonthKey: string;
+  timeZone: string;
   readOnly?: boolean;
 };
 
@@ -48,11 +49,12 @@ export function PaymentsMonthlySection({
   studentCreditPence,
   currencyCode,
   initialMonthKey,
+  timeZone,
   readOnly = false,
 }: PaymentsMonthlySectionProps) {
   const [selectedMonthKey, setSelectedMonthKey] = useState(initialMonthKey);
   const paymentsForSelectedMonth = payments.filter(
-    (payment) => getMonthKeyLocal(getPaymentDateValue(payment)) === selectedMonthKey,
+    (payment) => getMonthKeyLocal(getPaymentDateValue(payment), timeZone) === selectedMonthKey,
   );
   const paymentsForSelectedMonthPence = paymentsForSelectedMonth.reduce(
     (sum, payment) => sum + payment.amount_pence,
@@ -69,7 +71,13 @@ export function PaymentsMonthlySection({
               Review recorded payments or add an upfront payment covering several lessons.
             </p>
           </div>
-          {!readOnly ? <RecordPaymentForm studentId={studentId} currencyCode={currencyCode} /> : null}
+          {!readOnly ? (
+            <RecordPaymentForm
+              studentId={studentId}
+              currencyCode={currencyCode}
+              timeZone={timeZone}
+            />
+          ) : null}
         </div>
         {studentCreditPence > 0 ? (
           <div className="mt-4 rounded-md border border-blue-200 bg-blue-50 px-3 py-2">
@@ -90,6 +98,7 @@ export function PaymentsMonthlySection({
             label={`${formatCurrencyFromMinorUnits(paymentsForSelectedMonthPence, currencyCode)} received · ${paymentsForSelectedMonth.length} ${
               paymentsForSelectedMonth.length === 1 ? "payment" : "payments"
             }`}
+            timeZone={timeZone}
           />
         </div>
 
@@ -104,7 +113,7 @@ export function PaymentsMonthlySection({
                         {formatCurrencyFromMinorUnits(payment.amount_pence, currencyCode)}
                       </p>
                       <p className="mt-1 text-xs text-zinc-600">
-                        {formatDateLocal(getPaymentDateValue(payment))} · {getPaymentDetail(payment)}
+                        {formatDateLocal(getPaymentDateValue(payment), timeZone)} · {getPaymentDetail(payment)}
                       </p>
                     </div>
                     {!readOnly && payment.source === "recorded_payment" ? (

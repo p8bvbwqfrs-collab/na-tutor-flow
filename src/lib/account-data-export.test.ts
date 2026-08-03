@@ -145,6 +145,7 @@ test("the portable export excludes internal ownership and calendar security fiel
   }
 
   assert.doesNotMatch(ACCOUNT_DATA_EXPORT_SETTINGS_COLUMNS, /calendar_feed_version/);
+  assert.match(ACCOUNT_DATA_EXPORT_SETTINGS_COLUMNS, /time_zone/);
   assert.doesNotMatch(ACCOUNT_DATA_EXPORT_SETTINGS_COLUMNS, /\*/);
 });
 

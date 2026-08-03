@@ -15,7 +15,7 @@ import {
   getReportingRangeLabel,
   isInReportingRange,
 } from "@/lib/financial-reporting";
-import { getUserCurrencyCode } from "@/lib/user-settings";
+import { getUserCurrencyCode, getUserTimeZone } from "@/lib/user-settings";
 import { formatParentUpdate } from "@/lib/parent-update";
 import { partitionPlannedLessons } from "@/lib/lesson-attention";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -99,7 +99,7 @@ function parseMonthParam(value: string | undefined) {
     return null;
   }
 
-  return new Date(Date.UTC(year, month - 1, 1));
+  return value;
 }
 
 function cleanLessonText(value: string) {
@@ -151,6 +151,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
     initialLessonsResult,
     paymentsResult,
     currencyCode,
+    timeZone,
   ] = await Promise.all([
     studentQuery,
     lessonsQuery(),
@@ -160,6 +161,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
       .eq("student_id", id)
       .order("created_at", { ascending: false }),
     getUserCurrencyCode(supabase),
+    getUserTimeZone(supabase),
   ]);
 
   let lessonsData = initialLessonsResult.data;
@@ -201,7 +203,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
   const plannedLessons = [...lessons]
     .filter((lesson) => lesson.status === "planned")
     .sort((a, b) => new Date(a.lesson_at).getTime() - new Date(b.lesson_at).getTime());
-  const plannedLessonPartitions = partitionPlannedLessons(plannedLessons);
+  const plannedLessonPartitions = partitionPlannedLessons(plannedLessons, new Date(), timeZone);
   const plannedLessonSections = [
     {
       key: "overdue",
@@ -238,14 +240,19 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
   const selectedRange = getReportingRange(search.range);
   const rangeLabel = getReportingRangeLabel(selectedRange);
   const paymentsInRange = payments.filter((payment) =>
-    isInReportingRange(getPaymentReportingDate({ ...payment, student_id: id }), selectedRange),
+    isInReportingRange(
+      getPaymentReportingDate({ ...payment, student_id: id }),
+      selectedRange,
+      new Date(),
+      timeZone,
+    ),
   );
   const receivedInRangePence = paymentsInRange.reduce(
     (sum, payment) => sum + payment.amount_pence,
     0,
   );
   const completedLessonsInRange = completedLessons.filter((lesson) =>
-    isInReportingRange(lesson.lesson_at, selectedRange),
+    isInReportingRange(lesson.lesson_at, selectedRange, new Date(), timeZone),
   );
   const lastPayment = payments.reduce<Payment | null>((latest, payment) => {
     if (!latest) {
@@ -260,17 +267,13 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
   const hasStudentFinancialError = Boolean(
     lessonsError || paymentsResult.error || allocationsResult.error,
   );
-  const defaultMonthStart = new Date();
-  const lessonsMonthStart =
-    parseMonthParam(search.lessonsMonth) ??
-    new Date(Date.UTC(defaultMonthStart.getUTCFullYear(), defaultMonthStart.getUTCMonth(), 1));
-  const paymentsMonthStart =
-    parseMonthParam(search.paymentsMonth) ??
-    new Date(Date.UTC(defaultMonthStart.getUTCFullYear(), defaultMonthStart.getUTCMonth(), 1));
-  const initialLessonsMonthKey = getMonthKeyLocal(lessonsMonthStart);
-  const initialPaymentsMonthKey = getMonthKeyLocal(paymentsMonthStart);
+  const currentMonthKey = getMonthKeyLocal(new Date(), timeZone);
+  const initialLessonsMonthKey = parseMonthParam(search.lessonsMonth) ?? currentMonthKey;
+  const initialPaymentsMonthKey = parseMonthParam(search.paymentsMonth) ?? currentMonthKey;
   const latestLessonDate =
-    totalLessons > 0 ? formatDateTimeLocal(completedLessons[0].lesson_at) : "No lessons yet";
+    totalLessons > 0
+      ? formatDateTimeLocal(completedLessons[0].lesson_at, timeZone)
+      : "No lessons yet";
   const avgConfidence =
     totalLessons > 0
       ? (completedLessons.reduce((sum, lesson) => sum + lesson.confidence, 0) / totalLessons).toFixed(1)
@@ -350,7 +353,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
           ? "Next lesson"
           : "Next lesson";
   const learningTrendPoints = chronologicalLessons.slice(-10).map((lesson) => ({
-    label: formatShortDateLocal(lesson.lesson_at),
+    label: formatShortDateLocal(lesson.lesson_at, timeZone),
     confidence: lesson.confidence,
     effort: lesson.effort,
   }));
@@ -432,7 +435,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
               <>
                 <p className="mt-2 break-words text-base font-semibold text-zinc-900">Ready to share</p>
                 <p className="mt-1 text-sm text-zinc-600">
-                  From {formatDateLocal(latestCompletedLesson.lesson_at)}
+                  From {formatDateLocal(latestCompletedLesson.lesson_at, timeZone)}
                 </p>
                 {isArchived ? (
                   <Link
@@ -446,16 +449,20 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
                     reserveFeedbackSpace={false}
                     className="mt-auto pt-4"
                     buttonClassName="inline-flex min-h-10 w-full items-center justify-center whitespace-nowrap rounded-md bg-blue-700 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-                    message={formatParentUpdate(student.student_name, {
-                      lessonAt: latestCompletedLesson.lesson_at,
-                      topics: latestCompletedLesson.topics ?? "",
-                      wentWell: latestCompletedLesson.went_well ?? "",
-                      parentNote: latestCompletedLesson.parent_note ?? "",
-                      improve: latestCompletedLesson.improve ?? "",
-                      homework: latestCompletedLesson.homework ?? "",
-                      effort: latestCompletedLesson.effort,
-                      confidence: latestCompletedLesson.confidence,
-                    })}
+                    message={formatParentUpdate(
+                      student.student_name,
+                      {
+                        lessonAt: latestCompletedLesson.lesson_at,
+                        topics: latestCompletedLesson.topics ?? "",
+                        wentWell: latestCompletedLesson.went_well ?? "",
+                        parentNote: latestCompletedLesson.parent_note ?? "",
+                        improve: latestCompletedLesson.improve ?? "",
+                        homework: latestCompletedLesson.homework ?? "",
+                        effort: latestCompletedLesson.effort,
+                        confidence: latestCompletedLesson.confidence,
+                      },
+                      timeZone,
+                    )}
                   />
                 )}
               </>
@@ -502,9 +509,9 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
             {attentionLesson ? (
               <>
                 <p className="mt-2 text-base font-semibold text-zinc-900">
-                  {formatDateLocal(attentionLesson.lesson_at)}
+                  {formatDateLocal(attentionLesson.lesson_at, timeZone)}
                 </p>
-                <p className="mt-1 text-sm text-zinc-600">{formatTimeLocal(attentionLesson.lesson_at)}</p>
+                <p className="mt-1 text-sm text-zinc-600">{formatTimeLocal(attentionLesson.lesson_at, timeZone)}</p>
                 <Link
                   href="#student-schedule"
                   className="mt-auto inline-flex min-h-10 w-full items-center justify-center whitespace-nowrap rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
@@ -539,7 +546,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
                   <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:gap-3">
                     <h2 className="text-lg font-medium text-zinc-900">Latest parent update</h2>
                     <p className="text-sm text-zinc-500">
-                      {formatDateLocal(latestCompletedLesson.lesson_at)} at {formatTimeLocal(latestCompletedLesson.lesson_at)}
+                      {formatDateLocal(latestCompletedLesson.lesson_at, timeZone)} at {formatTimeLocal(latestCompletedLesson.lesson_at, timeZone)}
                     </p>
                   </div>
                 </div>
@@ -627,7 +634,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
                       >
                         <div>
                           <p className="flex flex-wrap items-center gap-2 text-sm font-medium text-zinc-900">
-                            <span>{formatDateLocal(lesson.lesson_at)} at {formatTimeLocal(lesson.lesson_at)}</span>
+                            <span>{formatDateLocal(lesson.lesson_at, timeZone)} at {formatTimeLocal(lesson.lesson_at, timeZone)}</span>
                             <span
                               className={`inline-flex rounded-full border px-2 py-1 text-xs font-medium ${section.badgeClassName}`}
                             >
@@ -716,7 +723,11 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
         </section>
 
         <section>
-          <MonthlySummaryGenerator studentName={student.student_name} lessons={completedLessons} />
+          <MonthlySummaryGenerator
+            studentName={student.student_name}
+            lessons={completedLessons}
+            timeZone={timeZone}
+          />
         </section>
 
         <PastLessonsMonthlySection
@@ -725,6 +736,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
           allocations={allocations}
           currencyCode={currencyCode}
           initialMonthKey={initialLessonsMonthKey}
+          timeZone={timeZone}
           hasLessonsError={Boolean(lessonsError)}
           readOnly={isArchived}
         />
@@ -778,7 +790,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
                       {formatCurrencyFromMinorUnits(lastPayment.amount_pence, currencyCode)}
                     </dd>
                     <dd className="mt-1 text-xs text-zinc-600">
-                      {formatDateLocal(lastPayment.payment_date ?? lastPayment.created_at)}
+                      {formatDateLocal(lastPayment.payment_date ?? lastPayment.created_at, timeZone)}
                     </dd>
                   </>
                 ) : (
@@ -795,6 +807,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
           studentCreditPence={studentCreditPence}
           currencyCode={currencyCode}
           initialMonthKey={initialPaymentsMonthKey}
+          timeZone={timeZone}
           readOnly={isArchived}
         />
       </div>

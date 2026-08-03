@@ -4,6 +4,7 @@ import {
   INITIAL_CALENDAR_FEED_VERSION,
   normalizeCalendarFeedVersion,
 } from "@/lib/calendar-feed";
+import { DEFAULT_TIME_ZONE, isValidTimeZone } from "@/lib/datetime";
 
 export async function getUserCurrencyCode(
   supabase: SupabaseClient,
@@ -34,4 +35,14 @@ export async function getUserCalendarFeedVersion(
   }
 
   return normalizeCalendarFeedVersion(data.calendar_feed_version);
+}
+
+export async function getUserTimeZone(supabase: SupabaseClient): Promise<string> {
+  const { data, error } = await supabase.from("user_settings").select("time_zone").maybeSingle();
+
+  if (error || typeof data?.time_zone !== "string" || !isValidTimeZone(data.time_zone)) {
+    return DEFAULT_TIME_ZONE;
+  }
+
+  return data.time_zone;
 }

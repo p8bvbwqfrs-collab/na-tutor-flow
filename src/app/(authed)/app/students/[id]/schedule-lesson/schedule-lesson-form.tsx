@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useMemo, useState } from "react";
 import { getCurrencyLabel, type SupportedCurrencyCode } from "@/lib/currency";
-import { getLondonDateTimeInputValues } from "@/lib/datetime";
+import { getTimeZoneLabel, getZonedDateTimeInputValues } from "@/lib/datetime";
 import { getSubmittedLessonAtIsoFromForm } from "@/lib/lesson-scheduling";
 import { verifyStudentIsActive } from "../../student-actions";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
@@ -21,6 +21,7 @@ type ScheduleLessonFormProps = {
     feeAmount: string;
   };
   currencyCode?: SupportedCurrencyCode;
+  timeZone: string;
 };
 
 export function ScheduleLessonForm({
@@ -30,12 +31,14 @@ export function ScheduleLessonForm({
   lessonId,
   initialLesson,
   currencyCode = "GBP",
+  timeZone,
 }: ScheduleLessonFormProps) {
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const isEditMode = mode === "edit";
   const formErrorId = "schedule-lesson-form-error";
   const initialDate = initialLesson?.lessonAt ? new Date(initialLesson.lessonAt) : new Date();
-  const initialDateTimeValues = getLondonDateTimeInputValues(initialDate);
+  const initialDateTimeValues = getZonedDateTimeInputValues(initialDate, timeZone);
+  const timeZoneLabel = getTimeZoneLabel(timeZone);
   const [lessonDate, setLessonDate] = useState(initialDateTimeValues.date);
   const [lessonTime, setLessonTime] = useState(initialDateTimeValues.time);
   const [topics, setTopics] = useState(initialLesson?.topics ?? "");
@@ -69,7 +72,7 @@ export function ScheduleLessonForm({
     let lessonAtIso: string;
 
     try {
-      lessonAtIso = getSubmittedLessonAtIsoFromForm(event.currentTarget);
+      lessonAtIso = getSubmittedLessonAtIsoFromForm(event.currentTarget, timeZone);
     } catch (dateTimeError) {
       setError(
         dateTimeError instanceof Error ? dateTimeError.message : "Lesson date and time is invalid.",
@@ -199,6 +202,12 @@ export function ScheduleLessonForm({
             />
           </div>
         </div>
+        <p className="text-xs leading-5 text-zinc-500">
+          Times use {timeZoneLabel}.{" "}
+          <Link href="/app/settings" className="font-medium underline underline-offset-2">
+            Change time zone
+          </Link>
+        </p>
 
         <div className="min-w-0">
           <label htmlFor="topics" className="block text-sm font-medium text-zinc-700">

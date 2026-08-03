@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { formatDayHeadingLocal, formatTimeLocal } from "@/lib/datetime";
+import { formatDayHeadingLocal, formatTimeLocal, getDateKeyLocal } from "@/lib/datetime";
 import {
   getPlannedLessonAttentionLabel,
   type PlannedLessonAttention,
@@ -36,6 +36,7 @@ type CalendarGridProps = {
   weekdayLabels: string[];
   lessons: CalendarGridLesson[];
   todayKey: string;
+  timeZone: string;
 };
 
 export function CalendarGrid({
@@ -43,24 +44,20 @@ export function CalendarGrid({
   weekdayLabels,
   lessons,
   todayKey,
+  timeZone,
 }: CalendarGridProps) {
   const lessonsByDate = useMemo(() => {
     const buckets = new Map<string, CalendarGridLesson[]>();
 
     lessons.forEach((lesson) => {
-      const dateKey = new Intl.DateTimeFormat("en-CA", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        timeZone: "Europe/London",
-      }).format(new Date(lesson.lessonAt));
+      const dateKey = getDateKeyLocal(lesson.lessonAt, timeZone);
       const existing = buckets.get(dateKey) ?? [];
       existing.push(lesson);
       buckets.set(dateKey, existing);
     });
 
     return buckets;
-  }, [lessons]);
+  }, [lessons, timeZone]);
   const selectedLessonsByKey = useMemo(() => lessonsByDate, [lessonsByDate]);
 
   const firstInMonthKey = monthCells.find((cell) => cell.inMonth)?.key ?? monthCells[0]?.key ?? "";
@@ -198,7 +195,7 @@ export function CalendarGrid({
                               : "text-emerald-800"
                         }`}
                       >
-                        {formatTimeLocal(lesson.lessonAt)}
+                        {formatTimeLocal(lesson.lessonAt, timeZone)}
                       </p>
                       {lesson.status === "planned" && lesson.attention ? (
                         <p
@@ -228,7 +225,7 @@ export function CalendarGrid({
       {selectedCell ? (
         <div className="mt-4 rounded-lg border border-zinc-200 bg-white p-4">
           <h3 className="text-base font-medium text-zinc-900">
-            Lessons on {formatDayHeadingLocal(selectedCell.dateIso)}
+            Lessons on {formatDayHeadingLocal(selectedCell.dateIso, timeZone)}
           </h3>
 
           {selectedLessons.length === 0 ? (
@@ -248,7 +245,7 @@ export function CalendarGrid({
                     }`}
                   >
                     <p className="text-sm font-medium text-zinc-900">
-                      {formatTimeLocal(lesson.lessonAt)} · {lesson.studentName}
+                      {formatTimeLocal(lesson.lessonAt, timeZone)} · {lesson.studentName}
                     </p>
                     {lesson.status === "planned" && lesson.attention ? (
                       <span

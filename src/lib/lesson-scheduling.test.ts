@@ -36,6 +36,15 @@ test("editing persists the submitted UK winter time rather than an initial value
   assert.equal(lessonAt, "2026-01-15T18:00:00.000Z");
 });
 
+test("scheduled lessons use the tutor time zone rather than the device time zone", () => {
+  const lessonAt = getSubmittedLessonAtIso(
+    submittedValues("2026-07-15", "18:00"),
+    "America/New_York",
+  );
+
+  assert.equal(lessonAt, "2026-07-15T22:00:00.000Z");
+});
+
 test("page reload restores the saved London date and time", () => {
   assert.deepEqual(getLondonDateTimeInputValues("2026-07-15T17:00:00.000Z"), {
     date: "2026-07-15",

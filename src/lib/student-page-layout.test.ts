@@ -7,7 +7,7 @@ test("student profiles put tutor work before progress, reporting and settings", 
   const overview = source.indexOf("At a glance");
   const latestUpdate = source.indexOf("Latest parent update");
   const learningProgress = source.indexOf("Learning progress");
-  const monthlySummary = source.indexOf("MonthlySummaryGenerator studentName");
+  const monthlySummary = source.indexOf("<MonthlySummaryGenerator");
   const pastLessons = source.indexOf("<PastLessonsMonthlySection");
   const money = source.indexOf("student-money-heading");
   const paymentHistory = source.indexOf("<PaymentsMonthlySection");

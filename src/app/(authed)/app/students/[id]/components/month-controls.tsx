@@ -18,25 +18,28 @@ export function getMonthStartFromKey(monthKey: string) {
 
 export function getAdjacentMonthKey(monthKey: string, offset: number) {
   const monthStart = getMonthStartFromKey(monthKey);
-  return getMonthKeyLocal(new Date(Date.UTC(monthStart.getUTCFullYear(), monthStart.getUTCMonth() + offset, 1)));
+  return new Date(Date.UTC(monthStart.getUTCFullYear(), monthStart.getUTCMonth() + offset, 1))
+    .toISOString()
+    .slice(0, 7);
 }
 
 export function MonthControls({
   monthKey,
   onChange,
   label,
+  timeZone,
 }: {
   monthKey: string;
   onChange: (monthKey: string) => void;
   label: string;
+  timeZone: string;
 }) {
-  const currentMonthKey = getMonthKeyLocal(new Date());
-  const monthStart = getMonthStartFromKey(monthKey);
+  const currentMonthKey = getMonthKeyLocal(new Date(), timeZone);
 
   return (
     <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-2.5 sm:flex sm:items-center sm:justify-between sm:gap-4">
       <p className="px-1 text-sm text-zinc-600">
-        <span className="font-medium text-zinc-900">{formatMonthLocal(monthStart)}</span>
+        <span className="font-medium text-zinc-900">{formatMonthLocal(monthKey)}</span>
         <span> · {label}</span>
       </p>
       <div className="mt-2 grid grid-cols-3 gap-2 sm:mt-0 sm:flex sm:flex-wrap">
@@ -44,7 +47,7 @@ export function MonthControls({
           type="button"
           onClick={() => onChange(getAdjacentMonthKey(monthKey, -1))}
           className={monthButtonClassName}
-          aria-label={`Show ${formatMonthLocal(getMonthStartFromKey(getAdjacentMonthKey(monthKey, -1)))}`}
+          aria-label={`Show ${formatMonthLocal(getAdjacentMonthKey(monthKey, -1))}`}
         >
           Previous
         </button>
@@ -60,7 +63,7 @@ export function MonthControls({
           type="button"
           onClick={() => onChange(getAdjacentMonthKey(monthKey, 1))}
           className={monthButtonClassName}
-          aria-label={`Show ${formatMonthLocal(getMonthStartFromKey(getAdjacentMonthKey(monthKey, 1)))}`}
+          aria-label={`Show ${formatMonthLocal(getAdjacentMonthKey(monthKey, 1))}`}
         >
           Next
         </button>
