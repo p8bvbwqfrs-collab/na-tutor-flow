@@ -381,25 +381,25 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                             </div>
                           </div>
                           <div className="mt-3 grid gap-2 sm:flex sm:flex-wrap md:mt-0 md:flex-nowrap md:justify-end">
-                          <Link
-                            href={`/app/students/${lesson.student_id}/lessons/${lesson.id}?mode=complete`}
-                            className="inline-flex min-h-10 w-full items-center justify-center rounded-md bg-blue-700 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
-                          >
-                            Complete lesson
-                          </Link>
-                          <Link
-                            href={`/app/students/${lesson.student_id}/lessons/${lesson.id}`}
-                            className="inline-flex min-h-10 w-full items-center justify-center rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
-                          >
-                            Reschedule
-                          </Link>
-                          <PlannedLessonStatusButton
-                            lessonId={lesson.id}
-                            studentId={lesson.student_id}
-                            nextStatus="cancelled"
-                            label="Cancel lesson"
-                            className="min-h-10 w-full border-rose-200 bg-white text-rose-700 hover:bg-rose-50 hover:text-rose-800 sm:w-auto"
-                          />
+                            <Link
+                              href={`/app/students/${lesson.student_id}/lessons/${lesson.id}?mode=complete`}
+                              className="inline-flex min-h-10 w-full items-center justify-center whitespace-nowrap rounded-md bg-blue-700 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
+                            >
+                              Complete lesson
+                            </Link>
+                            <Link
+                              href={`/app/students/${lesson.student_id}/lessons/${lesson.id}`}
+                              className="inline-flex min-h-10 w-full items-center justify-center whitespace-nowrap rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
+                            >
+                              Reschedule
+                            </Link>
+                            <PlannedLessonStatusButton
+                              lessonId={lesson.id}
+                              studentId={lesson.student_id}
+                              nextStatus="cancelled"
+                              label="Cancel lesson"
+                              className="min-h-10 w-full whitespace-nowrap border-rose-200 bg-white text-rose-700 hover:bg-rose-50 hover:text-rose-800 sm:w-auto"
+                            />
                           </div>
                         </div>
                       </div>
