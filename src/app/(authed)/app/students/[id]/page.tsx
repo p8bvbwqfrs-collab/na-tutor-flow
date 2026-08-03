@@ -11,6 +11,7 @@ import {
 } from "@/lib/datetime";
 import { getUserCurrencyCode } from "@/lib/user-settings";
 import { formatParentUpdate } from "@/lib/parent-update";
+import { partitionPlannedLessons } from "@/lib/lesson-attention";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { LessonUpdateActions } from "@/components/lesson-update-actions";
 import {
@@ -22,7 +23,6 @@ import {
   type AllocationLike,
   type PaymentLike,
 } from "@/lib/payments";
-import { getLessonStatusClassName, getLessonStatusLabel } from "@/lib/status-styles";
 import { CompletedLessonUpdateBanner } from "./components/completed-lesson-update-banner";
 import { LessonSuccessPanel } from "./components/lesson-success-panel";
 import { MonthlySummaryGenerator } from "./components/monthly-summary-generator";
@@ -193,6 +193,36 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
   const plannedLessons = [...lessons]
     .filter((lesson) => lesson.status === "planned")
     .sort((a, b) => new Date(a.lesson_at).getTime() - new Date(b.lesson_at).getTime());
+  const plannedLessonPartitions = partitionPlannedLessons(plannedLessons);
+  const plannedLessonSections = [
+    {
+      key: "overdue",
+      title: "Needs completing",
+      description: "The scheduled date has passed. Complete, reschedule or cancel these lessons.",
+      lessons: plannedLessonPartitions.overdue,
+      cardClassName: "border-amber-200 bg-amber-50/70",
+      badgeClassName: "border-amber-300 bg-amber-100 text-amber-900",
+      badgeLabel: "Needs completing",
+    },
+    {
+      key: "today",
+      title: "Today’s lessons",
+      description: "Complete the lesson after the session to capture notes and next steps.",
+      lessons: plannedLessonPartitions.today,
+      cardClassName: "border-blue-300 bg-blue-50",
+      badgeClassName: "border-blue-300 bg-blue-100 text-blue-900",
+      badgeLabel: "Today",
+    },
+    {
+      key: "upcoming",
+      title: "Next lessons",
+      description: "Scheduled lessons after today.",
+      lessons: plannedLessonPartitions.upcoming,
+      cardClassName: "border-blue-200 bg-blue-50/60",
+      badgeClassName: "border-blue-200 bg-blue-50 text-blue-800",
+      badgeLabel: "Upcoming",
+    },
+  ].filter((section) => section.lessons.length > 0);
   const isArchived = Boolean(student.archived_at);
   const totalLessons = completedLessons.length;
   const outstandingAmountPence = completedLessons.reduce(
@@ -477,81 +507,76 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
 
       <div className="mt-6 space-y-6">
         {plannedLessons.length > 0 ? (
-          <section>
-            <div className="rounded-lg border border-zinc-200 bg-white p-4">
-              <h2 className="text-lg font-medium text-zinc-900">Upcoming lessons</h2>
-              <p className="mt-1 text-sm text-zinc-600">
-                Scheduled lessons you can complete when the session is done.
-              </p>
-              <div className="mt-4 space-y-3">
-                {plannedLessons.map((lesson) => {
-                  const plannedTopic =
-                    lesson.topics && lesson.topics !== "Planned lesson" ? cleanLessonText(lesson.topics) : null;
+          <div className="space-y-4">
+            {plannedLessonSections.map((section) => (
+              <section key={section.key} className="rounded-lg border border-zinc-200 bg-white p-4">
+                <h2 className="text-lg font-medium text-zinc-900">{section.title}</h2>
+                <p className="mt-1 text-sm text-zinc-600">{section.description}</p>
+                <div className="mt-4 space-y-3">
+                  {section.lessons.map((lesson) => {
+                    const plannedTopic =
+                      lesson.topics && lesson.topics !== "Planned lesson" ? cleanLessonText(lesson.topics) : null;
+                    const paymentStatus = calculateLessonPaymentStatus(lesson, allocations);
 
-                  return (
-                    <div
-                      key={lesson.id}
-                      className="rounded-lg border border-blue-200 bg-blue-50/60 p-4"
-                    >
-                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                        <div>
-                          {(() => {
-                            const paymentStatus = calculateLessonPaymentStatus(lesson, allocations);
-
-                            return (
-                              <p className="flex flex-wrap items-center gap-2 text-sm font-medium text-zinc-900">
-                                <span>{formatDateLocal(lesson.lesson_at)} at {formatTimeLocal(lesson.lesson_at)}</span>
-                                <span
-                                  className={`inline-flex rounded-full border px-2 py-1 text-xs font-medium ${getLessonStatusClassName(lesson.status)}`}
-                                >
-                                  {getLessonStatusLabel(lesson.status)}
-                                </span>
-                                <span
-                                  className={`inline-flex rounded-full border px-2 py-1 text-xs font-medium ${getPaymentStatusClassName(paymentStatus)}`}
-                                >
-                                  {getPaymentStatusLabel(paymentStatus)}
-                                </span>
-                              </p>
-                            );
-                          })()}
-                          <p className="mt-1 text-sm text-zinc-600">
-                            {plannedTopic || "No planned topic or note yet."}
-                          </p>
-                        </div>
-                        {isArchived ? (
-                          <span className="inline-flex rounded-full border border-zinc-300 bg-zinc-100 px-2 py-1 text-xs font-medium text-zinc-700">
-                            Read-only
-                          </span>
-                        ) : (
-                          <div className="flex flex-wrap items-start gap-2">
-                            <Link
-                              href={`/app/students/${student.id}/lessons/${lesson.id}?mode=complete`}
-                              className="inline-flex min-h-10 items-center justify-center rounded-md bg-blue-700 px-3 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-                            >
-                              Complete lesson
-                            </Link>
-                            <Link
-                              href={`/app/students/${student.id}/lessons/${lesson.id}`}
-                              className="inline-flex min-h-10 items-center justify-center rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 transition-colors hover:bg-zinc-50 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-                            >
-                              Edit
-                            </Link>
-                            <PlannedLessonStatusButton
-                              lessonId={lesson.id}
-                              studentId={student.id}
-                              nextStatus="cancelled"
-                              label="Cancel lesson"
-                              className="min-h-10 border-rose-200 bg-white text-rose-700 hover:bg-rose-50 hover:text-rose-800"
-                            />
+                    return (
+                      <div
+                        key={lesson.id}
+                        className={`rounded-lg border p-4 ${section.cardClassName}`}
+                      >
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                          <div>
+                            <p className="flex flex-wrap items-center gap-2 text-sm font-medium text-zinc-900">
+                              <span>{formatDateLocal(lesson.lesson_at)} at {formatTimeLocal(lesson.lesson_at)}</span>
+                              <span
+                                className={`inline-flex rounded-full border px-2 py-1 text-xs font-medium ${section.badgeClassName}`}
+                              >
+                                {section.badgeLabel}
+                              </span>
+                              <span
+                                className={`inline-flex rounded-full border px-2 py-1 text-xs font-medium ${getPaymentStatusClassName(paymentStatus)}`}
+                              >
+                                {getPaymentStatusLabel(paymentStatus)}
+                              </span>
+                            </p>
+                            <p className="mt-1 text-sm text-zinc-600">
+                              {plannedTopic || "No planned topic or note yet."}
+                            </p>
                           </div>
-                        )}
+                          {isArchived ? (
+                            <span className="inline-flex rounded-full border border-zinc-300 bg-zinc-100 px-2 py-1 text-xs font-medium text-zinc-700">
+                              Read-only
+                            </span>
+                          ) : (
+                            <div className="grid gap-2 sm:flex sm:flex-wrap sm:items-start">
+                              <Link
+                                href={`/app/students/${student.id}/lessons/${lesson.id}?mode=complete`}
+                                className="inline-flex min-h-10 w-full items-center justify-center rounded-md bg-blue-700 px-3 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
+                              >
+                                Complete lesson
+                              </Link>
+                              <Link
+                                href={`/app/students/${student.id}/lessons/${lesson.id}`}
+                                className="inline-flex min-h-10 w-full items-center justify-center rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 transition-colors hover:bg-zinc-50 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
+                              >
+                                Reschedule
+                              </Link>
+                              <PlannedLessonStatusButton
+                                lessonId={lesson.id}
+                                studentId={student.id}
+                                nextStatus="cancelled"
+                                label="Cancel lesson"
+                                className="min-h-10 w-full border-rose-200 bg-white text-rose-700 hover:bg-rose-50 hover:text-rose-800 sm:w-auto"
+                              />
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </section>
+                    );
+                  })}
+                </div>
+              </section>
+            ))}
+          </div>
         ) : null}
 
         <section>

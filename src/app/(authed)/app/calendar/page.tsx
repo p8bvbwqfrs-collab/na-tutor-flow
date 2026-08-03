@@ -7,6 +7,7 @@ import {
   getMonthKeyLocal,
 } from "@/lib/datetime";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getPlannedLessonAttention } from "@/lib/lesson-attention";
 import { CalendarGrid } from "./calendar-grid";
 
 type CalendarPageProps = {
@@ -19,21 +20,28 @@ type CalendarLessonRow = {
   lesson_at: string;
   topics: string;
   status: "planned" | "completed" | "cancelled" | null;
-  student: { student_name: string } | { student_name: string }[] | null;
+  student:
+    | { student_name: string; archived_at: string | null }
+    | { student_name: string; archived_at: string | null }[]
+    | null;
 };
 
-function getStudentName(
-  student: { student_name: string } | { student_name: string }[] | null | undefined,
+function getStudent(
+  student:
+    | { student_name: string; archived_at: string | null }
+    | { student_name: string; archived_at: string | null }[]
+    | null
+    | undefined,
 ) {
   if (!student) {
-    return "Student";
+    return null;
   }
 
   if (Array.isArray(student)) {
-    return student[0]?.student_name ?? "Student";
+    return student[0] ?? null;
   }
 
-  return student.student_name ?? "Student";
+  return student;
 }
 
 function parseMonthParam(input: string | undefined) {
@@ -90,7 +98,7 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
 
   const { data, error } = await supabase
     .from("lessons")
-    .select("id, student_id, lesson_at, topics, status, student:students!lessons_student_id_fkey(student_name)")
+    .select("id, student_id, lesson_at, topics, status, student:students!lessons_student_id_fkey(student_name, archived_at)")
     .gte("lesson_at", monthStart.toISOString())
     .lt("lesson_at", nextMonthStart.toISOString())
     .order("lesson_at", { ascending: true });
@@ -100,14 +108,21 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
   const weekdayLabels = Array.from({ length: 7 }, (_, index) =>
     formatWeekdayShortLocal(new Date(Date.UTC(2026, 2, index + 2))),
   );
-  const calendarLessons = lessons.map((lesson) => ({
-    id: lesson.id,
-    studentId: lesson.student_id,
-    lessonAt: lesson.lesson_at,
-    topics: lesson.topics,
-    status: lesson.status,
-    studentName: getStudentName(lesson.student),
-  }));
+  const calendarLessons = lessons.map((lesson) => {
+    const student = getStudent(lesson.student);
+
+    return {
+      id: lesson.id,
+      studentId: lesson.student_id,
+      lessonAt: lesson.lesson_at,
+      topics: lesson.topics,
+      status: lesson.status,
+      studentName: student?.student_name ?? "Student",
+      readOnly: Boolean(student?.archived_at),
+      attention:
+        lesson.status === "planned" ? getPlannedLessonAttention(lesson.lesson_at, now) : null,
+    };
+  });
   const calendarCells = monthCells.map((cell) => ({
     key: getDateKeyLocal(cell.date),
     dateIso: cell.date.toISOString(),

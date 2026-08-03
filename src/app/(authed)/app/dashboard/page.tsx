@@ -5,6 +5,7 @@ import {
   formatMonthShortLocal,
   getMonthKeyLocal,
 } from "@/lib/datetime";
+import { partitionPlannedLessons } from "@/lib/lesson-attention";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { formatParentUpdate } from "@/lib/parent-update";
 import {
@@ -15,8 +16,8 @@ import {
   type AllocationLike,
   type PaymentLike,
 } from "@/lib/payments";
-import { getLessonStatusClassName, getLessonStatusLabel } from "@/lib/status-styles";
 import { getUserCurrencyCode } from "@/lib/user-settings";
+import { PlannedLessonStatusButton } from "../students/[id]/components/planned-lesson-status-button";
 import { MarkPaidButton } from "./components/mark-paid-button";
 import { MonthlyEarningsChart } from "./components/monthly-earnings-chart";
 import { ChartRangeFilter, type ChartRange } from "./components/chart-range-filter";
@@ -29,7 +30,12 @@ type LessonRow = {
   fee_pence: number;
   student_id: string;
   status: "planned" | "completed" | "cancelled" | null;
-  student: { student_name: string } | { student_name: string }[] | null;
+  student: DashboardStudentRelation | DashboardStudentRelation[] | null;
+};
+
+type DashboardStudentRelation = {
+  student_name: string;
+  archived_at?: string | null;
 };
 
 type DashboardLessonOverviewRow = {
@@ -45,7 +51,7 @@ type DashboardLessonOverviewRow = {
   homework?: string | null;
   effort?: number | null;
   confidence?: number | null;
-  student: { student_name: string } | { student_name: string }[] | null;
+  student: DashboardStudentRelation | DashboardStudentRelation[] | null;
 };
 
 type ChartLessonRow = {
@@ -107,17 +113,23 @@ function getMonthSeriesBetween(startInclusive: Date, endInclusive: Date) {
 }
 
 function getStudentName(
-  student: { student_name: string } | { student_name: string }[] | null | undefined,
+  student: DashboardStudentRelation | DashboardStudentRelation[] | null | undefined,
+) {
+  return getStudent(student)?.student_name ?? null;
+}
+
+function getStudent(
+  student: DashboardStudentRelation | DashboardStudentRelation[] | null | undefined,
 ) {
   if (!student) {
     return null;
   }
 
   if (Array.isArray(student)) {
-    return student[0]?.student_name ?? null;
+    return student[0] ?? null;
   }
 
-  return student.student_name ?? null;
+  return student;
 }
 
 function isCompletedLessonStatus(status: "planned" | "completed" | "cancelled" | null) {
@@ -160,7 +172,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     chartLessonsResult,
     oldestLessonResult,
     recentLessonsResult,
-    upcomingLessonsResult,
+    plannedLessonsResult,
     paymentsResult,
     paymentAllocationsResult,
     derivedLessonsResult,
@@ -186,10 +198,9 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       .limit(3),
     supabase
       .from("lessons")
-      .select("id, student_id, lesson_at, status, fee_pence, student:students!lessons_student_id_fkey(student_name)")
+      .select("id, student_id, lesson_at, status, fee_pence, student:students!lessons_student_id_fkey(student_name, archived_at)")
       .eq("status", "planned")
-      .order("lesson_at", { ascending: true })
-      .limit(3),
+      .order("lesson_at", { ascending: true }),
     supabase
       .from("payments")
       .select("id, amount_pence, payment_date, source, note, created_at"),
@@ -214,7 +225,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const oldestLessonAt = oldestLessonResult.data?.lesson_at
     ? new Date(oldestLessonResult.data.lesson_at)
     : null;
-  const hasAnyLessons = Boolean(oldestLessonAt || (upcomingLessonsResult.data ?? []).length > 0);
+  const hasAnyLessons = Boolean(oldestLessonAt || (plannedLessonsResult.data ?? []).length > 0);
   const dashboardExperience = deriveDashboardExperience(dashboardStudents, hasAnyLessons);
   const dashboardActions = getDashboardActions(
     dashboardExperience.state,
@@ -224,9 +235,39 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const recentLessons = ((recentLessonsResult.data ?? []) as DashboardLessonOverviewRow[]).filter((lesson) =>
     isCompletedLessonStatus(lesson.status),
   );
-  const upcomingLessons = ((upcomingLessonsResult.data ?? []) as DashboardLessonOverviewRow[]).filter(
-    (lesson) => lesson.status === "planned",
+  const plannedLessons = ((plannedLessonsResult.data ?? []) as DashboardLessonOverviewRow[]).filter(
+    (lesson) => lesson.status === "planned" && !getStudent(lesson.student)?.archived_at,
   );
+  const plannedLessonPartitions = partitionPlannedLessons(plannedLessons, now);
+  const plannedLessonSections = [
+    {
+      key: "overdue",
+      title: "Needs completing",
+      description: "The scheduled date has passed. Complete, reschedule or cancel these lessons.",
+      lessons: plannedLessonPartitions.overdue.slice(0, 3),
+      total: plannedLessonPartitions.overdue.length,
+      cardClassName: "border-amber-200 bg-amber-50/70 hover:border-amber-300 hover:bg-amber-50",
+      badgeClassName: "border-amber-300 bg-amber-100 text-amber-900",
+    },
+    {
+      key: "today",
+      title: "Today’s lessons",
+      description: "Open a lesson after the session to complete the notes and next steps.",
+      lessons: plannedLessonPartitions.today.slice(0, 3),
+      total: plannedLessonPartitions.today.length,
+      cardClassName: "border-blue-300 bg-blue-50 hover:border-blue-400",
+      badgeClassName: "border-blue-300 bg-blue-100 text-blue-900",
+    },
+    {
+      key: "upcoming",
+      title: "Next lessons",
+      description: "Your next scheduled lessons after today.",
+      lessons: plannedLessonPartitions.upcoming.slice(0, 3),
+      total: plannedLessonPartitions.upcoming.length,
+      cardClassName: "border-blue-200 bg-blue-50/60 hover:border-blue-300 hover:bg-blue-50",
+      badgeClassName: "border-blue-200 bg-blue-50 text-blue-800",
+    },
+  ].filter((section) => section.total > 0);
   const payments = (paymentsResult.data ?? []) as DashboardPaymentRow[];
   const paymentAllocations = ((paymentAllocationsResult.data ?? []) as DashboardAllocationRow[]).map((allocation) => ({
     ...allocation,
@@ -303,7 +344,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       {!activeStudentsResult.error &&
       !chartLessonsResult.error &&
       !oldestLessonResult.error &&
-      !upcomingLessonsResult.error &&
+      !plannedLessonsResult.error &&
       !paymentsResult.error &&
       !paymentAllocationsResult.error &&
       !derivedLessonsResult.error ? (
@@ -462,47 +503,52 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         </section>
 
         <section className="rounded-lg border border-zinc-200 bg-white p-4">
-          <h2 className="text-lg font-medium text-zinc-900">Upcoming lessons</h2>
+          <h2 className="text-lg font-medium text-zinc-900">Lesson schedule</h2>
           <p className="mt-1 text-sm text-zinc-600">
-            Your scheduled lessons. Open one when you’re ready to complete it after the session.
+            See what needs attention today without losing sight of what is coming next.
           </p>
 
-          {upcomingLessonsResult.error ? (
+          {plannedLessonsResult.error ? (
             <p
               role="alert"
               className="mt-4 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-900"
             >
-              Could not load upcoming lessons.
+              Could not load the lesson schedule.
             </p>
-          ) : upcomingLessons.length === 0 ? (
+          ) : plannedLessons.length === 0 ? (
             <p className="mt-4 rounded-md border border-dashed border-zinc-300 bg-zinc-50 px-3 py-2 text-sm text-zinc-700">
               No scheduled lessons yet.
             </p>
           ) : (
-            <div className="mt-4 space-y-3">
-              {upcomingLessons.map((lesson) => (
-                <div
-                  key={lesson.id}
-                  className="rounded-lg border border-blue-200 bg-blue-50/60 p-3 transition-colors hover:border-blue-300 hover:bg-blue-50"
-                >
-                  <Link
-                    href={`/app/students/${lesson.student_id}/lessons/${lesson.id}`}
-                    className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-                  >
-                    {(() => {
+            <div className="mt-4 space-y-5">
+              {plannedLessonSections.map((section) => (
+                <section key={section.key} aria-labelledby={`dashboard-${section.key}-lessons`}>
+                  <h3 id={`dashboard-${section.key}-lessons`} className="text-sm font-semibold text-zinc-900">
+                    {section.title}
+                  </h3>
+                  <p className="mt-1 text-xs leading-5 text-zinc-600">{section.description}</p>
+                  <div className="mt-2 space-y-3">
+                    {section.lessons.map((lesson) => {
                       const paymentStatus = calculateLessonPaymentStatus(lesson, paymentAllocations);
 
                       return (
-                        <>
+                        <div
+                          key={lesson.id}
+                          className={`rounded-lg border p-3 transition-colors ${section.cardClassName}`}
+                        >
                           <div className="flex flex-wrap items-center gap-2">
                             <p className="text-sm font-medium text-zinc-900">
                               {getStudentName(lesson.student) ?? "Unknown student"}
                             </p>
                             <span className="text-sm text-zinc-600">{formatDateTimeLocal(lesson.lesson_at)}</span>
                             <span
-                              className={`inline-flex rounded-full border px-2 py-1 text-xs font-medium ${getLessonStatusClassName(lesson.status)}`}
+                              className={`inline-flex rounded-full border px-2 py-1 text-xs font-medium ${section.badgeClassName}`}
                             >
-                              {getLessonStatusLabel(lesson.status)}
+                              {section.key === "overdue"
+                                ? "Needs completing"
+                                : section.key === "today"
+                                  ? "Today"
+                                  : "Upcoming"}
                             </span>
                             <span
                               className={`inline-flex rounded-full border px-2 py-1 text-xs font-medium ${getPaymentStatusClassName(paymentStatus)}`}
@@ -510,19 +556,40 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                               {getPaymentStatusLabel(paymentStatus)}
                             </span>
                           </div>
-                        </>
+                          <div className="mt-3 grid gap-2 sm:flex sm:flex-wrap">
+                            <Link
+                              href={`/app/students/${lesson.student_id}/lessons/${lesson.id}?mode=complete`}
+                              className="inline-flex min-h-9 w-full items-center justify-center rounded-md bg-blue-700 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
+                            >
+                              Complete lesson
+                            </Link>
+                            <Link
+                              href={`/app/students/${lesson.student_id}/lessons/${lesson.id}`}
+                              className="inline-flex min-h-9 w-full items-center justify-center rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
+                            >
+                              Reschedule
+                            </Link>
+                            <PlannedLessonStatusButton
+                              lessonId={lesson.id}
+                              studentId={lesson.student_id}
+                              nextStatus="cancelled"
+                              label="Cancel lesson"
+                              className="min-h-9 w-full border-rose-200 bg-white text-rose-700 hover:bg-rose-50 hover:text-rose-800 sm:w-auto"
+                            />
+                          </div>
+                        </div>
                       );
-                    })()}
-                  </Link>
-                  <div className="mt-2">
-                    <Link
-                      href={`/app/students/${lesson.student_id}/lessons/${lesson.id}?mode=complete`}
-                      className="inline-flex min-h-9 items-center justify-center rounded-md bg-blue-700 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-                    >
-                      Complete lesson
-                    </Link>
+                    })}
                   </div>
-                </div>
+                  {section.total > section.lessons.length ? (
+                    <Link
+                      href="/app/calendar"
+                      className="mt-2 inline-flex min-h-9 items-center text-sm font-medium text-blue-700 hover:text-blue-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                    >
+                      View {section.total - section.lessons.length} more in Calendar
+                    </Link>
+                  ) : null}
+                </section>
               ))}
             </div>
           )}
