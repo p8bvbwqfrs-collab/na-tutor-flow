@@ -112,14 +112,30 @@ test("marking a lesson paid uses existing credit before recording new money", ()
   );
 });
 
-test("the dashboard presents one payment summary and one action queue", () => {
+test("the dashboard presents a simple timeframe summary and student breakdown", () => {
   const dashboardSource = readFileSync(
     "src/app/(authed)/app/dashboard/page.tsx",
     "utf8",
   );
 
-  assert.match(dashboardSource, />Outstanding</);
+  assert.match(dashboardSource, /Money overview/);
+  assert.match(dashboardSource, /Outstanding now/);
+  assert.match(dashboardSource, /By student/);
+  assert.match(dashboardSource, /Income trend/);
   assert.match(dashboardSource, />Unpaid lessons</);
-  assert.match(dashboardSource, />Paid lesson income</);
+  assert.match(dashboardSource, /Received and completed figures use the selected timeframe/);
   assert.doesNotMatch(dashboardSource, /Paid vs unpaid/);
+});
+
+test("student profiles reuse the same timeframe payment summary", () => {
+  const studentSource = readFileSync(
+    "src/app/(authed)/app/students/[id]/page.tsx",
+    "utf8",
+  );
+
+  assert.match(studentSource, /Payment summary/);
+  assert.match(studentSource, /Outstanding now/);
+  assert.match(studentSource, /Last payment/);
+  assert.match(studentSource, /ChartRangeFilter/);
+  assert.match(studentSource, /receivedInRangePence/);
 });

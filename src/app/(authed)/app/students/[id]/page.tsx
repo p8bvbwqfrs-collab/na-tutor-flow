@@ -9,6 +9,12 @@ import {
   formatTimeLocal,
   getMonthKeyLocal,
 } from "@/lib/datetime";
+import {
+  getPaymentReportingDate,
+  getReportingRange,
+  getReportingRangeLabel,
+  isInReportingRange,
+} from "@/lib/financial-reporting";
 import { getUserCurrencyCode } from "@/lib/user-settings";
 import { formatParentUpdate } from "@/lib/parent-update";
 import { partitionPlannedLessons } from "@/lib/lesson-attention";
@@ -33,6 +39,7 @@ import { PlannedLessonStatusButton } from "./components/planned-lesson-status-bu
 import { ProgressSignalCard } from "./components/progress-signal-card";
 import { StudentArchiveToggle } from "./components/student-archive-toggle";
 import { StudentTrendChart } from "./components/student-trend-chart";
+import { ChartRangeFilter } from "../../dashboard/components/chart-range-filter";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -45,6 +52,7 @@ type StudentPageProps = {
     lessonsMonth?: string;
     paymentsMonth?: string;
     archived?: string;
+    range?: string;
   }>;
 };
 
@@ -230,6 +238,31 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
     0,
   );
   const studentCreditPence = calculateStudentCredit(payments, allocations);
+  const selectedRange = getReportingRange(search.range);
+  const rangeLabel = getReportingRangeLabel(selectedRange);
+  const paymentsInRange = payments.filter((payment) =>
+    isInReportingRange(getPaymentReportingDate({ ...payment, student_id: id }), selectedRange),
+  );
+  const receivedInRangePence = paymentsInRange.reduce(
+    (sum, payment) => sum + payment.amount_pence,
+    0,
+  );
+  const completedLessonsInRange = completedLessons.filter((lesson) =>
+    isInReportingRange(lesson.lesson_at, selectedRange),
+  );
+  const lastPayment = payments.reduce<Payment | null>((latest, payment) => {
+    if (!latest) {
+      return payment;
+    }
+
+    return new Date(payment.payment_date ?? payment.created_at) >
+      new Date(latest.payment_date ?? latest.created_at)
+      ? payment
+      : latest;
+  }, null);
+  const hasStudentFinancialError = Boolean(
+    lessonsError || paymentsResult.error || allocationsResult.error,
+  );
   const defaultMonthStart = new Date();
   const lessonsMonthStart =
     parseMonthParam(search.lessonsMonth) ??
@@ -383,6 +416,68 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
         <CompletedLessonUpdateBanner studentId={student.id} />
       ) : null}
 
+      <section className="mt-6" aria-labelledby="student-money-heading">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2 id="student-money-heading" className="text-lg font-medium text-zinc-900">
+              Payment summary
+            </h2>
+            <p className="mt-1 text-sm text-zinc-600">
+              Received and completed figures use the selected timeframe. Outstanding is what is owed now.
+            </p>
+          </div>
+          <ChartRangeFilter selected={selectedRange} basePath={`/app/students/${student.id}`} />
+        </div>
+
+        {hasStudentFinancialError ? (
+          <p
+            role="alert"
+            className="mt-4 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-900"
+          >
+            Could not load this student&apos;s payment summary.
+          </p>
+        ) : (
+          <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <div className="min-w-0 rounded-lg border border-emerald-200 bg-emerald-50/50 p-3 sm:p-4">
+              <p className="text-xs font-medium uppercase tracking-wide text-zinc-600">Received</p>
+              <p className="mt-1.5 break-words text-xl font-semibold text-emerald-900 sm:text-2xl">
+                {formatCurrencyFromMinorUnits(receivedInRangePence, currencyCode)}
+              </p>
+              <p className="mt-1 text-xs text-zinc-600">{rangeLabel}</p>
+            </div>
+            <div className="min-w-0 rounded-lg border border-amber-200 bg-amber-50/50 p-3 sm:p-4">
+              <p className="text-xs font-medium uppercase tracking-wide text-zinc-600">Outstanding now</p>
+              <p className="mt-1.5 break-words text-xl font-semibold text-amber-900 sm:text-2xl">
+                {formatCurrencyFromMinorUnits(outstandingAmountPence, currencyCode)}
+              </p>
+              <p className="mt-1 text-xs text-zinc-600">Current balance</p>
+            </div>
+            <div className="min-w-0 rounded-lg border border-blue-200 bg-blue-50/50 p-3 sm:p-4">
+              <p className="text-xs font-medium uppercase tracking-wide text-zinc-600">Completed lessons</p>
+              <p className="mt-1.5 text-xl font-semibold text-blue-900 sm:text-2xl">
+                {completedLessonsInRange.length}
+              </p>
+              <p className="mt-1 text-xs text-zinc-600">{rangeLabel}</p>
+            </div>
+            <div className="min-w-0 rounded-lg border border-zinc-200 bg-white p-3 sm:p-4">
+              <p className="text-xs font-medium uppercase tracking-wide text-zinc-600">Last payment</p>
+              {lastPayment ? (
+                <>
+                  <p className="mt-1.5 break-words text-xl font-semibold text-zinc-900 sm:text-2xl">
+                    {formatCurrencyFromMinorUnits(lastPayment.amount_pence, currencyCode)}
+                  </p>
+                  <p className="mt-1 text-xs text-zinc-600">
+                    {formatDateLocal(lastPayment.payment_date ?? lastPayment.created_at)}
+                  </p>
+                </>
+              ) : (
+                <p className="mt-2 text-sm font-medium text-zinc-600">No payments yet</p>
+              )}
+            </div>
+          </div>
+        )}
+      </section>
+
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div className="rounded-lg border border-zinc-200 bg-white p-4">
           <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Last lesson</p>
@@ -391,12 +486,6 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
         <div className="rounded-lg border border-zinc-200 bg-white p-4">
           <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Total lessons</p>
           <p className="mt-2 text-2xl font-semibold text-zinc-900">{totalLessons}</p>
-        </div>
-        <div className="rounded-lg border border-zinc-200 bg-white p-4">
-          <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Outstanding amount</p>
-          <p className="mt-2 text-2xl font-semibold text-zinc-900">
-            {formatCurrencyFromMinorUnits(outstandingAmountPence, currencyCode)}
-          </p>
         </div>
         <div className="rounded-lg border border-zinc-200 bg-white p-4">
           <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Average confidence</p>

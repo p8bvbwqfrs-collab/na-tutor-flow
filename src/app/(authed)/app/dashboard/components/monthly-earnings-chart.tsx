@@ -59,7 +59,7 @@ export function MonthlyEarningsChart({ data, currencyCode }: MonthlyEarningsChar
       viewBox={`0 0 ${chartWidth} ${chartHeight}`}
       className="h-[160px] w-full sm:h-[180px] lg:h-[200px]"
       role="img"
-      aria-label="Monthly earnings line chart"
+      aria-label="Monthly received income line chart"
     >
       {Array.from({ length: yTicks + 1 }, (_, tickIndex) => {
         const tickValue = Math.round((yMax / yTicks) * tickIndex);
