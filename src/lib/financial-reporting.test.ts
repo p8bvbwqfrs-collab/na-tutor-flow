@@ -37,6 +37,29 @@ test("uses the Europe/London month at the UTC boundary", () => {
   assert.equal(isInReportingRange("2026-07-31T08:00:00.000Z", "month", londonAugust), false);
 });
 
+test("uses the tutor month at an American UTC boundary", () => {
+  const stillJulyInNewYork = new Date("2026-08-01T02:30:00.000Z");
+
+  assert.equal(
+    isInReportingRange(
+      "2026-07-15T12:00:00.000Z",
+      "month",
+      stillJulyInNewYork,
+      "America/New_York",
+    ),
+    true,
+  );
+  assert.equal(
+    isInReportingRange(
+      "2026-08-01T12:00:00.000Z",
+      "month",
+      stillJulyInNewYork,
+      "America/New_York",
+    ),
+    false,
+  );
+});
+
 test("summarises received income in range while keeping outstanding as the current balance", () => {
   const summaries = buildStudentFinancialSummaries(
     [

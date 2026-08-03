@@ -1,4 +1,4 @@
-import { getDateKeyLocal } from "./datetime";
+import { DEFAULT_TIME_ZONE, getDateKeyLocal } from "./datetime";
 
 export type PlannedLessonAttention = "overdue" | "today" | "upcoming";
 
@@ -9,9 +9,10 @@ type LessonWithDate = {
 export function getPlannedLessonAttention(
   lessonAt: string | Date,
   now: string | Date = new Date(),
+  timeZone = DEFAULT_TIME_ZONE,
 ): PlannedLessonAttention {
-  const lessonDateKey = getDateKeyLocal(lessonAt);
-  const todayKey = getDateKeyLocal(now);
+  const lessonDateKey = getDateKeyLocal(lessonAt, timeZone);
+  const todayKey = getDateKeyLocal(now, timeZone);
 
   if (lessonDateKey < todayKey) {
     return "overdue";
@@ -39,6 +40,7 @@ export function getPlannedLessonAttentionLabel(attention: PlannedLessonAttention
 export function partitionPlannedLessons<T extends LessonWithDate>(
   lessons: T[],
   now: string | Date = new Date(),
+  timeZone = DEFAULT_TIME_ZONE,
 ) {
   const sortedLessons = [...lessons].sort(
     (a, b) => new Date(a.lesson_at).getTime() - new Date(b.lesson_at).getTime(),
@@ -48,7 +50,7 @@ export function partitionPlannedLessons<T extends LessonWithDate>(
   const upcoming: T[] = [];
 
   sortedLessons.forEach((lesson) => {
-    const attention = getPlannedLessonAttention(lesson.lesson_at, now);
+    const attention = getPlannedLessonAttention(lesson.lesson_at, now, timeZone);
 
     if (attention === "overdue") {
       overdue.push(lesson);

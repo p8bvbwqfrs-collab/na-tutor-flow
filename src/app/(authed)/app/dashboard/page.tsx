@@ -20,7 +20,7 @@ import {
   type AllocationLike,
   type PaymentLike,
 } from "@/lib/payments";
-import { getUserCurrencyCode } from "@/lib/user-settings";
+import { getUserCurrencyCode, getUserTimeZone } from "@/lib/user-settings";
 import { PlannedLessonStatusButton } from "../students/[id]/components/planned-lesson-status-button";
 import { MarkPaidButton } from "./components/mark-paid-button";
 import { IncomeTrendChart } from "./components/income-trend-chart";
@@ -117,7 +117,10 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const { range } = await searchParams;
   const selectedRange = getReportingRange(range);
   const supabase = await createSupabaseServerClient();
-  const currencyCode = await getUserCurrencyCode(supabase);
+  const [currencyCode, timeZone] = await Promise.all([
+    getUserCurrencyCode(supabase),
+    getUserTimeZone(supabase),
+  ]);
 
   const now = new Date();
 
@@ -173,7 +176,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const plannedLessons = ((plannedLessonsResult.data ?? []) as DashboardLessonOverviewRow[]).filter(
     (lesson) => lesson.status === "planned" && !getStudent(lesson.student)?.archived_at,
   );
-  const plannedLessonPartitions = partitionPlannedLessons(plannedLessons, now);
+  const plannedLessonPartitions = partitionPlannedLessons(plannedLessons, now, timeZone);
   const plannedLessonSections = [
     {
       key: "overdue",
@@ -218,11 +221,11 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     (lesson) => lesson.fee_pence - getPaidAllocatedAmountForLesson(lesson.id, paymentAllocations) > 0,
   ).length;
   const reportingPayments = payments.filter((payment) =>
-    isInReportingRange(getPaymentReportingDate(payment), selectedRange, now),
+    isInReportingRange(getPaymentReportingDate(payment), selectedRange, now, timeZone),
   );
   const receivedInRangePence = reportingPayments.reduce((sum, payment) => sum + payment.amount_pence, 0);
   const completedLessonsInRange = derivedLessons.filter((lesson) =>
-    isInReportingRange(lesson.lesson_at, selectedRange, now),
+    isInReportingRange(lesson.lesson_at, selectedRange, now, timeZone),
   );
   const studentFinancialSummaries = buildStudentFinancialSummaries(
     dashboardStudentRows,
@@ -231,8 +234,9 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     paymentAllocations,
     selectedRange,
     now,
+    timeZone,
   );
-  const incomeTrendSeries = buildIncomeTrendSeries(payments, selectedRange, now);
+  const incomeTrendSeries = buildIncomeTrendSeries(payments, selectedRange, now, timeZone);
   const rangeLabel = getReportingRangeLabel(selectedRange);
   const hasDashboardDataError = Boolean(
     activeStudentsResult.error ||
@@ -363,7 +367,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                               <p className="min-w-0 text-sm font-medium text-zinc-900">
                                 {getStudentName(lesson.student) ?? "Unknown student"}
                               </p>
-                              <span className="text-sm text-zinc-600">{formatDateTimeLocal(lesson.lesson_at)}</span>
+                              <span className="text-sm text-zinc-600">{formatDateTimeLocal(lesson.lesson_at, timeZone)}</span>
                               <span
                                 className={`inline-flex rounded-full border px-2 py-1 text-xs font-medium ${section.badgeClassName}`}
                               >
@@ -619,7 +623,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                       <dl className="mt-3 grid grid-cols-2 gap-3">
                         <div>
                           <dt className="text-xs text-zinc-500">Lesson</dt>
-                          <dd className="mt-1 text-sm text-zinc-700">{formatDateTimeLocal(lesson.lesson_at)}</dd>
+                          <dd className="mt-1 text-sm text-zinc-700">{formatDateTimeLocal(lesson.lesson_at, timeZone)}</dd>
                         </div>
                         <div>
                           <dt className="text-xs text-zinc-500">Remaining</dt>
@@ -680,7 +684,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                             </Link>
                           </td>
                           <td className="whitespace-nowrap px-3 py-2.5 align-middle text-zinc-700">
-                            {formatDateTimeLocal(lesson.lesson_at)}
+                            {formatDateTimeLocal(lesson.lesson_at, timeZone)}
                           </td>
                           <td className="whitespace-nowrap px-3 py-2.5 align-middle font-semibold text-zinc-900">
                             {formatCurrencyFromMinorUnits(remainingPence, currencyCode)}
@@ -747,7 +751,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                         <p className="text-sm font-medium text-zinc-900">
                           {getStudentName(lesson.student) ?? "Unknown student"}
                         </p>
-                        <span className="text-sm text-zinc-600">{formatDateTimeLocal(lesson.lesson_at)}</span>
+                        <span className="text-sm text-zinc-600">{formatDateTimeLocal(lesson.lesson_at, timeZone)}</span>
                         <span
                           className={`inline-flex rounded-full border px-2 py-1 text-xs font-medium ${getPaymentStatusClassName(paymentStatus)}`}
                         >
@@ -771,16 +775,20 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                     lesson.effort != null &&
                     lesson.confidence != null ? (
                       <ShareUpdateButton
-                        message={formatParentUpdate(getStudentName(lesson.student)!, {
-                          lessonAt: lesson.lesson_at,
-                          topics: lesson.topics ?? "",
-                          wentWell: lesson.went_well ?? "",
-                          parentNote: lesson.parent_note ?? "",
-                          improve: lesson.improve ?? "",
-                          homework: lesson.homework ?? "",
-                          effort: lesson.effort,
-                          confidence: lesson.confidence,
-                        })}
+                        message={formatParentUpdate(
+                          getStudentName(lesson.student)!,
+                          {
+                            lessonAt: lesson.lesson_at,
+                            topics: lesson.topics ?? "",
+                            wentWell: lesson.went_well ?? "",
+                            parentNote: lesson.parent_note ?? "",
+                            improve: lesson.improve ?? "",
+                            homework: lesson.homework ?? "",
+                            effort: lesson.effort,
+                            confidence: lesson.confidence,
+                          },
+                          timeZone,
+                        )}
                       />
                     ) : null}
                   </div>

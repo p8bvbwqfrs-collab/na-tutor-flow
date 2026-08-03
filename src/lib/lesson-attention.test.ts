@@ -15,6 +15,27 @@ test("planned lessons use Europe/London calendar days for attention state", () =
   assert.equal(getPlannedLessonAttention("2026-07-16T23:30:00.000Z", now), "upcoming");
 });
 
+test("planned lesson attention follows the tutor time zone", () => {
+  const now = "2026-08-01T02:30:00.000Z"; // 31 July in New York
+
+  assert.equal(
+    getPlannedLessonAttention(
+      "2026-08-01T01:00:00.000Z",
+      now,
+      "America/New_York",
+    ),
+    "today",
+  );
+  assert.equal(
+    getPlannedLessonAttention(
+      "2026-08-01T12:00:00.000Z",
+      now,
+      "America/New_York",
+    ),
+    "upcoming",
+  );
+});
+
 test("planned lessons are sorted and partitioned without one group hiding another", () => {
   const lessons = [
     { id: "future", lesson_at: "2026-08-18T17:00:00.000Z" },

@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { getLatestStudentFeeAmount } from "@/lib/lesson-fees";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { getUserCurrencyCode } from "@/lib/user-settings";
+import { getUserCurrencyCode, getUserTimeZone } from "@/lib/user-settings";
 import { LessonPageHeader } from "../components/lesson-page-header";
 import { ScheduleLessonForm } from "./schedule-lesson-form";
 
@@ -13,7 +13,7 @@ export default async function ScheduleLessonPage({ params }: ScheduleLessonPageP
   const { id } = await params;
   const supabase = await createSupabaseServerClient();
 
-  const [{ data: student, error }, initialFeeAmount, currencyCode] = await Promise.all([
+  const [{ data: student, error }, initialFeeAmount, currencyCode, timeZone] = await Promise.all([
     supabase
       .from("students")
       .select("id, student_name, archived_at")
@@ -21,6 +21,7 @@ export default async function ScheduleLessonPage({ params }: ScheduleLessonPageP
       .maybeSingle(),
     getLatestStudentFeeAmount(supabase, id),
     getUserCurrencyCode(supabase),
+    getUserTimeZone(supabase),
   ]);
 
   if (error || !student) {
@@ -43,6 +44,7 @@ export default async function ScheduleLessonPage({ params }: ScheduleLessonPageP
         studentId={student.id}
         studentName={student.student_name}
         currencyCode={currencyCode}
+        timeZone={timeZone}
         initialLesson={{
           lessonAt: new Date().toISOString(),
           topics: "",

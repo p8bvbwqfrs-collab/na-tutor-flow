@@ -5,6 +5,11 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatCurrencyFromMinorUnits, getCurrencyLabel, type SupportedCurrencyCode } from "@/lib/currency";
 import { getCompletedLessonUpdateStorageKey } from "@/lib/lesson-completion";
+import {
+  getTimeZoneLabel,
+  getZonedDateTimeInputValues,
+  zonedDateTimeToIso,
+} from "@/lib/datetime";
 import { formatParentUpdate } from "@/lib/parent-update";
 import type { LessonPaymentStatus } from "@/lib/payments";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
@@ -23,6 +28,7 @@ type LessonFormProps = {
   saveStatus?: "completed" | "planned" | "cancelled";
   completionMode?: boolean;
   currencyCode?: SupportedCurrencyCode;
+  timeZone: string;
   initialLesson?: {
     lessonAt: string;
     topics: string;
@@ -68,20 +74,6 @@ function parseTopicTags(input: string) {
   );
 }
 
-function toDatetimeLocalValue(date: Date) {
-  const offset = date.getTimezoneOffset();
-  const local = new Date(date.getTime() - offset * 60_000);
-  return local.toISOString().slice(0, 16);
-}
-
-function getDateValue(date: Date) {
-  return toDatetimeLocalValue(date).slice(0, 10);
-}
-
-function getTimeValue(date: Date) {
-  return toDatetimeLocalValue(date).slice(11, 16);
-}
-
 export function NewLessonForm({
   studentId,
   studentName,
@@ -90,6 +82,7 @@ export function NewLessonForm({
   saveStatus = "completed",
   completionMode = false,
   currencyCode = "GBP",
+  timeZone,
   initialLesson,
 }: LessonFormProps) {
   const router = useRouter();
@@ -97,9 +90,11 @@ export function NewLessonForm({
   const formErrorId = "new-lesson-form-error";
   const isEditMode = mode === "edit";
   const initialDate = initialLesson?.lessonAt ? new Date(initialLesson.lessonAt) : new Date();
+  const initialDateTime = getZonedDateTimeInputValues(initialDate, timeZone);
+  const timeZoneLabel = getTimeZoneLabel(timeZone);
 
-  const [lessonDate, setLessonDate] = useState(getDateValue(initialDate));
-  const [lessonTime, setLessonTime] = useState(getTimeValue(initialDate));
+  const [lessonDate, setLessonDate] = useState(initialDateTime.date);
+  const [lessonTime, setLessonTime] = useState(initialDateTime.time);
   const [topics, setTopics] = useState(initialLesson?.topics ?? "");
   const [topicTagsInput, setTopicTagsInput] = useState(initialLesson?.topicTags.join(", ") ?? "");
   const [wentWell, setWentWell] = useState(initialLesson?.wentWell ?? "");
@@ -109,11 +104,14 @@ export function NewLessonForm({
   const initialNextLessonDate = initialLesson?.nextLesson?.lessonAt
     ? new Date(initialLesson.nextLesson.lessonAt)
     : null;
+  const initialNextLessonDateTime = initialNextLessonDate
+    ? getZonedDateTimeInputValues(initialNextLessonDate, timeZone)
+    : null;
   const [nextLessonDate, setNextLessonDate] = useState(
-    initialNextLessonDate ? getDateValue(initialNextLessonDate) : "",
+    initialNextLessonDateTime?.date ?? "",
   );
   const [nextLessonTime, setNextLessonTime] = useState(
-    initialNextLessonDate ? getTimeValue(initialNextLessonDate) : "",
+    initialNextLessonDateTime?.time ?? "",
   );
   const [nextLessonTopics, setNextLessonTopics] = useState(
     initialLesson?.nextLesson?.topics === "Planned lesson" ? "" : initialLesson?.nextLesson?.topics ?? "",
@@ -198,10 +196,20 @@ export function NewLessonForm({
     }
 
     const feePence = Math.round(feeValue * 100);
-    const lessonAtIso = new Date(`${lessonDate}T${lessonTime}`).toISOString();
-    const nextLessonAtIso = hasNextLessonInput
-      ? new Date(`${nextLessonDate}T${nextLessonTime}`).toISOString()
-      : null;
+    let lessonAtIso: string;
+    let nextLessonAtIso: string | null;
+
+    try {
+      lessonAtIso = zonedDateTimeToIso(lessonDate, lessonTime, timeZone);
+      nextLessonAtIso = hasNextLessonInput
+        ? zonedDateTimeToIso(nextLessonDate, nextLessonTime, timeZone)
+        : null;
+    } catch (dateTimeError) {
+      setError(
+        dateTimeError instanceof Error ? dateTimeError.message : "Lesson date and time is invalid.",
+      );
+      return;
+    }
 
     setIsSubmitting(true);
 
@@ -346,7 +354,7 @@ export function NewLessonForm({
     setIsSubmitting(false);
 
     if (completionMode && !nextLessonSaveWarning) {
-      const parentUpdateMessage = formatParentUpdate(studentName, nextSavedLesson);
+      const parentUpdateMessage = formatParentUpdate(studentName, nextSavedLesson, timeZone);
       window.sessionStorage.setItem(
         getCompletedLessonUpdateStorageKey(studentId),
         parentUpdateMessage,
@@ -359,7 +367,7 @@ export function NewLessonForm({
     setSavedLesson(nextSavedLesson);
   }
 
-  const parentUpdate = savedLesson ? formatParentUpdate(studentName, savedLesson) : "";
+  const parentUpdate = savedLesson ? formatParentUpdate(studentName, savedLesson, timeZone) : "";
   const successTitle = completionMode ? "Lesson completed" : isEditMode ? "Lesson updated" : "Lesson saved";
   const successCopy = completionMode
     ? "Share the update message while the lesson details are still fresh."
@@ -430,6 +438,13 @@ export function NewLessonForm({
                 className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-500 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 disabled:bg-zinc-100 disabled:text-zinc-600"
               />
             </div>
+
+            <p className="text-xs leading-5 text-zinc-500 sm:col-span-2">
+              Times use {timeZoneLabel}.{" "}
+              <Link href="/app/settings" className="font-medium underline underline-offset-2">
+                Change time zone
+              </Link>
+            </p>
 
             <div className="min-w-0 sm:col-span-2">
               <label htmlFor="topics" className="block text-sm font-medium text-zinc-700">

@@ -2,6 +2,8 @@
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getOutstandingLessonAmount, type AllocationLike, type PaymentLike } from "@/lib/payments";
+import { getDateKeyLocal } from "@/lib/datetime";
+import { getUserTimeZone } from "@/lib/user-settings";
 
 type AllocationRow = {
   id?: string;
@@ -98,12 +100,13 @@ async function insertReceivedPaymentForLesson({
   userId: string;
 }) {
   const supabase = await createSupabaseServerClient();
+  const timeZone = await getUserTimeZone(supabase);
   const paymentPayload = {
     user_id: userId,
     student_id: studentId,
     amount_pence: amountPence,
     status: "paid",
-    payment_date: new Date().toISOString().slice(0, 10),
+    payment_date: getDateKeyLocal(new Date(), timeZone),
     source: "lesson_paid_now",
     note: "Payment recorded for lesson",
   };

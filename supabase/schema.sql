@@ -20,6 +20,9 @@ create table if not exists public.students (
 create table if not exists public.user_settings (
   user_id uuid primary key references auth.users(id) on delete cascade,
   currency_code text not null default 'GBP' check (currency_code in ('GBP', 'USD', 'EUR', 'AUD')),
+  time_zone text not null default 'Europe/London'
+    constraint user_settings_time_zone_length_check
+    check (char_length(time_zone) between 1 and 100),
   calendar_feed_version integer not null default 1 check (calendar_feed_version >= 1),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()

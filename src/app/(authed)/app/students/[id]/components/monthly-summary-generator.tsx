@@ -18,12 +18,12 @@ type SummaryLesson = {
 type MonthlySummaryGeneratorProps = {
   studentName: string;
   lessons: SummaryLesson[];
+  timeZone: string;
   hideHeader?: boolean;
 };
 
 function formatMonthLabel(monthKey: string) {
-  const [year, month] = monthKey.split("-").map(Number);
-  return formatMonthLocal(new Date(year, month - 1, 1));
+  return formatMonthLocal(monthKey);
 }
 
 function cleanSummaryPhrase(value: string) {
@@ -173,15 +173,16 @@ function consolidateItems(values: string[], limit = 4) {
 export function MonthlySummaryGenerator({
   studentName,
   lessons,
+  timeZone,
   hideHeader = false,
 }: MonthlySummaryGeneratorProps) {
   const availableMonths = useMemo(() => {
     const months = Array.from(
-      new Set(lessons.map((lesson) => getMonthKeyLocal(lesson.lesson_at))),
+      new Set(lessons.map((lesson) => getMonthKeyLocal(lesson.lesson_at, timeZone))),
     ).sort((a, b) => b.localeCompare(a));
 
     return months;
-  }, [lessons]);
+  }, [lessons, timeZone]);
 
   const monthOptions = useMemo(
     () =>
@@ -193,13 +194,13 @@ export function MonthlySummaryGenerator({
   );
 
   const defaultMonth = useMemo(() => {
-    const currentMonth = getMonthKeyLocal(new Date());
+    const currentMonth = getMonthKeyLocal(new Date(), timeZone);
     if (availableMonths.includes(currentMonth)) {
       return currentMonth;
     }
 
     return availableMonths[0] ?? currentMonth;
-  }, [availableMonths]);
+  }, [availableMonths, timeZone]);
 
   const [selectedMonth, setSelectedMonth] = useState(defaultMonth);
   const [summary, setSummary] = useState("");
@@ -207,8 +208,10 @@ export function MonthlySummaryGenerator({
   const [status, setStatus] = useState<string | null>(null);
 
   const lessonsForMonth = useMemo(() => {
-    return lessons.filter((lesson) => getMonthKeyLocal(lesson.lesson_at) === selectedMonth);
-  }, [lessons, selectedMonth]);
+    return lessons.filter(
+      (lesson) => getMonthKeyLocal(lesson.lesson_at, timeZone) === selectedMonth,
+    );
+  }, [lessons, selectedMonth, timeZone]);
 
   const summaryInputs = useMemo(() => {
     const topicTags = dedupeAndLimit(uniqueTags(lessonsForMonth.map((lesson) => lesson.topic_tags)), 3);

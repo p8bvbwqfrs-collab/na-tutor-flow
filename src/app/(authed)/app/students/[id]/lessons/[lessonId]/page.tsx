@@ -7,7 +7,7 @@ import {
   type AllocationLike,
   type PaymentLike,
 } from "@/lib/payments";
-import { getUserCurrencyCode } from "@/lib/user-settings";
+import { getUserCurrencyCode, getUserTimeZone } from "@/lib/user-settings";
 import { LessonPageHeader } from "../../components/lesson-page-header";
 import { NewLessonForm } from "../../new-lesson/new-lesson-form";
 import { ScheduleLessonForm } from "../../schedule-lesson/schedule-lesson-form";
@@ -33,7 +33,7 @@ export default async function EditLessonPage({ params, searchParams }: EditLesso
   const { mode } = await searchParams;
   const supabase = await createSupabaseServerClient();
 
-  const [{ data: student, error: studentError }, { data: lesson, error: lessonError }, currencyCode] = await Promise.all([
+  const [{ data: student, error: studentError }, { data: lesson, error: lessonError }, currencyCode, timeZone] = await Promise.all([
     supabase.from("students").select("id, student_name, archived_at").eq("id", id).maybeSingle(),
     supabase
       .from("lessons")
@@ -42,6 +42,7 @@ export default async function EditLessonPage({ params, searchParams }: EditLesso
       .eq("student_id", id)
       .maybeSingle(),
     getUserCurrencyCode(supabase),
+    getUserTimeZone(supabase),
   ]);
 
   if (studentError || lessonError || !student || !lesson) {
@@ -116,6 +117,7 @@ export default async function EditLessonPage({ params, searchParams }: EditLesso
           studentId={student.id}
           studentName={student.student_name}
           currencyCode={currencyCode}
+          timeZone={timeZone}
           initialLesson={{
             lessonAt: lesson.lesson_at,
             topics: plannedTopics,
@@ -129,6 +131,7 @@ export default async function EditLessonPage({ params, searchParams }: EditLesso
           studentId={student.id}
           studentName={student.student_name}
           currencyCode={currencyCode}
+          timeZone={timeZone}
           saveStatus="completed"
           completionMode={isCompletingPlannedLesson}
           initialLesson={{

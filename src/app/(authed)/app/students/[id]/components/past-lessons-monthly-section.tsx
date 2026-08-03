@@ -27,6 +27,7 @@ type PastLessonsMonthlySectionProps = {
   allocations: AllocationLike[];
   currencyCode: SupportedCurrencyCode;
   initialMonthKey: string;
+  timeZone: string;
   hasLessonsError: boolean;
   readOnly?: boolean;
 };
@@ -45,11 +46,14 @@ export function PastLessonsMonthlySection({
   allocations,
   currencyCode,
   initialMonthKey,
+  timeZone,
   hasLessonsError,
   readOnly = false,
 }: PastLessonsMonthlySectionProps) {
   const [selectedMonthKey, setSelectedMonthKey] = useState(initialMonthKey);
-  const lessonsForMonth = lessons.filter((lesson) => getMonthKeyLocal(lesson.lesson_at) === selectedMonthKey);
+  const lessonsForMonth = lessons.filter(
+    (lesson) => getMonthKeyLocal(lesson.lesson_at, timeZone) === selectedMonthKey,
+  );
 
   return (
     <section>
@@ -61,6 +65,7 @@ export function PastLessonsMonthlySection({
               monthKey={selectedMonthKey}
               onChange={setSelectedMonthKey}
               label={`${lessonsForMonth.length} ${lessonsForMonth.length === 1 ? "lesson" : "lessons"}`}
+              timeZone={timeZone}
             />
           </div>
         </div>
@@ -118,9 +123,9 @@ export function PastLessonsMonthlySection({
                           href={`/app/students/${studentId}/lessons/${lesson.id}/view`}
                           className="block underline-offset-4 hover:underline"
                         >
-                          <span className="block text-zinc-900">{formatDateLocal(lesson.lesson_at)}</span>
+                          <span className="block text-zinc-900">{formatDateLocal(lesson.lesson_at, timeZone)}</span>
                           <span className="mt-1 block text-xs text-zinc-500">
-                            {formatTimeLocal(lesson.lesson_at)}
+                            {formatTimeLocal(lesson.lesson_at, timeZone)}
                           </span>
                         </Link>
                       </td>

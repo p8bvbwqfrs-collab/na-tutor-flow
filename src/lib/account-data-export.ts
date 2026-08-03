@@ -13,7 +13,7 @@ export const ACCOUNT_DATA_EXPORT_COLUMNS = {
 } as const;
 
 export const ACCOUNT_DATA_EXPORT_SETTINGS_COLUMNS =
-  "currency_code, created_at, updated_at";
+  "currency_code, time_zone, created_at, updated_at";
 
 export type AccountDataExportTable = keyof typeof ACCOUNT_DATA_EXPORT_COLUMNS;
 type ExportRow = Record<string, unknown>;
