@@ -437,14 +437,14 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
                 {isArchived ? (
                   <Link
                     href="#latest-parent-update"
-                    className="mt-4 inline-flex min-h-10 w-full items-center justify-center whitespace-nowrap rounded-md border border-blue-200 bg-white px-3 py-2 text-sm font-medium text-blue-800 transition-colors hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                    className="mt-auto inline-flex min-h-10 w-full items-center justify-center whitespace-nowrap rounded-md border border-blue-200 bg-white px-3 py-2 text-sm font-medium text-blue-800 transition-colors hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
                   >
                     View update
                   </Link>
                 ) : (
                   <LessonUpdateActions
                     reserveFeedbackSpace={false}
-                    className="mt-4"
+                    className="mt-auto pt-4"
                     buttonClassName="inline-flex min-h-10 w-full items-center justify-center whitespace-nowrap rounded-md bg-blue-700 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
                     message={formatParentUpdate(student.student_name, {
                       lessonAt: latestCompletedLesson.lesson_at,
@@ -466,7 +466,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
                 {!isArchived ? (
                   <Link
                     href={`/app/students/${student.id}/new-lesson`}
-                    className="mt-4 inline-flex min-h-10 w-full items-center justify-center whitespace-nowrap rounded-md bg-blue-700 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                    className="mt-auto inline-flex min-h-10 w-full items-center justify-center whitespace-nowrap rounded-md bg-blue-700 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
                   >
                     Log lesson
                   </Link>
@@ -491,7 +491,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
             )}
             <Link
               href={outstandingAmountPence > 0 && !isArchived ? "#payment-history" : "#money"}
-              className="mt-4 inline-flex min-h-10 w-full items-center justify-center whitespace-nowrap rounded-md border border-amber-300 bg-white px-3 py-2 text-sm font-medium text-amber-900 transition-colors hover:bg-amber-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+              className="mt-auto inline-flex min-h-10 w-full items-center justify-center whitespace-nowrap rounded-md border border-amber-300 bg-white px-3 py-2 text-sm font-medium text-amber-900 transition-colors hover:bg-amber-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
             >
               {outstandingAmountPence > 0 && !isArchived ? "Record payment" : "View money"}
             </Link>
@@ -507,7 +507,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
                 <p className="mt-1 text-sm text-zinc-600">{formatTimeLocal(attentionLesson.lesson_at)}</p>
                 <Link
                   href="#student-schedule"
-                  className="mt-4 inline-flex min-h-10 w-full items-center justify-center whitespace-nowrap rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                  className="mt-auto inline-flex min-h-10 w-full items-center justify-center whitespace-nowrap rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
                 >
                   View lesson
                 </Link>
@@ -519,7 +519,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
                 {!isArchived ? (
                   <Link
                     href={`/app/students/${student.id}/schedule-lesson`}
-                    className="mt-4 inline-flex min-h-10 w-full items-center justify-center whitespace-nowrap rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                    className="mt-auto inline-flex min-h-10 w-full items-center justify-center whitespace-nowrap rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
                   >
                     Schedule lesson
                   </Link>

@@ -40,6 +40,7 @@ test("student overview foregrounds parent updates, outstanding money and the nex
   assert.match(source, /href="#student-schedule"/);
   assert.match(source, /md:grid-cols-3/);
   assert.match(source, /whitespace-nowrap/);
+  assert.match(source, /mt-auto pt-4/);
   assert.match(paymentsSource, /id="payment-history"/);
 });
 
