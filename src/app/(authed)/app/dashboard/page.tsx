@@ -473,16 +473,16 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       </section>
 
       <section className="mt-6" aria-labelledby="money-overview-heading">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h2 id="money-overview-heading" className="text-lg font-medium text-zinc-900">
-              Money overview
-            </h2>
-            <p className="mt-1 text-sm text-zinc-600">
-              Received and completed figures use the selected timeframe. Outstanding is what is owed now.
-            </p>
+        <div>
+          <h2 id="money-overview-heading" className="text-lg font-medium text-zinc-900">
+            Money overview
+          </h2>
+          <p className="mt-1 text-sm text-zinc-600">
+            Received and completed figures use the selected timeframe. Outstanding is what is owed now.
+          </p>
+          <div className="mt-3">
+            <ChartRangeFilter selected={selectedRange} />
           </div>
-          <ChartRangeFilter selected={selectedRange} />
         </div>
 
         {hasDashboardDataError ? (
