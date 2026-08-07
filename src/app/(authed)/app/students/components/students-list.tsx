@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { StudentArchiveToggle } from "../[id]/components/student-archive-toggle";
+import { useNavigationFeedback } from "../../../components/navigation-feedback-provider";
 
 type Student = {
   id: string;
@@ -21,6 +22,7 @@ type StudentsListProps = {
 
 export function StudentsList({ students }: StudentsListProps) {
   const router = useRouter();
+  const { beginNavigation } = useNavigationFeedback();
   const [query, setQuery] = useState("");
   const normalized = query.trim().toLowerCase();
   const filteredStudents = normalized
@@ -28,6 +30,13 @@ export function StudentsList({ students }: StudentsListProps) {
         student.student_name.toLowerCase().includes(normalized),
       )
     : students;
+
+  function openStudent(studentId: string) {
+    const href = `/app/students/${studentId}`;
+    if (beginNavigation(href)) {
+      router.push(href);
+    }
+  }
 
   return (
     <div>
@@ -57,7 +66,7 @@ export function StudentsList({ students }: StudentsListProps) {
                 key={student.id}
                 role="link"
                 tabIndex={0}
-                onClick={() => router.push(`/app/students/${student.id}`)}
+                onClick={() => openStudent(student.id)}
                 onKeyDown={(event) => {
                   if (event.target !== event.currentTarget) {
                     return;
@@ -65,7 +74,7 @@ export function StudentsList({ students }: StudentsListProps) {
 
                   if (event.key === "Enter" || event.key === " ") {
                     event.preventDefault();
-                    router.push(`/app/students/${student.id}`);
+                    openStudent(student.id);
                   }
                 }}
                 className="cursor-pointer rounded-lg border border-zinc-200 bg-white p-4 transition-colors hover:border-zinc-300 hover:bg-zinc-50/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
