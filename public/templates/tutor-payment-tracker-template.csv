@@ -1,0 +1,4 @@
+Student name,Lesson date,Lesson fee,Payment date,Amount received,Status,Payment reference or notes
+Example - Alex,2026-08-08,35.00,2026-08-08,35.00,Paid,Example row - replace with your own record
+Example - Jamie,2026-08-09,40.00,,,Outstanding,Example row - payment not yet received
+Example - Sam,2026-08-11,35.00,2026-08-01,140.00,Covered by credit,Example row - one advance payment can cover several lessons
