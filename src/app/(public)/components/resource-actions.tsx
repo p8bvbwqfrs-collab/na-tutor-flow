@@ -98,3 +98,47 @@ export function CopyResourceButton({
     </div>
   );
 }
+
+type ResourceCardLinkProps = {
+  href: string;
+  resource: string;
+  category: string;
+  title: string;
+  description: string;
+  format: string;
+};
+
+export function ResourceCardLink({
+  href,
+  resource,
+  category,
+  title,
+  description,
+  format,
+}: ResourceCardLinkProps) {
+  return (
+    <a
+      href={href}
+      className="group flex h-full flex-col rounded-lg border border-zinc-200 bg-white p-5 transition-colors hover:border-zinc-300 hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:p-6"
+      onClick={() => {
+        try {
+          track("resource_action", { resource: "resource-index", action: `open_${resource}` });
+        } catch {
+          // Analytics must never prevent navigation to a resource.
+        }
+      }}
+    >
+      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-blue-700">
+        {category}
+      </p>
+      <h3 className="mt-3 text-lg font-semibold leading-6 text-zinc-900">{title}</h3>
+      <p className="mt-3 text-sm leading-6 text-zinc-600">{description}</p>
+      <div className="mt-auto pt-6">
+        <p className="text-xs font-medium text-zinc-500">{format}</p>
+        <p className="mt-2 text-sm font-medium text-zinc-900 underline decoration-zinc-300 underline-offset-4 group-hover:decoration-zinc-700">
+          Open resource <span aria-hidden="true">→</span>
+        </p>
+      </div>
+    </a>
+  );
+}

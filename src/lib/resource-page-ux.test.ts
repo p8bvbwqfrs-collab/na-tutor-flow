@@ -22,6 +22,7 @@ const parentUpdatesSource = readFileSync(
   "src/app/(public)/how-to-write-parent-updates-after-tutoring/page.tsx",
   "utf8",
 );
+const resourceIndexSource = readFileSync("src/app/(public)/resources/page.tsx", "utf8");
 
 test("resource pages use a compact header and one divided article surface", () => {
   assert.match(sharedPageSource, /category: string/);
@@ -58,4 +59,16 @@ test("all resource FAQs use accessible native disclosures", () => {
   assert.match(paymentSource, /<PublicFaqSection/);
   assert.match(lessonNotesSource, /<PublicFaqSection/);
   assert.match(parentUpdatesSource, /<PublicFaqSection/);
+});
+
+test("the resources index uses the shared brand and workflow-led cards", () => {
+  assert.match(resourceIndexSource, /Start with what you need/);
+  assert.match(resourceIndexSource, /<ResourceCardLink/);
+  assert.match(resourceIndexSource, /Copyable template/);
+  assert.match(resourceIndexSource, /Copyable example/);
+  assert.match(resourceIndexSource, /Free CSV template/);
+  assert.match(resourceIndexSource, /md:grid-cols-3/);
+  assert.match(resourceIndexSource, /resource="resource-index"/);
+  assert.match(actionsSource, /action: `open_\$\{resource\}`/);
+  assert.match(actionsSource, /<h3 className=/);
 });

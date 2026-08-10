@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { createPublicMetadata } from "@/lib/seo";
+import { ResourceActionLink, ResourceCardLink } from "../components/resource-actions";
 
 const description =
   "Free, practical resources for private tutors covering lesson notes, parent updates, and payment tracking.";
@@ -16,29 +16,35 @@ const resources = [
     title: "Tutor lesson notes template",
     description:
       "A copyable structure for recording lesson focus, progress, homework, effort, and next steps.",
-    label: "Lesson records",
+    category: "Lesson records",
+    format: "Copyable template",
+    resource: "lesson-notes",
   },
   {
     href: "/how-to-write-parent-updates-after-tutoring",
     title: "How to write parent updates after tutoring",
     description:
       "A straightforward format and realistic example for sending useful updates after each lesson.",
-    label: "Parent communication",
+    category: "Parent communication",
+    format: "Copyable example",
+    resource: "parent-updates",
   },
   {
     href: "/tutor-payment-tracker",
     title: "Tutor payment tracker",
     description:
       "What to record so lesson fees, received payments, and outstanding sessions stay clear.",
-    label: "Payments",
+    category: "Payment tracking",
+    format: "Free CSV template",
+    resource: "payment-tracker",
   },
 ] as const;
 
 export default function ResourcesPage() {
   return (
-    <section className="mx-auto max-w-3xl space-y-6 py-6 sm:py-10">
+    <section className="mx-auto max-w-4xl space-y-8 py-6 sm:py-10">
       <header className="rounded-lg border border-zinc-200 bg-white p-6 sm:p-8">
-        <p className="text-sm font-semibold uppercase tracking-[0.14em] text-zinc-500">
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-blue-700">
           Tutor resources
         </p>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight text-zinc-900 sm:text-4xl">
@@ -48,38 +54,43 @@ export default function ResourcesPage() {
           Free, useful starting points for keeping lesson records, updating parents, and tracking
           payments without making your workflow more complicated.
         </p>
+        <p className="mt-5 text-xs leading-5 text-zinc-500">
+          Built from real private tutoring workflows ·{" "}
+          <time dateTime="2026-08-10">Reviewed August 2026</time>
+        </p>
       </header>
 
-      <div className="grid gap-4">
-        {resources.map((resource) => (
-          <article key={resource.href} className="rounded-lg border border-zinc-200 bg-white p-5 sm:p-6">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">
-              {resource.label}
-            </p>
-            <h2 className="mt-2 text-lg font-semibold text-zinc-900">{resource.title}</h2>
-            <p className="mt-2 text-sm leading-6 text-zinc-600">{resource.description}</p>
-            <Link
-              href={resource.href}
-              className="mt-4 inline-flex min-h-11 items-center rounded-md font-medium text-zinc-900 underline decoration-zinc-300 underline-offset-4 transition-colors hover:decoration-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-            >
-              Read the resource
-            </Link>
-          </article>
-        ))}
-      </div>
+      <section aria-labelledby="choose-a-resource">
+        <div className="max-w-2xl">
+          <h2 id="choose-a-resource" className="text-xl font-semibold text-zinc-900">
+            Start with what you need
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-zinc-600">
+            Each resource solves one common piece of tutor admin and can be used straight away.
+          </p>
+        </div>
+        <div className="mt-4 grid gap-4 md:grid-cols-3">
+          {resources.map((resource) => (
+            <ResourceCardLink key={resource.href} {...resource} />
+          ))}
+        </div>
+      </section>
 
-      <section className="rounded-lg border border-zinc-200 bg-white p-6 text-center sm:p-8">
+      <section className="rounded-lg bg-blue-50 p-6 sm:p-8">
         <h2 className="text-xl font-semibold text-zinc-900">Keep everything together</h2>
-        <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-zinc-600">
+        <p className="mt-2 max-w-xl text-sm leading-6 text-zinc-700">
           Tutor Flow connects lesson notes, parent updates, scheduling, and payments in one simple
           workflow.
         </p>
-        <Link
-          href="/signup"
-          className="mt-5 inline-flex min-h-11 items-center justify-center rounded-md bg-blue-700 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-        >
-          Get started free
-        </Link>
+        <div className="mt-5">
+          <ResourceActionLink
+            href="/signup"
+            resource="resource-index"
+            action="body_signup"
+          >
+            Get started free
+          </ResourceActionLink>
+        </div>
       </section>
     </section>
   );
