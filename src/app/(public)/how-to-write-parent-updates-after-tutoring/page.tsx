@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import { createPublicMetadata } from "@/lib/seo";
 import {
   PublicContentPage,
+  PublicFaqSection,
   PublicSection,
   ResourceLinksSection,
   PublicCtaSection,
 } from "../components/public-content-page";
+import { CopyResourceButton } from "../components/resource-actions";
 
 export const metadata: Metadata = createPublicMetadata({
   title: "How to Write Parent Updates After Tutoring",
@@ -15,10 +17,44 @@ export const metadata: Metadata = createPublicMetadata({
   type: "article",
 });
 
+const parentUpdateExample = `Harris – lesson update (31 Mar)
+
+Harris was much more confident today which was great to see.
+
+Today we worked on
+• Equations of motion
+• Exam questions involving force
+• Connected particles – trickier questions
+
+What went well
+• Strong understanding of mechanics
+• Better simplification of complex equations
+
+Next focus
+• Continued practice simplifying equations
+• Checking all parts are resolved when angles are involved
+
+Homework
+• Practise further exam questions
+
+Effort: 5/5
+Confidence: 4/5
+Next lesson scheduled: 7 Apr at 16:00`;
+
 export default function HowToWriteParentUpdatesAfterTutoringPage() {
   return (
     <PublicContentPage
+      category="Parent communication"
       title="How to Write Parent Updates After Tutoring"
+      resource="parent-updates"
+      primaryAction={
+        <CopyResourceButton
+          copyText={parentUpdateExample}
+          resource="parent-updates"
+          action="copy_example"
+          label="Copy the parent update example"
+        />
+      }
       intro={
         <>
           <p>
@@ -95,15 +131,48 @@ export default function HowToWriteParentUpdatesAfterTutoringPage() {
       </PublicSection>
 
       <PublicCtaSection
+        resource="parent-updates"
         title="How Tutor Flow helps"
         ctaLabel="Try Tutor Flow"
-        ctaHref="https://www.natutorflow.com"
+        ctaHref="/signup"
         body={
           <p>
             Tutor Flow turns your lesson notes into this kind of update automatically, so you can
             copy or share it straight into WhatsApp, Messages, or email in seconds.
           </p>
         }
+      />
+
+      <PublicFaqSection
+        items={[
+          {
+            question: "How long should a parent update be?",
+            answer: (
+              <p>
+                Keep it brief enough to scan. A few clear lines on the lesson, progress, and next
+                steps are usually more useful than a long report.
+              </p>
+            ),
+          },
+          {
+            question: "Should I send an update after every lesson?",
+            answer: (
+              <p>
+                Regular short updates build trust and reduce catch-up later. Agree a rhythm that
+                suits the family if a message after every lesson would be unnecessary.
+              </p>
+            ),
+          },
+          {
+            question: "Can I use this for email or WhatsApp?",
+            answer: (
+              <p>
+                Yes. The structure is designed to work as a short email, WhatsApp message, or
+                record you keep against the student.
+              </p>
+            ),
+          },
+        ]}
       />
 
       <ResourceLinksSection

@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import { createPublicMetadata } from "@/lib/seo";
 import {
   PublicContentPage,
+  PublicFaqSection,
   PublicSection,
   ResourceLinksSection,
   PublicCtaSection,
 } from "../components/public-content-page";
+import { ResourceActionLink } from "../components/resource-actions";
 
 export const metadata: Metadata = createPublicMetadata({
   title: "Tutor Payment Tracker Template",
@@ -42,7 +44,19 @@ const exampleRows = [
 export default function TutorPaymentTrackerPage() {
   return (
     <PublicContentPage
+      category="Payment tracking"
       title="Tutor Payment Tracker Template"
+      resource="payment-tracker"
+      primaryAction={
+        <ResourceActionLink
+          href="/templates/tutor-payment-tracker-template.csv"
+          resource="payment-tracker"
+          action="download_csv"
+          download
+        >
+          Download the free CSV template
+        </ResourceActionLink>
+      }
       intro={
         <>
           <p>
@@ -88,16 +102,9 @@ export default function TutorPaymentTrackerPage() {
           ))}
         </div>
 
-        <a
-          href="/templates/tutor-payment-tracker-template.csv"
-          download
-          className="inline-flex min-h-11 items-center justify-center rounded-md border border-zinc-300 bg-white px-4 py-2.5 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-        >
-          Download the free CSV template
-        </a>
         <p className="text-xs leading-5 text-zinc-500">
-          The download contains clearly labelled example rows that you can replace with your own
-          records.
+          The free CSV above contains clearly labelled example rows that you can replace with your
+          own records.
         </p>
       </PublicSection>
 
@@ -161,6 +168,7 @@ export default function TutorPaymentTrackerPage() {
       </PublicSection>
 
       <PublicCtaSection
+        resource="payment-tracker"
         title="How Tutor Flow handles payments"
         ctaLabel="Try Tutor Flow free"
         ctaHref="/signup"
@@ -173,36 +181,47 @@ export default function TutorPaymentTrackerPage() {
         }
       />
 
-      <PublicSection title="Tutor payment tracker FAQs">
-        <div>
-          <p className="font-medium text-zinc-900">Should I record lessons or payments?</p>
-          <p className="mt-1">
-            Record both. A lesson creates the fee due; a payment records when money was actually
-            received. Keeping them separate prevents mismatched dates and totals.
-          </p>
-        </div>
-        <div>
-          <p className="font-medium text-zinc-900">What if one payment covers several lessons?</p>
-          <p className="mt-1">
-            Record one payment and match it across the relevant lessons. Any money left can remain
-            as credit for a future session.
-          </p>
-        </div>
-        <div>
-          <p className="font-medium text-zinc-900">Should cancelled lessons appear?</p>
-          <p className="mt-1">
-            Keep the cancellation in your lesson history, but only include a fee if your agreed
-            cancellation policy means that payment is due.
-          </p>
-        </div>
-        <div>
-          <p className="font-medium text-zinc-900">Does this replace accounting records?</p>
-          <p className="mt-1">
-            No. It is a practical lesson-payment record. Keep the invoices, receipts, and financial
-            records required for your own accounting and tax arrangements.
-          </p>
-        </div>
-      </PublicSection>
+      <PublicFaqSection
+        title="Tutor payment tracker FAQs"
+        items={[
+          {
+            question: "Should I record lessons or payments?",
+            answer: (
+              <p>
+                Record both. A lesson creates the fee due; a payment records when money was
+                actually received. Keeping them separate prevents mismatched dates and totals.
+              </p>
+            ),
+          },
+          {
+            question: "What if one payment covers several lessons?",
+            answer: (
+              <p>
+                Record one payment and match it across the relevant lessons. Any money left can
+                remain as credit for a future session.
+              </p>
+            ),
+          },
+          {
+            question: "Should cancelled lessons appear?",
+            answer: (
+              <p>
+                Keep the cancellation in your lesson history, but only include a fee if your
+                agreed cancellation policy means that payment is due.
+              </p>
+            ),
+          },
+          {
+            question: "Does this replace accounting records?",
+            answer: (
+              <p>
+                No. It is a practical lesson-payment record. Keep the invoices, receipts, and
+                financial records required for your own accounting and tax arrangements.
+              </p>
+            ),
+          },
+        ]}
+      />
 
       <ResourceLinksSection
         links={[
