@@ -1,0 +1,100 @@
+"use client";
+
+import { track } from "@vercel/analytics";
+import { useEffect, useRef, useState } from "react";
+
+type ResourceActionLinkProps = {
+  href: string;
+  resource: string;
+  action: string;
+  children: React.ReactNode;
+  download?: boolean;
+  variant?: "primary" | "secondary";
+};
+
+export function ResourceActionLink({
+  href,
+  resource,
+  action,
+  children,
+  download = false,
+  variant = "primary",
+}: ResourceActionLinkProps) {
+  const className =
+    variant === "primary"
+      ? "inline-flex min-h-11 w-full items-center justify-center rounded-md bg-blue-700 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
+      : "inline-flex min-h-11 w-full items-center justify-center px-3 py-2.5 text-sm font-medium text-zinc-800 underline decoration-zinc-300 underline-offset-4 transition-colors hover:decoration-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto";
+
+  return (
+    <a
+      href={href}
+      download={download || undefined}
+      className={className}
+      onClick={() => {
+        try {
+          track("resource_action", { resource, action });
+        } catch {
+          // Analytics must never prevent the requested navigation or download.
+        }
+      }}
+    >
+      {children}
+    </a>
+  );
+}
+
+type CopyResourceButtonProps = {
+  copyText: string;
+  resource: string;
+  action: string;
+  label: string;
+};
+
+export function CopyResourceButton({
+  copyText,
+  resource,
+  action,
+  label,
+}: CopyResourceButtonProps) {
+  const [status, setStatus] = useState<"idle" | "copied" | "error">("idle");
+  const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (resetTimer.current) clearTimeout(resetTimer.current);
+    };
+  }, []);
+
+  async function copyResource() {
+    try {
+      await navigator.clipboard.writeText(copyText);
+      setStatus("copied");
+      try {
+        track("resource_action", { resource, action });
+      } catch {
+        // Copying remains successful if analytics is unavailable.
+      }
+    } catch {
+      setStatus("error");
+    }
+
+    if (resetTimer.current) clearTimeout(resetTimer.current);
+    resetTimer.current = setTimeout(() => setStatus("idle"), 3000);
+  }
+
+  return (
+    <div className="w-full sm:w-auto">
+      <button
+        type="button"
+        onClick={copyResource}
+        className="inline-flex min-h-11 w-full items-center justify-center rounded-md bg-blue-700 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
+      >
+        {status === "copied" ? "Copied" : label}
+      </button>
+      <p className="mt-2 min-h-5 text-xs text-zinc-600" role="status" aria-live="polite">
+        {status === "copied" && "Ready to paste wherever you keep your records."}
+        {status === "error" && "Copy unavailable. Select the example below and copy it manually."}
+      </p>
+    </div>
+  );
+}

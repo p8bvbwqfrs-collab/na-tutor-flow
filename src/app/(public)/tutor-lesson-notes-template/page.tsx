@@ -3,10 +3,12 @@ import Link from "next/link";
 import { createPublicMetadata } from "@/lib/seo";
 import {
   PublicContentPage,
+  PublicFaqSection,
   PublicSection,
   ResourceLinksSection,
   PublicCtaSection,
 } from "../components/public-content-page";
+import { CopyResourceButton } from "../components/resource-actions";
 
 export const metadata: Metadata = createPublicMetadata({
   title: "Tutor Lesson Notes Template",
@@ -16,37 +18,51 @@ export const metadata: Metadata = createPublicMetadata({
   type: "article",
 });
 
+const lessonNotesTemplate = `Student:
+Date:
+
+Focus today:
+• Add the topics or skills covered
+
+What went well:
+• Add a clear example of progress
+
+Areas to improve:
+• Add the main point to revisit
+
+Homework:
+• Add the agreed next task
+
+Effort: /5
+Confidence: /5`;
+
 export default function TutorLessonNotesTemplatePage() {
   return (
     <PublicContentPage
+      category="Lesson records"
       title="Tutor Lesson Notes Template"
+      resource="lesson-notes"
+      primaryAction={
+        <CopyResourceButton
+          copyText={lessonNotesTemplate}
+          resource="lesson-notes"
+          action="copy_template"
+          label="Copy the lesson notes template"
+        />
+      }
       intro={
         <>
           <p>
-            If you tutor regularly, a tutor lesson notes template can make a big difference.
-          </p>
-          <p>
-            You finish a session, think you’ll remember everything, and then later you’re trying
-            to piece together what you covered, what went well, and what to do next.
-          </p>
-          <p>
-            This is a simple tutor lesson notes template you can use after each session to keep
-            things clear and consistent.
+            A simple tutor lesson notes template helps you record what was covered, what went well,
+            and what to do next while the session is still fresh.
           </p>
         </>
       }
     >
       <PublicSection title="Template">
-        <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 font-medium text-zinc-900">
-          <div className="space-y-3 whitespace-pre-line text-sm leading-6">
-            <p>{`Student:\nDate:`}</p>
-            <p>{`Focus today:\n• `}</p>
-            <p>{`What went well:\n• `}</p>
-            <p>{`Areas to improve:\n• `}</p>
-            <p>{`Homework:\n• `}</p>
-            <p>{`Effort: /5\nConfidence: /5`}</p>
-          </div>
-        </div>
+        <pre className="whitespace-pre-wrap rounded-lg border border-zinc-200 bg-zinc-50 p-4 font-sans text-sm font-medium leading-6 text-zinc-900">
+          {lessonNotesTemplate}
+        </pre>
       </PublicSection>
 
       <PublicSection title="Example">
@@ -160,8 +176,9 @@ export default function TutorLessonNotesTemplatePage() {
       </PublicSection>
 
       <PublicCtaSection
+        resource="lesson-notes"
         ctaLabel="Try Tutor Flow"
-        ctaHref="https://www.natutorflow.com"
+        ctaHref="/signup"
         body={
           <>
             <p>
@@ -185,26 +202,24 @@ export default function TutorLessonNotesTemplatePage() {
         }
       />
 
-      <PublicSection title="FAQs">
-        <div>
-          <p className="font-medium text-zinc-900">Do I need to write lesson notes after every session?</p>
-          <p className="mt-1">
-            Even short notes help track progress and make future sessions easier to plan.
-          </p>
-        </div>
-        <div>
-          <p className="font-medium text-zinc-900">Can I send this to parents?</p>
-          <p className="mt-1">
-            Yes — you can use this structure directly or turn it into a parent update.
-          </p>
-        </div>
-        <div>
-          <p className="font-medium text-zinc-900">What should I include in tutor lesson notes?</p>
-          <p className="mt-1">
-            Focus on what was covered, what went well, areas to improve, and next steps.
-          </p>
-        </div>
-      </PublicSection>
+      <PublicFaqSection
+        items={[
+          {
+            question: "Do I need to write lesson notes after every session?",
+            answer: <p>Even short notes help track progress and make future sessions easier to plan.</p>,
+          },
+          {
+            question: "Can I send this to parents?",
+            answer: <p>Yes — you can use this structure directly or turn it into a parent update.</p>,
+          },
+          {
+            question: "What should I include in tutor lesson notes?",
+            answer: (
+              <p>Focus on what was covered, what went well, areas to improve, and next steps.</p>
+            ),
+          },
+        ]}
+      />
 
       <ResourceLinksSection
         links={[
