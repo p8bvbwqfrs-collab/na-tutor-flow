@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { createPublicMetadata } from "@/lib/seo";
 import {
   PublicContentPage,
   PublicSection,
@@ -6,11 +7,13 @@ import {
   PublicCtaSection,
 } from "../components/public-content-page";
 
-export const metadata: Metadata = {
-  title: "How to Write Parent Updates After Tutoring | Tutor Flow",
+export const metadata: Metadata = createPublicMetadata({
+  title: "How to Write Parent Updates After Tutoring",
   description:
     "A simple way to write clear parent updates after tutoring, with examples of what to include after each lesson.",
-};
+  path: "/how-to-write-parent-updates-after-tutoring",
+  type: "article",
+});
 
 export default function HowToWriteParentUpdatesAfterTutoringPage() {
   return (

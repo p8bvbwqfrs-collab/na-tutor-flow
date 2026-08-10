@@ -1,3 +1,12 @@
+import type { Metadata } from "next";
+import { createPublicMetadata } from "@/lib/seo";
+
+export const metadata: Metadata = createPublicMetadata({
+  title: "Privacy Policy",
+  description: "How Tutor Flow collects, uses, protects, exports, and deletes account and tutoring data.",
+  path: "/privacy",
+});
+
 export default function PrivacyPage() {
   return (
     <section className="mx-auto max-w-3xl space-y-6 py-6 sm:py-10">

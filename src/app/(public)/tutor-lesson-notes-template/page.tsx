@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { createPublicMetadata } from "@/lib/seo";
 import {
   PublicContentPage,
   PublicSection,
@@ -7,11 +8,13 @@ import {
   PublicCtaSection,
 } from "../components/public-content-page";
 
-export const metadata: Metadata = {
-  title: "Tutor Lesson Notes Template | Tutor Flow",
+export const metadata: Metadata = createPublicMetadata({
+  title: "Tutor Lesson Notes Template",
   description:
     "A simple tutor lesson notes template you can use after each session to keep notes, progress, homework, and next steps organised.",
-};
+  path: "/tutor-lesson-notes-template",
+  type: "article",
+});
 
 export default function TutorLessonNotesTemplatePage() {
   return (

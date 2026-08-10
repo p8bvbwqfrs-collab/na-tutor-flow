@@ -1,8 +1,16 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteFooter } from "@/components/site-footer";
 import { AuthedNav } from "./components/authed-nav";
 import { LogoutButton } from "./components/logout-button";
 import { NavigationFeedbackProvider } from "./components/navigation-feedback-provider";
+
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 export default function AuthedLayout({
   children,

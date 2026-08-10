@@ -29,6 +29,12 @@ export default function PublicLayout({
               How it works
             </Link>
             <Link
+              href="/resources"
+              className="hidden rounded-md px-2 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 hover:text-zinc-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:inline-flex sm:px-3"
+            >
+              Resources
+            </Link>
+            <Link
               href="/login"
               className="rounded-md px-2 py-2 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:px-3"
             >
