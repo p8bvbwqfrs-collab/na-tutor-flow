@@ -1,3 +1,12 @@
+import type { Metadata } from "next";
+import { createPublicMetadata } from "@/lib/seo";
+
+export const metadata: Metadata = createPublicMetadata({
+  title: "Terms of Use",
+  description: "The terms for using Tutor Flow, a simple lesson and tutor administration tool.",
+  path: "/terms",
+});
+
 export default function TermsPage() {
   return (
     <section className="mx-auto max-w-3xl space-y-6 py-6 sm:py-10">

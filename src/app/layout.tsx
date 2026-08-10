@@ -4,6 +4,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.natutorflow.com"),
+  applicationName: "Tutor Flow",
   title: {
     default: "Tutor Flow – Run your tutoring without the admin",
     template: "%s | Tutor Flow",

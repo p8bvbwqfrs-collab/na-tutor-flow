@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { createPublicMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = createPublicMetadata({
   title: "Naz – Online GCSE & A-level Maths Tutor",
   description:
     "Calm, supportive online GCSE, A-level and Further Maths tutoring from an experienced Head of Maths.",
-};
+  path: "/maths-tutor",
+  absoluteTitle: true,
+});
 
 const enquiryHref =
   "mailto:natutorflow@gmail.com?subject=Maths%20tuition%20enquiry";

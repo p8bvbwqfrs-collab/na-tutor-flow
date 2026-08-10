@@ -1,10 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { JsonLd } from "@/components/json-ld";
+import { createPublicMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+const description =
+  "Log lessons, track payments, and send updates in one simple tool built for private tutors.";
+
+export const metadata: Metadata = createPublicMetadata({
   title: "Tutor Flow – Simple tutor management software for private tutors",
-  description: "Log lessons, track payments, and send updates in one simple tool built for private tutors.",
-};
+  description,
+  path: "/",
+  absoluteTitle: true,
+});
 
 const steps = [
   {
@@ -137,7 +144,25 @@ function FeatureIcon({ icon }: { icon: string }) {
 
 export default function HomePage() {
   return (
-    <section className="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:py-10">
+    <>
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "WebApplication",
+          name: "Tutor Flow",
+          url: "https://www.natutorflow.com",
+          applicationCategory: "BusinessApplication",
+          operatingSystem: "Web",
+          description,
+          featureList: [
+            "Tutor lesson records",
+            "Parent update generation",
+            "Lesson scheduling",
+            "Tutor payment tracking",
+          ],
+        }}
+      />
+      <section className="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:py-10">
       <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white p-6 sm:p-8 lg:p-10">
         <div className="grid gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-center lg:gap-10 xl:gap-12">
           <div className="mx-auto max-w-xl text-center lg:mx-0 lg:text-left">
@@ -253,10 +278,20 @@ export default function HomePage() {
       </section>
 
       <section className="rounded-lg border border-zinc-200 bg-white p-5 sm:p-6">
-        <h2 className="text-xl font-semibold text-zinc-900">Free resources for tutors</h2>
-        <p className="mt-2 text-sm leading-6 text-zinc-600">
-          Simple guides and templates for lesson notes, parent updates, and payment tracking.
-        </p>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+          <div>
+            <h2 className="text-xl font-semibold text-zinc-900">Free resources for tutors</h2>
+            <p className="mt-2 text-sm leading-6 text-zinc-600">
+              Simple guides and templates for lesson notes, parent updates, and payment tracking.
+            </p>
+          </div>
+          <Link
+            href="/resources"
+            className="inline-flex min-h-11 shrink-0 items-center text-sm font-medium text-zinc-900 underline decoration-zinc-300 underline-offset-4 transition-colors hover:decoration-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+          >
+            View all resources
+          </Link>
+        </div>
         <div className="mt-4 grid gap-3">
           <Link
             href="/tutor-lesson-notes-template"
@@ -318,6 +353,7 @@ export default function HomePage() {
           Get started free
         </Link>
       </section>
-    </section>
+      </section>
+    </>
   );
 }

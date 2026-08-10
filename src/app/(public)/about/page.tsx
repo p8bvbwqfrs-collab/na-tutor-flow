@@ -1,3 +1,13 @@
+import type { Metadata } from "next";
+import { createPublicMetadata } from "@/lib/seo";
+
+export const metadata: Metadata = createPublicMetadata({
+  title: "About",
+  description:
+    "Why Tutor Flow was built to make lesson notes, parent updates, scheduling, and payment tracking simpler for independent tutors.",
+  path: "/about",
+});
+
 export default function AboutPage() {
   return (
     <section className="mx-auto max-w-3xl space-y-6 py-6 sm:py-10">

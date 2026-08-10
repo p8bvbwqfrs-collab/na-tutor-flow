@@ -1,5 +1,14 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+import { createPublicMetadata } from "@/lib/seo";
 import { ParentUpdatePreview } from "../parent-update-preview";
+
+export const metadata: Metadata = createPublicMetadata({
+  title: "How It Works",
+  description:
+    "See how Tutor Flow helps private tutors log lessons, send parent updates, schedule sessions, and track payments in one workflow.",
+  path: "/how-it-works",
+});
 
 const steps = [
   {
@@ -288,6 +297,12 @@ export default function HowItWorksPage() {
             className="inline-flex min-h-11 items-center rounded-md border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
           >
             How to write parent updates after tutoring
+          </Link>
+          <Link
+            href="/resources"
+            className="inline-flex min-h-11 items-center rounded-md border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+          >
+            Browse all tutor resources
           </Link>
         </div>
       </section>

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { createPublicMetadata } from "@/lib/seo";
 import {
   PublicContentPage,
   PublicSection,
@@ -6,11 +7,13 @@ import {
   PublicCtaSection,
 } from "../components/public-content-page";
 
-export const metadata: Metadata = {
-  title: "Tutor Payment Tracker | Tutor Flow",
+export const metadata: Metadata = createPublicMetadata({
+  title: "Tutor Payment Tracker",
   description:
     "A simple tutor payment tracker to keep lesson fees, paid sessions, and unpaid lessons organised without messy spreadsheets.",
-};
+  path: "/tutor-payment-tracker",
+  type: "article",
+});
 
 export default function TutorPaymentTrackerPage() {
   return (

@@ -57,6 +57,12 @@ export function ResourceLinksSection({ links }: ResourceLinksSectionProps) {
             {link.label}
           </Link>
         ))}
+        <Link
+          href="/resources"
+          className="inline-flex min-h-11 items-center text-sm font-medium text-zinc-900 underline decoration-zinc-300 underline-offset-4 transition-colors hover:decoration-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+        >
+          Browse all tutor resources
+        </Link>
       </div>
     </section>
   );
