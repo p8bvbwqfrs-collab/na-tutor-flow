@@ -541,18 +541,26 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
                   {cleanLessonText(latestCompletedLesson.topics) || "No focus captured yet."}
                 </p>
                 {latestCompletedLesson.improve || latestCompletedLesson.homework ? (
-                  <div className="mt-3 divide-y divide-zinc-100 rounded-md border border-zinc-200 bg-white px-3 py-1 text-sm leading-6 text-zinc-700">
+                  <div className="mt-3 grid gap-2 md:grid-cols-2">
                     {latestCompletedLesson.improve ? (
-                      <div className="grid gap-0.5 py-2 sm:grid-cols-[5.5rem_minmax(0,1fr)] sm:gap-3">
-                        <p className="text-sm font-medium text-zinc-900">Improve</p>
-                        <p className="line-clamp-2 break-words">{cleanLessonText(latestCompletedLesson.improve)}</p>
-                      </div>
+                      <article className="min-w-0 rounded-md border border-zinc-200 bg-white p-3">
+                        <h4 className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+                          Next focus
+                        </h4>
+                        <p className="mt-1 break-words text-sm leading-6 text-zinc-700">
+                          {cleanLessonText(latestCompletedLesson.improve)}
+                        </p>
+                      </article>
                     ) : null}
                     {latestCompletedLesson.homework ? (
-                      <div className="grid gap-0.5 py-2 sm:grid-cols-[5.5rem_minmax(0,1fr)] sm:gap-3">
-                        <p className="text-sm font-medium text-zinc-900">Homework</p>
-                        <p className="line-clamp-2 break-words">{cleanLessonText(latestCompletedLesson.homework)}</p>
-                      </div>
+                      <article className="min-w-0 rounded-md border border-zinc-200 bg-white p-3">
+                        <h4 className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+                          Homework
+                        </h4>
+                        <p className="mt-1 break-words text-sm leading-6 text-zinc-700">
+                          {cleanLessonText(latestCompletedLesson.homework)}
+                        </p>
+                      </article>
                     ) : null}
                   </div>
                 ) : null}
