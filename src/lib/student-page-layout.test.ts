@@ -40,6 +40,9 @@ test("student overview separates current status from updates and lesson history"
   assert.match(source, /<StudentLessonHistory/);
   assert.match(source, /Parent: \{student\.parent_name\}/);
   assert.match(source, /whitespace-nowrap/);
+  assert.match(source, /mt-3 grid gap-2 md:grid-cols-2/);
+  assert.match(source, />\s*Next focus\s*</);
+  assert.doesNotMatch(source, /sm:grid-cols-\[5\.5rem_minmax\(0,1fr\)\]/);
   assert.match(paymentsSource, /id="payment-history"/);
   assert.match(paymentsSource, /embedded/);
 });
