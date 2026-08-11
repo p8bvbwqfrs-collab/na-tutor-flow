@@ -4,7 +4,6 @@ import { unstable_noStore as noStore } from "next/cache";
 import { formatCurrencyFromMinorUnits } from "@/lib/currency";
 import {
   formatDateLocal,
-  formatDateTimeLocal,
   formatShortDateLocal,
   formatTimeLocal,
   getMonthKeyLocal,
@@ -31,13 +30,12 @@ import {
 } from "@/lib/payments";
 import { CompletedLessonUpdateBanner } from "./components/completed-lesson-update-banner";
 import { LessonSuccessPanel } from "./components/lesson-success-panel";
-import { MonthlySummaryGenerator } from "./components/monthly-summary-generator";
-import { PastLessonsMonthlySection } from "./components/past-lessons-monthly-section";
 import { PaymentsMonthlySection } from "./components/payments-monthly-section";
 import { PermanentStudentDeletion } from "./components/permanent-student-deletion";
 import { PlannedLessonStatusButton } from "./components/planned-lesson-status-button";
 import { ProgressSignalCard } from "./components/progress-signal-card";
 import { StudentArchiveToggle } from "./components/student-archive-toggle";
+import { StudentLessonHistory } from "./components/student-lesson-history";
 import { StudentTrendChart } from "./components/student-trend-chart";
 import { ChartRangeFilter } from "../../dashboard/components/chart-range-filter";
 
@@ -231,7 +229,6 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
     },
   ].filter((section) => section.lessons.length > 0);
   const isArchived = Boolean(student.archived_at);
-  const totalLessons = completedLessons.length;
   const outstandingAmountPence = completedLessons.reduce(
     (sum, lesson) => sum + getOutstandingLessonAmount(lesson, allocations),
     0,
@@ -270,18 +267,6 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
   const currentMonthKey = getMonthKeyLocal(new Date(), timeZone);
   const initialLessonsMonthKey = parseMonthParam(search.lessonsMonth) ?? currentMonthKey;
   const initialPaymentsMonthKey = parseMonthParam(search.paymentsMonth) ?? currentMonthKey;
-  const latestLessonDate =
-    totalLessons > 0
-      ? formatDateTimeLocal(completedLessons[0].lesson_at, timeZone)
-      : "No lessons yet";
-  const avgConfidence =
-    totalLessons > 0
-      ? (completedLessons.reduce((sum, lesson) => sum + lesson.confidence, 0) / totalLessons).toFixed(1)
-      : "-";
-  const avgEffort =
-    totalLessons > 0
-      ? (completedLessons.reduce((sum, lesson) => sum + lesson.effort, 0) / totalLessons).toFixed(1)
-      : "-";
   const latestConfidenceLessons = completedLessons.slice(0, 3);
   const previousConfidenceLessons = completedLessons.slice(3, 6);
   const latestConfidenceAverage =
@@ -344,6 +329,8 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
     plannedLessonPartitions.today[0] ??
     plannedLessonPartitions.upcoming[0] ??
     null;
+  const nextScheduledLesson =
+    plannedLessonPartitions.today[0] ?? plannedLessonPartitions.upcoming[0] ?? null;
   const attentionLessonLabel =
     plannedLessonPartitions.overdue.length > 0
       ? "Needs completing"
@@ -369,6 +356,22 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
         ) : null}
       </div>
       <p className="mt-1 text-sm text-zinc-600">Profile, progress, and lesson history.</p>
+      {student.parent_name || student.parent_contact || student.parent_email ? (
+        <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-sm text-zinc-600">
+          {student.parent_name ? <span>Parent: {student.parent_name}</span> : null}
+          {student.parent_email ? (
+            <a
+              href={`mailto:${student.parent_email}`}
+              className="font-medium text-zinc-800 underline decoration-zinc-300 underline-offset-4 hover:decoration-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+            >
+              {student.parent_email}
+            </a>
+          ) : null}
+          {student.parent_contact && student.parent_contact !== student.parent_email ? (
+            <span>{student.parent_contact}</span>
+          ) : null}
+        </div>
+      ) : null}
 
       {isArchived ? (
         <div className="mt-4 rounded-lg border border-zinc-300 bg-zinc-100 px-4 py-3">
@@ -423,65 +426,12 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
 
       <section className="mt-6" aria-labelledby="student-overview-heading">
         <h2 id="student-overview-heading" className="text-lg font-medium text-zinc-900">
-          At a glance
+          Current position
         </h2>
         <p className="mt-1 text-sm text-zinc-600">
-          The next update, payment position and lesson for this student.
+          What is owed now and the lesson that needs attention next.
         </p>
-        <div className="mt-3 grid gap-3 md:grid-cols-3">
-          <article className="flex min-w-0 flex-col rounded-lg border border-blue-200 bg-blue-50/60 p-4">
-            <h3 className="text-xs font-medium uppercase tracking-wide text-zinc-600">Parent update</h3>
-            {latestCompletedLesson ? (
-              <>
-                <p className="mt-2 break-words text-base font-semibold text-zinc-900">Ready to share</p>
-                <p className="mt-1 text-sm text-zinc-600">
-                  From {formatDateLocal(latestCompletedLesson.lesson_at, timeZone)}
-                </p>
-                {isArchived ? (
-                  <Link
-                    href="#latest-parent-update"
-                    className="mt-auto inline-flex min-h-10 w-full items-center justify-center whitespace-nowrap rounded-md border border-blue-200 bg-white px-3 py-2 text-sm font-medium text-blue-800 transition-colors hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-                  >
-                    View update
-                  </Link>
-                ) : (
-                  <LessonUpdateActions
-                    reserveFeedbackSpace={false}
-                    className="mt-auto pt-4"
-                    buttonClassName="inline-flex min-h-10 w-full items-center justify-center whitespace-nowrap rounded-md bg-blue-700 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-                    message={formatParentUpdate(
-                      student.student_name,
-                      {
-                        lessonAt: latestCompletedLesson.lesson_at,
-                        topics: latestCompletedLesson.topics ?? "",
-                        wentWell: latestCompletedLesson.went_well ?? "",
-                        parentNote: latestCompletedLesson.parent_note ?? "",
-                        improve: latestCompletedLesson.improve ?? "",
-                        homework: latestCompletedLesson.homework ?? "",
-                        effort: latestCompletedLesson.effort,
-                        confidence: latestCompletedLesson.confidence,
-                      },
-                      timeZone,
-                    )}
-                  />
-                )}
-              </>
-            ) : (
-              <>
-                <p className="mt-2 text-base font-semibold text-zinc-900">No update yet</p>
-                <p className="mt-1 text-sm text-zinc-600">Log a lesson to create the first parent update.</p>
-                {!isArchived ? (
-                  <Link
-                    href={`/app/students/${student.id}/new-lesson`}
-                    className="mt-auto inline-flex min-h-10 w-full items-center justify-center whitespace-nowrap rounded-md bg-blue-700 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-                  >
-                    Log lesson
-                  </Link>
-                ) : null}
-              </>
-            )}
-          </article>
-
+        <div className="mt-3 grid gap-3 md:grid-cols-2">
           <article className="flex min-w-0 flex-col rounded-lg border border-amber-200 bg-amber-50/60 p-4">
             <h3 className="text-xs font-medium uppercase tracking-wide text-zinc-600">Outstanding</h3>
             {hasStudentFinancialError ? (
@@ -539,18 +489,43 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
 
       <section id="latest-parent-update" className="mt-6 scroll-mt-24">
         <div className="rounded-lg border border-zinc-200 bg-white p-4 sm:p-5">
+          <h2 className="text-lg font-medium text-zinc-900">Updates and lesson history</h2>
+          <p className="mt-1 text-sm text-zinc-600">
+            Share the latest update, review previous notes or create a monthly parent update.
+          </p>
           {latestCompletedLesson ? (
             <>
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="mt-5 flex flex-col gap-3 border-t border-zinc-200 pt-5 sm:flex-row sm:items-start sm:justify-between">
                 <div className="min-w-0">
                   <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:gap-3">
-                    <h2 className="text-lg font-medium text-zinc-900">Latest parent update</h2>
+                    <h3 className="text-base font-medium text-zinc-900">Latest parent update</h3>
                     <p className="text-sm text-zinc-500">
                       {formatDateLocal(latestCompletedLesson.lesson_at, timeZone)} at {formatTimeLocal(latestCompletedLesson.lesson_at, timeZone)}
                     </p>
                   </div>
                 </div>
                 <div className="flex flex-wrap items-start gap-2 sm:justify-end">
+                  {!isArchived ? (
+                    <LessonUpdateActions
+                      reserveFeedbackSpace={false}
+                      className="min-w-0"
+                      buttonClassName="inline-flex min-h-9 w-full items-center justify-center whitespace-nowrap rounded-md bg-blue-700 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
+                      message={formatParentUpdate(
+                        student.student_name,
+                        {
+                          lessonAt: latestCompletedLesson.lesson_at,
+                          topics: latestCompletedLesson.topics ?? "",
+                          wentWell: latestCompletedLesson.went_well ?? "",
+                          parentNote: latestCompletedLesson.parent_note ?? "",
+                          improve: latestCompletedLesson.improve ?? "",
+                          homework: latestCompletedLesson.homework ?? "",
+                          effort: latestCompletedLesson.effort,
+                          confidence: latestCompletedLesson.confidence,
+                        },
+                        timeZone,
+                      )}
+                    />
+                  ) : null}
                   <Link
                     href={`/app/students/${student.id}/lessons/${latestCompletedLesson.id}/view`}
                     className="inline-flex min-h-9 items-center justify-center whitespace-nowrap rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
@@ -603,7 +578,9 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
             </>
           ) : (
             <>
-              <h2 className="text-lg font-medium text-zinc-900">Latest parent update</h2>
+              <h3 className="mt-5 border-t border-zinc-200 pt-5 text-base font-medium text-zinc-900">
+                Latest parent update
+              </h3>
               <div className="mt-4 rounded-md border border-dashed border-zinc-300 bg-zinc-50 p-4">
                 <p className="text-sm font-medium text-zinc-900">No lesson notes yet.</p>
                 <p className="mt-2 text-sm text-zinc-600">
@@ -612,6 +589,19 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
               </div>
             </>
           )}
+
+          <div className="mt-5 border-t border-zinc-200 pt-5">
+            <StudentLessonHistory
+              studentId={student.id}
+              studentName={student.student_name}
+              lessons={completedLessons}
+              allocations={allocations}
+              initialMonthKey={initialLessonsMonthKey}
+              timeZone={timeZone}
+              hasLessonsError={Boolean(lessonsError)}
+              nextLessonAt={nextScheduledLesson?.lesson_at}
+            />
+          </div>
         </div>
       </section>
 
@@ -691,26 +681,8 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
             Learning progress
           </h2>
           <p className="mt-1 text-sm text-zinc-600">
-            A concise view of this student&apos;s recent lessons and learning signals.
+            Recent confidence and effort signals, without relying on all-time averages.
           </p>
-          <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-4 border-y border-zinc-200 py-4 lg:grid-cols-4">
-            <div className="min-w-0">
-              <dt className="text-xs font-medium uppercase tracking-wide text-zinc-500">Last lesson</dt>
-              <dd className="mt-1 break-words text-sm font-semibold text-zinc-900">{latestLessonDate}</dd>
-            </div>
-            <div className="min-w-0">
-              <dt className="text-xs font-medium uppercase tracking-wide text-zinc-500">Total lessons</dt>
-              <dd className="mt-1 text-xl font-semibold text-zinc-900">{totalLessons}</dd>
-            </div>
-            <div className="min-w-0">
-              <dt className="text-xs font-medium uppercase tracking-wide text-zinc-500">Avg confidence</dt>
-              <dd className="mt-1 text-xl font-semibold text-zinc-900">{avgConfidence}</dd>
-            </div>
-            <div className="min-w-0">
-              <dt className="text-xs font-medium uppercase tracking-wide text-zinc-500">Avg effort</dt>
-              <dd className="mt-1 text-xl font-semibold text-zinc-900">{avgEffort}</dd>
-            </div>
-          </dl>
           <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)]">
             <ProgressSignalCard
               label={progressSignal.label}
@@ -721,25 +693,6 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
             <StudentTrendChart points={learningTrendPoints} />
           </div>
         </section>
-
-        <section>
-          <MonthlySummaryGenerator
-            studentName={student.student_name}
-            lessons={completedLessons}
-            timeZone={timeZone}
-          />
-        </section>
-
-        <PastLessonsMonthlySection
-          studentId={student.id}
-          lessons={completedLessons}
-          allocations={allocations}
-          currencyCode={currencyCode}
-          initialMonthKey={initialLessonsMonthKey}
-          timeZone={timeZone}
-          hasLessonsError={Boolean(lessonsError)}
-          readOnly={isArchived}
-        />
 
         <section id="money" className="scroll-mt-24 rounded-lg border border-zinc-200 bg-white p-4 sm:p-5" aria-labelledby="student-money-heading">
           <h2 id="student-money-heading" className="text-lg font-medium text-zinc-900">
@@ -799,17 +752,20 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
               </div>
             </dl>
           )}
-        </section>
 
-        <PaymentsMonthlySection
-          studentId={student.id}
-          payments={payments}
-          studentCreditPence={studentCreditPence}
-          currencyCode={currencyCode}
-          initialMonthKey={initialPaymentsMonthKey}
-          timeZone={timeZone}
-          readOnly={isArchived}
-        />
+          <div className="mt-5 border-t border-zinc-200 pt-5">
+            <PaymentsMonthlySection
+              studentId={student.id}
+              payments={payments}
+              studentCreditPence={studentCreditPence}
+              currencyCode={currencyCode}
+              initialMonthKey={initialPaymentsMonthKey}
+              timeZone={timeZone}
+              readOnly={isArchived}
+              embedded
+            />
+          </div>
+        </section>
       </div>
 
       {isArchived ? null : (

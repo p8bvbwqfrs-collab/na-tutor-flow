@@ -2,379 +2,133 @@
 
 import { useMemo, useState } from "react";
 import { formatMonthLocal, getMonthKeyLocal } from "@/lib/datetime";
-
-type SummaryLesson = {
-  id: string;
-  lesson_at: string;
-  topics: string;
-  topic_tags: string[] | null;
-  effort: number;
-  confidence: number;
-  went_well: string | null;
-  improve: string | null;
-  homework: string | null;
-};
+import {
+  buildMonthlyParentUpdate,
+  type MonthlyParentUpdateLesson,
+} from "@/lib/monthly-parent-update";
 
 type MonthlySummaryGeneratorProps = {
   studentName: string;
-  lessons: SummaryLesson[];
+  lessons: MonthlyParentUpdateLesson[];
+  selectedMonthKey: string;
   timeZone: string;
-  hideHeader?: boolean;
+  nextLessonAt?: string | null;
 };
-
-function formatMonthLabel(monthKey: string) {
-  return formatMonthLocal(monthKey);
-}
-
-function cleanSummaryPhrase(value: string) {
-  const cleaned = value
-    .replace(/^[-•]\s*/, "")
-    .replace(/\s+/g, " ")
-    .replace(/\s*([,;:])\s*/g, "$1 ")
-    .trim()
-    .replace(/[.;,\s]+$/, "")
-    .trim();
-
-  if (!cleaned) {
-    return "";
-  }
-
-  return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
-}
-
-function splitIntoItems(values: Array<string | null>) {
-  return values
-    .flatMap((value) => (value ?? "").split(/\n|;/))
-    .map(cleanSummaryPhrase)
-    .filter(Boolean);
-}
-
-function toBulletSection(lines: string[]) {
-  return lines.length > 0 ? lines.map((line) => `- ${line}`).join("\n") : "- None yet";
-}
-
-function buildSummarySection(title: string, lines: string[]) {
-  return `${title}\n${toBulletSection(lines)}`;
-}
-
-function uniqueTags(values: Array<string[] | null>) {
-  const seen = new Set<string>();
-  const result: string[] = [];
-
-  values
-    .flatMap((value) => value ?? [])
-    .map(cleanSummaryPhrase)
-    .filter(Boolean)
-    .forEach((tag) => {
-      const key = normaliseKey(tag);
-
-      if (!key || seen.has(key)) {
-        return;
-      }
-
-      seen.add(key);
-      result.push(tag);
-    });
-
-  return result;
-}
-
-function normaliseKey(value: string) {
-  return value.toLowerCase().replace(/[^\w\s]/g, "").replace(/\s+/g, " ").trim();
-}
-
-function normaliseWord(word: string) {
-  return word.replace(/[^a-z0-9]/gi, "").replace(/(ing|ed|es|s)$/i, "");
-}
-
-function getSignatureTokens(value: string) {
-  return Array.from(
-    new Set(
-      normaliseKey(value)
-        .split(" ")
-        .map(normaliseWord)
-        .filter((word) => word.length > 2),
-    ),
-  );
-}
-
-function areNearDuplicate(left: string, right: string) {
-  const leftKey = normaliseKey(left);
-  const rightKey = normaliseKey(right);
-
-  if (!leftKey || !rightKey) {
-    return false;
-  }
-
-  if (leftKey === rightKey || leftKey.includes(rightKey) || rightKey.includes(leftKey)) {
-    return true;
-  }
-
-  const leftTokens = getSignatureTokens(left);
-  const rightTokens = getSignatureTokens(right);
-
-  if (leftTokens.length === 0 || rightTokens.length === 0) {
-    return false;
-  }
-
-  const overlap = leftTokens.filter((token) => rightTokens.includes(token)).length;
-  const threshold = Math.min(leftTokens.length, rightTokens.length);
-
-  return overlap >= Math.max(2, threshold);
-}
-
-function dedupeAndLimit(values: string[], limit = 5) {
-  const seen = new Set<string>();
-  const result: string[] = [];
-
-  values.forEach((value) => {
-    const cleaned = value.trim();
-    if (!cleaned) {
-      return;
-    }
-
-    const key = normaliseKey(cleaned);
-    if (!key || seen.has(key)) {
-      return;
-    }
-
-    seen.add(key);
-    result.push(cleaned);
-  });
-
-  return result.slice(0, limit);
-}
-
-function consolidateItems(values: string[], limit = 4) {
-  const result: string[] = [];
-
-  values.forEach((value) => {
-    const cleaned = value.trim();
-
-    if (!cleaned) {
-      return;
-    }
-
-    const existingIndex = result.findIndex((item) => areNearDuplicate(item, cleaned));
-
-    if (existingIndex >= 0) {
-      if (cleaned.length < result[existingIndex].length) {
-        result[existingIndex] = cleaned;
-      }
-      return;
-    }
-
-    result.push(cleaned);
-  });
-
-  return result.slice(0, limit);
-}
 
 export function MonthlySummaryGenerator({
   studentName,
   lessons,
+  selectedMonthKey,
   timeZone,
-  hideHeader = false,
+  nextLessonAt,
 }: MonthlySummaryGeneratorProps) {
-  const availableMonths = useMemo(() => {
-    const months = Array.from(
-      new Set(lessons.map((lesson) => getMonthKeyLocal(lesson.lesson_at, timeZone))),
-    ).sort((a, b) => b.localeCompare(a));
-
-    return months;
-  }, [lessons, timeZone]);
-
-  const monthOptions = useMemo(
-    () =>
-      availableMonths.map((month) => ({
-        value: month,
-        label: formatMonthLabel(month),
-      })),
-    [availableMonths],
-  );
-
-  const defaultMonth = useMemo(() => {
-    const currentMonth = getMonthKeyLocal(new Date(), timeZone);
-    if (availableMonths.includes(currentMonth)) {
-      return currentMonth;
-    }
-
-    return availableMonths[0] ?? currentMonth;
-  }, [availableMonths, timeZone]);
-
-  const [selectedMonth, setSelectedMonth] = useState(defaultMonth);
   const [summary, setSummary] = useState("");
   const [copied, setCopied] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
-
-  const lessonsForMonth = useMemo(() => {
-    return lessons.filter(
-      (lesson) => getMonthKeyLocal(lesson.lesson_at, timeZone) === selectedMonth,
-    );
-  }, [lessons, selectedMonth, timeZone]);
-
-  const summaryInputs = useMemo(() => {
-    const topicTags = dedupeAndLimit(uniqueTags(lessonsForMonth.map((lesson) => lesson.topic_tags)), 3);
-    const topicsCovered = consolidateItems(splitIntoItems(lessonsForMonth.map((lesson) => lesson.topics)), 3);
-    const whatWentWell = consolidateItems(splitIntoItems(lessonsForMonth.map((lesson) => lesson.went_well)), 3);
-    const nextFocus = consolidateItems(splitIntoItems(lessonsForMonth.map((lesson) => lesson.improve)), 3);
-    const homework = consolidateItems(splitIntoItems(lessonsForMonth.map((lesson) => lesson.homework)), 3);
-
-    return {
-      topicTags,
-      topicsCovered,
-      whatWentWell,
-      nextFocus,
-      homework,
-    };
-  }, [lessonsForMonth]);
+  const lessonsForMonth = useMemo(
+    () =>
+      lessons.filter(
+        (lesson) => getMonthKeyLocal(lesson.lesson_at, timeZone) === selectedMonthKey,
+      ),
+    [lessons, selectedMonthKey, timeZone],
+  );
 
   function generateSummary() {
-    setCopied(false);
-
     if (lessonsForMonth.length === 0) {
       setSummary("");
-      setStatus("No lessons logged for this month yet.");
+      setStatus("No completed lessons are available for this month.");
       return;
     }
 
-    const avgConfidence = (
-      lessonsForMonth.reduce((sum, lesson) => sum + lesson.confidence, 0) /
-      lessonsForMonth.length
-    ).toFixed(1);
-    const avgEffort = (
-      lessonsForMonth.reduce((sum, lesson) => sum + lesson.effort, 0) /
-      lessonsForMonth.length
-    ).toFixed(1);
-
-    const topicsSection =
-      summaryInputs.topicTags.length > 0 ? summaryInputs.topicTags : summaryInputs.topicsCovered;
-
-    const nextSummary = `${studentName} – Monthly summary for ${formatMonthLabel(selectedMonth)}
-
-This month we focused on:
-${toBulletSection(topicsSection)}
-
-Overall
-- Lessons completed: ${lessonsForMonth.length}
-- Average confidence: ${avgConfidence}/5
-- Average student effort: ${avgEffort}/5
-
-${buildSummarySection("What’s going well", summaryInputs.whatWentWell)}
-
-${buildSummarySection("Area to improve", summaryInputs.nextFocus)}
-
-${buildSummarySection("Homework / follow-up", summaryInputs.homework)}`;
-
-    setSummary(nextSummary);
-    setStatus(null);
+    setSummary(
+      buildMonthlyParentUpdate({
+        studentName,
+        monthKey: selectedMonthKey,
+        lessons: lessonsForMonth,
+        timeZone,
+        nextLessonAt,
+      }),
+    );
+    setCopied(false);
+    setStatus("Update created from the recorded lesson details. Review it before sharing.");
   }
 
   async function onCopySummary() {
-    if (!summary) {
-      return;
-    }
+    if (!summary) return;
 
     try {
       await navigator.clipboard.writeText(summary);
       setCopied(true);
+      setStatus("Monthly parent update copied.");
     } catch {
-      setStatus("We couldn’t copy the summary. Please copy it manually.");
+      setCopied(false);
+      setStatus("We couldn’t copy the update. Select the text and copy it manually.");
     }
   }
 
+  const lessonLabel = `${lessonsForMonth.length} ${lessonsForMonth.length === 1 ? "lesson" : "lessons"}`;
+
   return (
-    <section className="rounded-lg border border-zinc-200 bg-white p-4">
-      <div>
-        {!hideHeader ? (
-          <div>
-            <h2 className="text-lg font-medium text-zinc-900">Monthly summary</h2>
-            <p className="mt-1 text-sm text-zinc-600">
-              Generate an update-ready summary from this student&apos;s lessons.
-            </p>
-          </div>
-        ) : null}
-        {availableMonths.length > 0 ? (
-          <div
-            className={`rounded-lg border border-zinc-200 bg-zinc-50 p-3 sm:flex sm:items-end sm:gap-3 ${
-              hideHeader ? "" : "mt-4"
-            }`}
-          >
-            <div className="min-w-0 sm:w-56">
-              <label htmlFor="summary_month" className="block text-sm font-medium text-zinc-700">
-                Month
-              </label>
-              <select
-                id="summary_month"
-                value={selectedMonth}
-                onChange={(event) => {
-                  setSelectedMonth(event.target.value);
-                  setCopied(false);
-                  setStatus(null);
-                }}
-                className="mt-1 min-h-10 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
-              >
-                {monthOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+    <details className="group rounded-lg border border-zinc-200 bg-zinc-50">
+      <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 px-4 py-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 [&::-webkit-details-marker]:hidden">
+        <span className="min-w-0">
+          <span className="block text-sm font-medium text-zinc-900">Create monthly parent update</span>
+          <span className="mt-0.5 block text-xs leading-5 text-zinc-600">
+            {formatMonthLocal(selectedMonthKey)} · {lessonLabel} included
+          </span>
+        </span>
+        <span
+          aria-hidden="true"
+          className="text-lg text-zinc-500 transition-transform group-open:rotate-45"
+        >
+          +
+        </span>
+      </summary>
+
+      <div className="border-t border-zinc-200 p-4">
+        <p className="text-sm leading-6 text-zinc-600">
+          Creates a concise draft using the recorded topics, strengths, next focus, homework and
+          tutor ratings. Nothing is sent automatically, and you can edit every word.
+        </p>
+        <button
+          type="button"
+          onClick={generateSummary}
+          disabled={lessonsForMonth.length === 0}
+          className="mt-4 inline-flex min-h-10 w-full items-center justify-center rounded-md bg-blue-700 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-600 disabled:cursor-not-allowed disabled:bg-zinc-300 disabled:text-zinc-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
+        >
+          {summary ? "Regenerate update" : "Create update"}
+        </button>
+
+        {summary ? (
+          <div className="mt-4 space-y-3">
+            <label htmlFor="monthly_parent_update" className="block text-sm font-medium text-zinc-900">
+              Review and edit
+            </label>
+            <textarea
+              id="monthly_parent_update"
+              value={summary}
+              onChange={(event) => {
+                setSummary(event.target.value);
+                setCopied(false);
+                setStatus(null);
+              }}
+              rows={15}
+              className="w-full rounded-md border border-zinc-300 bg-white px-3 py-3 text-sm leading-6 text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+            />
             <button
               type="button"
-              onClick={generateSummary}
-              className="mt-3 inline-flex min-h-10 w-full items-center justify-center rounded-md bg-blue-700 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:mt-0 sm:w-auto"
+              onClick={onCopySummary}
+              className="inline-flex min-h-10 w-full items-center justify-center rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
             >
-              Generate summary
+              {copied ? "Copied" : "Copy update"}
             </button>
           </div>
         ) : null}
-      </div>
 
-      {availableMonths.length === 0 ? (
-        <p className="mt-4 rounded-md border border-dashed border-zinc-300 bg-zinc-50 px-3 py-2 text-sm text-zinc-600">
-          No lessons logged for this student yet.
+        <p className="mt-3 min-h-5 text-sm text-zinc-600" role="status" aria-live="polite">
+          {status ?? (lessonsForMonth.length === 0 ? "Log a completed lesson to create an update." : "")}
         </p>
-      ) : null}
-
-      {availableMonths.length > 0 ? (
-        <div className="mt-4 space-y-3">
-          {status ? (
-            <p className="rounded-md border border-dashed border-zinc-300 bg-zinc-50 px-3 py-2 text-sm text-zinc-600">
-              {status}
-            </p>
-          ) : null}
-
-          {summary ? (
-            <>
-              <textarea
-                value={summary}
-                onChange={(event) => {
-                  setSummary(event.target.value);
-                  setCopied(false);
-                }}
-                rows={16}
-                className="w-full rounded-md border border-zinc-300 bg-white px-3 py-3 text-sm text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
-              />
-              <div className="flex flex-wrap items-center gap-3">
-                <button
-                  type="button"
-                  onClick={onCopySummary}
-                  className="inline-flex min-h-10 items-center justify-center rounded-md bg-blue-700 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-                >
-                  Copy summary
-                </button>
-                {copied ? <p className="text-sm font-medium text-emerald-700">Copied.</p> : null}
-              </div>
-            </>
-          ) : (
-            <div className="rounded-md border border-dashed border-zinc-300 bg-zinc-50 px-3 py-4 text-sm text-zinc-600">
-              Select a month and generate a summary to review or copy for an update message.
-            </div>
-          )}
-        </div>
-      ) : null}
-    </section>
+      </div>
+    </details>
   );
 }
