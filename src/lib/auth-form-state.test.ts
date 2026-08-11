@@ -47,3 +47,11 @@ test("homepage Get started free CTAs target signup", async () => {
   assert.equal(ctaCount, 2);
   assert.equal(signupHrefCount, 2);
 });
+
+test("the How It Works conversion CTA sends new users to signup", async () => {
+  const source = await readFile("src/app/(public)/how-it-works/page.tsx", "utf8");
+  const readySection = source.slice(source.indexOf("Ready to try it?"));
+
+  assert.match(readySection, /href="\/signup"/);
+  assert.doesNotMatch(readySection, /href="\/login"/);
+});

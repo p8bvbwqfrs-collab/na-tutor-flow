@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { getCurrencyLabel, type SupportedCurrencyCode } from "@/lib/currency";
 import { getDateKeyLocal } from "@/lib/datetime";
 import { autoApplyPaymentToLessons, type AllocationLike, type LessonFeeLike, type PaymentLike } from "@/lib/payments";
+import { trackActivationStep } from "@/lib/product-analytics";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { verifyStudentIsActive } from "../../student-actions";
 
@@ -157,6 +158,7 @@ export function RecordPaymentForm({ studentId, currencyCode, timeZone }: RecordP
     setPaymentDate(getDateKeyLocal(new Date(), timeZone));
     setMessage("Payment recorded.");
     setIsOpen(false);
+    trackActivationStep("payment_recorded");
     router.refresh();
   }
 

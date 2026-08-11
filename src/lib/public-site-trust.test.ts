@@ -50,3 +50,18 @@ test("public navigation exposes the product explanation", () => {
 
   assert.notEqual(howItWorksPosition, -1);
 });
+
+test("the homepage preview reflects the current student workflow without an outdated screenshot", () => {
+  const previewSource = readFileSync(
+    new URL("../app/(public)/components/student-workflow-preview.tsx", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(homepageSource, /<StudentWorkflowPreview/);
+  assert.doesNotMatch(homepageSource, /tutor-flow-student-preview\.png/);
+  assert.match(previewSource, /Current position/);
+  assert.match(previewSource, /Latest parent update/);
+  assert.match(previewSource, /What we covered/);
+  assert.match(previewSource, /Next focus/);
+  assert.match(homepageSource, /<h3 className="mt-2 text-sm font-semibold/);
+});

@@ -18,6 +18,7 @@ import { DeleteLessonButton } from "../components/delete-lesson-button";
 import { verifyStudentIsActive } from "../../student-actions";
 import { LessonFormSection } from "../components/lesson-form-section";
 import { LessonSuccessPanel } from "../components/lesson-success-panel";
+import { trackActivationStep } from "@/lib/product-analytics";
 import { RatingSelector } from "../components/rating-selector";
 
 type LessonFormProps = {
@@ -257,6 +258,10 @@ export function NewLessonForm({
       setIsSubmitting(false);
       setError("The lesson was saved, but we couldn’t finish the next step. Please refresh and try again.");
       return;
+    }
+
+    if (!isEditMode) {
+      trackActivationStep("lesson_logged");
     }
 
     if (markPaidOnSave && feePence > 0) {

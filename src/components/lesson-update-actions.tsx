@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { trackActivationStep } from "@/lib/product-analytics";
 
 type LessonUpdateActionsProps = {
   message: string;
@@ -25,6 +26,7 @@ export function LessonUpdateActions({
       setShared(false);
       setCopiedFallback(true);
       setError(null);
+      trackActivationStep("parent_update_shared");
       window.setTimeout(() => setCopiedFallback(false), 2200);
     } catch {
       setShared(false);
@@ -47,6 +49,7 @@ export function LessonUpdateActions({
       setShared(true);
       setCopiedFallback(false);
       setError(null);
+      trackActivationStep("parent_update_shared");
     } catch (shareError) {
       if (shareError instanceof DOMException && shareError.name === "AbortError") {
         return;
