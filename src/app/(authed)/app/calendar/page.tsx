@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SectionHeading } from "@/components/section-heading";
 import {
   formatDayNumberLocal,
   formatMonthLocal,
@@ -147,7 +148,6 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-xl font-semibold text-zinc-900">Calendar</h1>
-          <p className="mt-1 text-sm text-zinc-600">View your lessons over time</p>
         </div>
         <Link
           href="/app/settings"
@@ -159,14 +159,10 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
 
       <div className="mt-6 rounded-lg border border-zinc-200 bg-white p-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-lg font-medium text-zinc-900">
-              {formatMonthLocal(selectedMonthKey)}
-            </h2>
-            <p className="mt-1 text-sm text-zinc-600">
-              Lessons are shown by the date and time saved on each lesson.
-            </p>
-          </div>
+          <SectionHeading
+            title={formatMonthLocal(selectedMonthKey)}
+            description="Lessons are shown using the tutor time zone saved in Settings."
+          />
           <div className="flex items-center gap-2">
             <Link
               href={`/app/calendar?month=${prevMonthKey}`}

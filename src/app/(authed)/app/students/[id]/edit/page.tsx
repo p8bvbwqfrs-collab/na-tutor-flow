@@ -29,7 +29,6 @@ export default async function EditStudentPage({ params }: EditStudentPageProps) 
     <section className="max-w-2xl">
       <div className="mb-4">
         <h1 className="text-xl font-semibold text-zinc-900">Edit student</h1>
-        <p className="mt-1 text-sm text-zinc-600">Update student and contact details.</p>
       </div>
 
       <EditStudentForm

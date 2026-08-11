@@ -40,7 +40,9 @@ test("student overview separates current status from updates and lesson history"
   assert.match(source, /<StudentLessonHistory/);
   assert.match(source, /Parent: \{student\.parent_name\}/);
   assert.match(source, /whitespace-nowrap/);
-  assert.match(source, /mt-3 grid gap-2 md:grid-cols-2/);
+  assert.match(source, /overflow-hidden rounded-lg border border-zinc-200 bg-white/);
+  assert.match(source, />\s*What we covered\s*</);
+  assert.match(source, /grid border-t border-zinc-200 md:grid-cols-2/);
   assert.match(source, />\s*Next focus\s*</);
   assert.doesNotMatch(source, /sm:grid-cols-\[5\.5rem_minmax\(0,1fr\)\]/);
   assert.match(paymentsSource, /id="payment-history"/);
@@ -63,7 +65,7 @@ test("lesson history is responsive and shares one month with the parent-update g
 
   assert.equal((historySource.match(/<MonthControls/g) ?? []).length, 1);
   assert.match(historySource, /selectedMonthKey=\{selectedMonthKey\}/);
-  assert.match(historySource, /Create a parent update from the same month|create a parent update from the same month/i);
+  assert.match(historySource, />\s*Lesson history\s*</);
   assert.doesNotMatch(lessonsSource, /<table/);
   assert.match(lessonsSource, /sm:grid-cols-\[8\.5rem_minmax\(0,1fr\)_auto\]/);
   assert.match(lessonsSource, /tags\.slice\(0, 2\)/);

@@ -1,4 +1,5 @@
 import { headers } from "next/headers";
+import { SectionHeading } from "@/components/section-heading";
 import { canUseCalendarFeeds, generateCalendarFeedToken } from "@/lib/calendar-feed";
 import {
   getUserCalendarFeedVersion,
@@ -51,9 +52,6 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
   return (
     <section>
       <h1 className="text-xl font-semibold text-zinc-900">Settings</h1>
-      <p className="mt-1 text-sm text-zinc-600">
-        Manage your account, preferences and calendar connection.
-      </p>
 
       {resolvedSearchParams.calendar_reset === "1" ? (
         <p
@@ -86,10 +84,10 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
         </section>
 
         <section className="rounded-lg border border-zinc-200 bg-white p-4">
-          <h2 className="text-lg font-medium text-zinc-900">Preferences</h2>
-          <p className="mt-1 text-sm text-zinc-600">
-            Choose how fees and totals are shown across the app.
-          </p>
+          <SectionHeading
+            title="Preferences"
+            description="Choose how fees, totals and lesson times are shown across the app."
+          />
 
           {user ? (
             <>
@@ -100,11 +98,10 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
         </section>
 
         <section className="rounded-lg border border-zinc-200 bg-white p-4">
-          <h2 className="text-lg font-medium text-zinc-900">Calendar sync</h2>
-          <p className="mt-1 text-sm text-zinc-600">
-            Subscribe once to keep your tutoring lessons visible in your preferred calendar app.
-            Updates made in Tutor Flow will appear automatically.
-          </p>
+          <SectionHeading
+            title="Calendar sync"
+            description="Subscribe once to keep tutoring lessons visible in your preferred calendar app. Updates made in Tutor Flow will appear automatically."
+          />
 
           <div className="mt-4">
             <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
@@ -149,11 +146,10 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
         </section>
 
         <section className="rounded-lg border border-zinc-200 bg-white p-4">
-          <h2 className="text-lg font-medium text-zinc-900">Your data</h2>
-          <p className="mt-1 text-sm leading-6 text-zinc-600">
-            Download a portable copy of the information you have saved in Tutor Flow. The export
-            includes active and archived students, all lesson states, payments and preferences.
-          </p>
+          <SectionHeading
+            title="Your data"
+            description="Download a portable copy of the information saved in Tutor Flow, including active and archived students, lessons, payments and preferences."
+          />
           <AccountDataExportControls />
           {user?.email ? <AccountDeletionControls accountEmail={user.email} /> : null}
         </section>

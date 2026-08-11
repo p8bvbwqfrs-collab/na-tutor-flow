@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SectionHeading } from "@/components/section-heading";
 import { formatCurrencyFromMinorUnits } from "@/lib/currency";
 import { formatDateTimeLocal } from "@/lib/datetime";
 import {
@@ -250,9 +251,6 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   return (
     <section>
       <h1 className="text-xl font-semibold text-zinc-900">Dashboard</h1>
-      <p className="mt-1 text-sm text-zinc-600">
-        See what needs attention, what you have received, and what is still owed.
-      </p>
 
       {!hasDashboardDataError ? (
         dashboardExperience.state === "no_active_students" ? (
@@ -330,12 +328,11 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         className="mt-6 rounded-lg border border-zinc-200 bg-white p-4 sm:p-5"
         aria-labelledby="lesson-schedule-heading"
       >
-        <h2 id="lesson-schedule-heading" className="text-lg font-medium text-zinc-900">
-          Lesson schedule
-        </h2>
-        <p className="mt-1 text-sm text-zinc-600">
-          Start with overdue and today&apos;s lessons, then see what is coming next.
-        </p>
+        <SectionHeading
+          id="lesson-schedule-heading"
+          title="Lesson schedule"
+          description="Start with overdue and today’s lessons, then see what is coming next."
+        />
 
         {plannedLessonsResult.error ? (
           <p role="alert" className="mt-4 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-900">
@@ -426,12 +423,11 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
       <section className="mt-6" aria-labelledby="money-heading">
         <div>
-          <h2 id="money-heading" className="text-lg font-medium text-zinc-900">
-            Money
-          </h2>
-          <p className="mt-1 text-sm text-zinc-600">
-            Received and completed figures use the selected timeframe. Outstanding is what is owed now.
-          </p>
+          <SectionHeading
+            id="money-heading"
+            title="Money"
+            description="Received and completed figures use the selected timeframe. Outstanding is what is owed now."
+          />
           <div className="mt-3">
             <ChartRangeFilter selected={selectedRange} />
           </div>
@@ -476,12 +472,12 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             className="min-w-0 rounded-lg border border-zinc-200 bg-white p-4 sm:p-5"
             aria-labelledby="student-income-heading"
           >
-            <h3 id="student-income-heading" className="text-lg font-medium text-zinc-900">
-              By student
-            </h3>
-            <p className="mt-1 text-sm text-zinc-600">
-              Received and completed use {rangeLabel.toLowerCase()}. Outstanding is the current balance.
-            </p>
+            <SectionHeading
+              id="student-income-heading"
+              level={3}
+              title="By student"
+              description={<>Received and completed use {rangeLabel.toLowerCase()}. Outstanding is the current balance.</>}
+            />
 
             {hasDashboardDataError ? (
               <p
@@ -715,7 +711,6 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         <h2 id="recent-activity-heading" className="text-lg font-medium text-zinc-900">
           Recent activity
         </h2>
-        <p className="mt-1 text-sm text-zinc-600">A quick view of the lessons you have logged most recently.</p>
 
         <section
           className="mt-4 rounded-lg border border-zinc-200 bg-white p-4 sm:p-5"

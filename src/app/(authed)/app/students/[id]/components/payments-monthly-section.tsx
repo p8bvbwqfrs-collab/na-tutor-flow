@@ -73,9 +73,6 @@ export function PaymentsMonthlySection({
             ) : (
               <h2 className="text-lg font-medium text-zinc-900">Payment history</h2>
             )}
-            <p className="mt-1 text-sm text-zinc-600">
-              Review recorded payments or add an upfront payment covering several lessons.
-            </p>
           </div>
           {!readOnly ? (
             <RecordPaymentForm

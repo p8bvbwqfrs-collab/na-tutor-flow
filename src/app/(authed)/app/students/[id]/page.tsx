@@ -19,6 +19,7 @@ import { formatParentUpdate } from "@/lib/parent-update";
 import { partitionPlannedLessons } from "@/lib/lesson-attention";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { LessonUpdateActions } from "@/components/lesson-update-actions";
+import { SectionHeading } from "@/components/section-heading";
 import {
   calculateLessonPaymentStatus,
   calculateStudentCredit,
@@ -355,7 +356,6 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
           </span>
         ) : null}
       </div>
-      <p className="mt-1 text-sm text-zinc-600">Profile, progress, and lesson history.</p>
       {student.parent_name || student.parent_contact || student.parent_email ? (
         <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-sm text-zinc-600">
           {student.parent_name ? <span>Parent: {student.parent_name}</span> : null}
@@ -428,9 +428,6 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
         <h2 id="student-overview-heading" className="text-lg font-medium text-zinc-900">
           Current position
         </h2>
-        <p className="mt-1 text-sm text-zinc-600">
-          What is owed now and the lesson that needs attention next.
-        </p>
         <div className="mt-3 grid gap-3 md:grid-cols-2">
           <article className="flex min-w-0 flex-col rounded-lg border border-amber-200 bg-amber-50/60 p-4">
             <h3 className="text-xs font-medium uppercase tracking-wide text-zinc-600">Outstanding</h3>
@@ -489,10 +486,10 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
 
       <section id="latest-parent-update" className="mt-6 scroll-mt-24">
         <div className="rounded-lg border border-zinc-200 bg-white p-4 sm:p-5">
-          <h2 className="text-lg font-medium text-zinc-900">Updates and lesson history</h2>
-          <p className="mt-1 text-sm text-zinc-600">
-            Share the latest update, review previous notes or create a monthly parent update.
-          </p>
+          <SectionHeading
+            title="Updates and lesson history"
+            description="Share the latest update, review previous notes or create a monthly parent update."
+          />
           {latestCompletedLesson ? (
             <>
               <div className="mt-5 flex flex-col gap-3 border-t border-zinc-200 pt-5 sm:flex-row sm:items-start sm:justify-between">
@@ -536,14 +533,19 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
               </div>
 
               {/* The parent update stays focused on shareable, next-session useful details; full notes live on the lesson page. */}
-              <div className="mt-2 rounded-lg border border-zinc-200 bg-neutral-50 p-3">
-                <p className="line-clamp-2 break-words text-sm font-medium leading-6 text-zinc-900 sm:line-clamp-3 sm:text-[15px]">
-                  {cleanLessonText(latestCompletedLesson.topics) || "No focus captured yet."}
-                </p>
+              <div className="mt-3 overflow-hidden rounded-lg border border-zinc-200 bg-white">
+                <div className="p-4">
+                  <h4 className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+                    What we covered
+                  </h4>
+                  <p className="mt-1 break-words text-sm font-medium leading-6 text-zinc-900 sm:text-[15px]">
+                    {cleanLessonText(latestCompletedLesson.topics) || "No focus captured yet."}
+                  </p>
+                </div>
                 {latestCompletedLesson.improve || latestCompletedLesson.homework ? (
-                  <div className="mt-3 grid gap-2 md:grid-cols-2">
+                  <div className="grid border-t border-zinc-200 md:grid-cols-2">
                     {latestCompletedLesson.improve ? (
-                      <article className="min-w-0 rounded-md border border-zinc-200 bg-white p-3">
+                      <article className="min-w-0 p-4">
                         <h4 className="text-xs font-medium uppercase tracking-wide text-zinc-500">
                           Next focus
                         </h4>
@@ -553,7 +555,13 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
                       </article>
                     ) : null}
                     {latestCompletedLesson.homework ? (
-                      <article className="min-w-0 rounded-md border border-zinc-200 bg-white p-3">
+                      <article
+                        className={`min-w-0 p-4 ${
+                          latestCompletedLesson.improve
+                            ? "border-t border-zinc-200 md:border-l md:border-t-0"
+                            : ""
+                        }`}
+                      >
                         <h4 className="text-xs font-medium uppercase tracking-wide text-zinc-500">
                           Homework
                         </h4>
@@ -564,7 +572,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
                     ) : null}
                   </div>
                 ) : null}
-                <div className="mt-3 flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 border-t border-zinc-200 bg-zinc-50 px-4 py-3">
                   <span className="inline-flex rounded-md border border-zinc-200 bg-white px-2.5 py-1 text-xs font-medium text-zinc-700">
                     Effort {latestCompletedLesson.effort}/5
                   </span>
@@ -685,12 +693,11 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
         ) : null}
 
         <section className="rounded-lg border border-zinc-200 bg-white p-4 sm:p-5" aria-labelledby="learning-progress-heading">
-          <h2 id="learning-progress-heading" className="text-lg font-medium text-zinc-900">
-            Learning progress
-          </h2>
-          <p className="mt-1 text-sm text-zinc-600">
-            Recent confidence and effort signals, without relying on all-time averages.
-          </p>
+          <SectionHeading
+            id="learning-progress-heading"
+            title="Learning progress"
+            description="Recent confidence and effort signals, without relying on all-time averages."
+          />
           <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)]">
             <ProgressSignalCard
               label={progressSignal.label}
@@ -703,12 +710,11 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
         </section>
 
         <section id="money" className="scroll-mt-24 rounded-lg border border-zinc-200 bg-white p-4 sm:p-5" aria-labelledby="student-money-heading">
-          <h2 id="student-money-heading" className="text-lg font-medium text-zinc-900">
-            Money
-          </h2>
-          <p className="mt-1 text-sm text-zinc-600">
-            Received and completed use the selected timeframe. Outstanding is what is owed now.
-          </p>
+          <SectionHeading
+            id="student-money-heading"
+            title="Money"
+            description="Received and completed use the selected timeframe. Outstanding is what is owed now."
+          />
           <div className="mt-3">
             <ChartRangeFilter selected={selectedRange} basePath={`/app/students/${student.id}`} />
           </div>
@@ -778,12 +784,12 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
 
       {isArchived ? null : (
         <section className="mt-6 rounded-lg border border-zinc-200 bg-zinc-50 p-4" aria-labelledby="student-settings-heading">
-          <h2 id="student-settings-heading" className="text-base font-medium text-zinc-900">
-            Student settings
-          </h2>
-          <p className="mt-1 text-sm text-zinc-600">
-            Update this student&apos;s details or move their profile out of the active list.
-          </p>
+          <SectionHeading
+            id="student-settings-heading"
+            title="Student settings"
+            description="Update this student’s details or move their profile out of the active list."
+            headingClassName="text-base font-medium text-zinc-900"
+          />
           <div className="mt-3 flex flex-wrap gap-2">
             <Link
               href={`/app/students/${student.id}/edit`}
