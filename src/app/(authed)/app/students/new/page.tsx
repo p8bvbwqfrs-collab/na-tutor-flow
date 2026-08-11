@@ -74,7 +74,6 @@ export default function NewStudentPage() {
     <section className="max-w-2xl">
       <div className="mb-4">
         <h1 className="text-xl font-semibold text-zinc-900">Add student</h1>
-        <p className="mt-1 text-sm text-zinc-600">Save student and contact details.</p>
       </div>
 
       <form onSubmit={onSubmit} className="space-y-4 rounded-lg border border-zinc-200 bg-white p-4 sm:p-6">

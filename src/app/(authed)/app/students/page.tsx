@@ -68,7 +68,6 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
         <div className="flex flex-col gap-3">
           <div>
             <h1 className="text-xl font-semibold text-zinc-900">Students</h1>
-            <p className="mt-1 text-sm text-zinc-600">Manage your student list and contact details.</p>
 
             <div className="mt-3 inline-flex rounded-md border border-zinc-200 bg-white p-1">
               <Link

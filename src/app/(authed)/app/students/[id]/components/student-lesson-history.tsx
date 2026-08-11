@@ -41,14 +41,9 @@ export function StudentLessonHistory({
 
   return (
     <section aria-labelledby="lesson-history-heading">
-      <div>
-        <h3 id="lesson-history-heading" className="text-base font-medium text-zinc-900">
-          Lesson history
-        </h3>
-        <p className="mt-1 text-sm text-zinc-600">
-          Review previous notes or create a parent update from the same month.
-        </p>
-      </div>
+      <h3 id="lesson-history-heading" className="text-base font-medium text-zinc-900">
+        Lesson history
+      </h3>
 
       <div className="mt-3">
         <MonthControls
