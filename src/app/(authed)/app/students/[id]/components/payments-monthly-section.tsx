@@ -21,6 +21,7 @@ type PaymentsMonthlySectionProps = {
   initialMonthKey: string;
   timeZone: string;
   readOnly?: boolean;
+  embedded?: boolean;
 };
 
 function getPaymentDateValue(payment: Pick<Payment, "payment_date" | "created_at">) {
@@ -51,6 +52,7 @@ export function PaymentsMonthlySection({
   initialMonthKey,
   timeZone,
   readOnly = false,
+  embedded = false,
 }: PaymentsMonthlySectionProps) {
   const [selectedMonthKey, setSelectedMonthKey] = useState(initialMonthKey);
   const paymentsForSelectedMonth = payments.filter(
@@ -63,10 +65,14 @@ export function PaymentsMonthlySection({
 
   return (
     <section id="payment-history" className="scroll-mt-24">
-      <div className="rounded-lg border border-zinc-200 bg-white p-4">
+      <div className={embedded ? "" : "rounded-lg border border-zinc-200 bg-white p-4"}>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h2 className="text-lg font-medium text-zinc-900">Payment history</h2>
+            {embedded ? (
+              <h3 className="text-base font-medium text-zinc-900">Payment history</h3>
+            ) : (
+              <h2 className="text-lg font-medium text-zinc-900">Payment history</h2>
+            )}
             <p className="mt-1 text-sm text-zinc-600">
               Review recorded payments or add an upfront payment covering several lessons.
             </p>
