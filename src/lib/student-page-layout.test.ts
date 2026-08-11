@@ -38,6 +38,8 @@ test("student overview separates current status from updates and lesson history"
   assert.match(source, /Updates and lesson history/);
   assert.match(source, /<LessonUpdateActions/);
   assert.match(source, /<StudentLessonHistory/);
+  assert.match(source, /<PaymentReminderGenerator/);
+  assert.match(source, /outstandingAmountPence > 0/);
   assert.match(source, /Parent: \{student\.parent_name\}/);
   assert.match(source, /whitespace-nowrap/);
   assert.match(source, /overflow-hidden rounded-lg border border-zinc-200 bg-white/);

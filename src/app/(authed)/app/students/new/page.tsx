@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { trackActivationStep } from "@/lib/product-analytics";
 
 export default function NewStudentPage() {
   const router = useRouter();
@@ -66,6 +67,7 @@ export default function NewStudentPage() {
       return;
     }
 
+    trackActivationStep("student_added");
     router.push(`/app/students/${createdStudent.id}`);
     router.refresh();
   }

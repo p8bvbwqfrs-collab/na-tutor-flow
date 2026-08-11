@@ -116,12 +116,13 @@ function LessonFormPreview() {
 function DashboardPreview() {
   return (
     <div className="space-y-2.5 text-sm">
+      <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Money · this month</p>
       <div className="grid grid-cols-2 gap-2">
         {[
-          ["Active students", "12"],
-          ["This month", "£640"],
-          ["Unpaid", "£120"],
-          ["Upcoming", "3"],
+          ["Received", "£640"],
+          ["Outstanding now", "£120"],
+          ["Completed lessons", "14"],
+          ["Active students", "4"],
         ].map(([label, value]) => (
           <div key={label} className="rounded-md border border-zinc-200 bg-white p-3">
             <p className="text-xs text-zinc-500">{label}</p>
@@ -130,24 +131,24 @@ function DashboardPreview() {
         ))}
       </div>
       <div className="rounded-md border border-zinc-200 bg-white p-3">
-        <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Upcoming lessons</p>
+        <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Lesson schedule</p>
         <div className="mt-2 space-y-2">
           <div className="flex items-center justify-between gap-3 rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2">
             <div>
               <p className="font-medium text-zinc-900">Harris</p>
-              <p className="text-xs text-zinc-500">Tue 8 Apr · 16:00</p>
+              <p className="text-xs text-zinc-500">Today · 16:00</p>
             </div>
             <span className="rounded-md bg-blue-700 px-2.5 py-1 text-xs font-medium text-white">
-              Complete
+              Complete lesson
             </span>
           </div>
           <div className="flex items-center justify-between gap-3 rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2">
             <div>
               <p className="font-medium text-zinc-900">Ava</p>
-              <p className="text-xs text-zinc-500">Wed 9 Apr · 17:00</p>
+              <p className="text-xs text-zinc-500">Tomorrow · 17:00</p>
             </div>
             <span className="rounded-md border border-zinc-200 bg-white px-2.5 py-1 text-xs text-zinc-700">
-              Scheduled
+              Upcoming
             </span>
           </div>
         </div>
@@ -315,7 +316,7 @@ export default function HowItWorksPage() {
         <p className="mt-2 text-sm text-zinc-500">Takes less than 2 minutes to get started.</p>
         <div className="mt-5">
           <Link
-            href="/login"
+            href="/signup"
             className="inline-flex min-h-11 items-center justify-center rounded-md bg-blue-700 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
           >
             Get started

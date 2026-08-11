@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { clearAuthenticationDraft } from "@/lib/auth-form-state";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { trackActivationStep } from "@/lib/product-analytics";
 
 type AuthMode = "sign_in" | "sign_up";
 
@@ -209,6 +210,8 @@ export function LoginClient({ mode: authMode }: LoginClientProps) {
           setError(formatAuthErrorMessage(signUpError.message));
           return;
         }
+
+        trackActivationStep("signup_submitted");
 
         if (!signUpData.session) {
           setConfirmationEmail(trimmedEmail);

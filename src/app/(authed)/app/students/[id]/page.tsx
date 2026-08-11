@@ -20,6 +20,7 @@ import { partitionPlannedLessons } from "@/lib/lesson-attention";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { LessonUpdateActions } from "@/components/lesson-update-actions";
 import { SectionHeading } from "@/components/section-heading";
+import { buildPaymentReminder } from "@/lib/payment-reminder";
 import {
   calculateLessonPaymentStatus,
   calculateStudentCredit,
@@ -32,6 +33,7 @@ import {
 import { CompletedLessonUpdateBanner } from "./components/completed-lesson-update-banner";
 import { LessonSuccessPanel } from "./components/lesson-success-panel";
 import { PaymentsMonthlySection } from "./components/payments-monthly-section";
+import { PaymentReminderGenerator } from "./components/payment-reminder-generator";
 import { PermanentStudentDeletion } from "./components/permanent-student-deletion";
 import { PlannedLessonStatusButton } from "./components/planned-lesson-status-button";
 import { ProgressSignalCard } from "./components/progress-signal-card";
@@ -234,6 +236,16 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
     (sum, lesson) => sum + getOutstandingLessonAmount(lesson, allocations),
     0,
   );
+  const paymentReminderMessage = buildPaymentReminder({
+    studentName: student.student_name,
+    parentName: student.parent_name,
+    currencyCode,
+    timeZone,
+    outstandingLessons: completedLessons.map((lesson) => ({
+      lessonAt: lesson.lesson_at,
+      outstandingPence: getOutstandingLessonAmount(lesson, allocations),
+    })),
+  });
   const studentCreditPence = calculateStudentCredit(payments, allocations);
   const selectedRange = getReportingRange(search.range);
   const rangeLabel = getReportingRangeLabel(selectedRange);
@@ -605,6 +617,10 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
               </div>
             </>
           )}
+
+          {!hasStudentFinancialError && !isArchived && outstandingAmountPence > 0 ? (
+            <PaymentReminderGenerator initialMessage={paymentReminderMessage} />
+          ) : null}
 
           <div className="mt-5 border-t border-zinc-200 pt-5">
             <StudentLessonHistory

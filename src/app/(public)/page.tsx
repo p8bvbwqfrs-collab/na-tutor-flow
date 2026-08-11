@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { JsonLd } from "@/components/json-ld";
+import { StudentWorkflowPreview } from "./components/student-workflow-preview";
 import { createPublicMetadata } from "@/lib/seo";
 
 const description =
@@ -195,11 +196,7 @@ export default function HomePage() {
           </div>
 
           <div className="mx-auto w-full max-w-2xl lg:mr-0 lg:max-w-none">
-            <img
-              src="/images/tutor-flow-student-preview.png"
-              alt="Tutor Flow student page showing lesson notes, progress, and upcoming lessons"
-              className="w-full rounded-2xl border border-zinc-200 bg-zinc-50 shadow-sm"
-            />
+            <StudentWorkflowPreview />
           </div>
         </div>
       </div>
@@ -217,7 +214,7 @@ export default function HomePage() {
             {steps.map((step, index) => (
               <div key={step.title} className="rounded-lg border border-zinc-200 bg-white p-4">
                 <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Step {index + 1}</p>
-                <h4 className="mt-2 text-sm font-semibold text-zinc-900">{step.title}</h4>
+                <h3 className="mt-2 text-sm font-semibold text-zinc-900">{step.title}</h3>
                 <p className="mt-2 text-sm leading-6 text-zinc-600">{step.copy}</p>
               </div>
             ))}
