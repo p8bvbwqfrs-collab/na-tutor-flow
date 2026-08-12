@@ -99,6 +99,14 @@ export function LoginClient({ mode: authMode }: LoginClientProps) {
       return "Your email is not confirmed yet. Please use the confirmation link we sent, then sign in.";
     }
 
+    if (/invalid login credentials/i.test(rawMessage)) {
+      return "We didn’t recognise that email and password. Check both and try again.";
+    }
+
+    if (/user already registered|already been registered/i.test(rawMessage)) {
+      return "An account already exists for that email. Sign in instead, or reset your password.";
+    }
+
     return rawMessage;
   }
 
@@ -423,6 +431,18 @@ export function LoginClient({ mode: authMode }: LoginClientProps) {
         onSubmit={onPrimarySubmit}
         className="mt-6 space-y-4 rounded-lg border border-zinc-200 bg-white p-4 shadow-sm sm:p-6"
       >
+        {error ? (
+          <p
+            id={formErrorId}
+            role="alert"
+            ref={errorRef}
+            tabIndex={-1}
+            className="scroll-mt-24 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-900"
+          >
+            {error}
+          </p>
+        ) : null}
+
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-zinc-700">
             Email
@@ -618,18 +638,6 @@ export function LoginClient({ mode: authMode }: LoginClientProps) {
           className="mt-4 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900"
         >
           {message}
-        </p>
-      ) : null}
-
-      {error ? (
-        <p
-          id={formErrorId}
-          role="alert"
-          ref={errorRef}
-          tabIndex={-1}
-          className="mt-4 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-900"
-        >
-          {error}
         </p>
       ) : null}
 
