@@ -9,7 +9,7 @@ export default function PublicLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="min-h-screen">
+    <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-40 border-b border-zinc-200 bg-white/95 text-zinc-900 backdrop-blur">
         <div className="mx-auto flex w-full max-w-4xl items-center justify-between px-4 py-3">
           <TutorFlowBrand
@@ -44,7 +44,7 @@ export default function PublicLayout({
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-4xl px-4 py-6">{children}</main>
+      <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-6">{children}</main>
       <SiteFooter />
     </div>
   );

@@ -17,6 +17,15 @@ test("shared shells use one Tutor Flow identity without the former NA prefix", (
   assert.doesNotMatch(authedLayout, /NA(?:&apos;|'s)/);
   assert.match(brand, /Tutor <span className="text-blue-700">Flow/);
   assert.match(brand, /aria-hidden="true"/);
+  assert.match(brand, /shrink-0/);
+  assert.match(brand, /inline-flex items-center[^"']*leading-none/);
+});
+
+test("short public pages keep the footer at the bottom of the viewport", () => {
+  const publicLayout = read("src/app/(public)/layout.tsx");
+
+  assert.match(publicLayout, /className="flex min-h-screen flex-col"/);
+  assert.match(publicLayout, /<main className="[^"]*flex-1[^"]*"/);
 });
 
 test("public navigation keeps conversion and account actions available on mobile", () => {

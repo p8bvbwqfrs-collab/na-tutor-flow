@@ -7,9 +7,14 @@ export function StudentWorkflowPreview({ className = "" }: StudentWorkflowPrevie
     <div
       role="img"
       aria-label="Tutor Flow student page showing current payment position, the next lesson and a parent update"
-      className={`overflow-hidden rounded-xl border border-zinc-200 bg-zinc-50 p-3 text-left shadow-sm sm:p-4 ${className}`}
+      className={`cursor-default select-none overflow-hidden rounded-xl border border-zinc-200 bg-zinc-50 p-3 text-left shadow-sm sm:p-4 ${className}`}
     >
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-200 pb-3">
+      <div className="flex items-center justify-between gap-3 border-b border-zinc-200 pb-2 text-[10px] font-medium uppercase tracking-wide text-zinc-500">
+        <span>Product preview</span>
+        <span>Example data</span>
+      </div>
+
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-200 py-3">
         <div>
           <p className="text-sm font-semibold text-zinc-900">Harris</p>
           <p className="mt-0.5 text-[11px] text-zinc-500">Maths · Parent contact saved</p>

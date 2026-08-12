@@ -12,7 +12,7 @@ export function TutorFlowMark({ className = "h-8 w-8" }: { className?: string })
     <svg
       viewBox="0 0 32 32"
       aria-hidden="true"
-      className={className}
+      className={`${className} shrink-0`}
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
@@ -45,7 +45,7 @@ export function TutorFlowBrand({
     >
       <TutorFlowMark className={compact ? "h-7 w-7" : "h-8 w-8"} />
       <span
-        className={`font-semibold tracking-[-0.025em] text-zinc-950 ${compact ? "text-base" : "text-lg"}`}
+        className={`inline-flex items-center font-semibold leading-none tracking-[-0.025em] text-zinc-950 ${compact ? "text-base" : "text-lg"}`}
       >
         Tutor <span className="text-blue-700">Flow</span>
       </span>

@@ -55,3 +55,17 @@ test("the How It Works conversion CTA sends new users to signup", async () => {
   assert.match(readySection, /href="\/signup"/);
   assert.doesNotMatch(readySection, /href="\/login"/);
 });
+
+test("authentication errors appear inside the primary form with accessible focus", async () => {
+  const source = await readFile("src/app/(public)/login/login-client.tsx", "utf8");
+  const formStart = source.indexOf("<form");
+  const formEnd = source.indexOf("</form>", formStart);
+  const errorPosition = source.indexOf("id={formErrorId}");
+
+  assert.ok(errorPosition > formStart && errorPosition < formEnd);
+  assert.match(source, /errorRef\.current\?\.focus\(\)/);
+  assert.match(source, /role="alert"/);
+  assert.match(source, /tabIndex=\{-1\}/);
+  assert.match(source, /We didn’t recognise that email and password/);
+  assert.match(source, /An account already exists for that email/);
+});

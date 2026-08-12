@@ -89,6 +89,10 @@ test("the homepage preview reflects the current student workflow without an outd
   assert.match(homepageSource, /<StudentWorkflowPreview/);
   assert.doesNotMatch(homepageSource, /tutor-flow-student-preview\.png/);
   assert.match(previewSource, /Current position/);
+  assert.match(previewSource, /Product preview/);
+  assert.match(previewSource, /Example data/);
+  assert.match(previewSource, /select-none/);
+  assert.match(previewSource, /cursor-default/);
   assert.match(previewSource, /Latest parent update/);
   assert.match(previewSource, /What we covered/);
   assert.match(previewSource, /Next focus/);
