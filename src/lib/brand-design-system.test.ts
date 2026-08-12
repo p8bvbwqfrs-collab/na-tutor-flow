@@ -60,3 +60,10 @@ test("the design system defines reusable foundations and interaction patterns", 
   assert.match(documentation, /touch and keyboard/);
   assert.match(documentation, /Do not expose student, parent, lesson or payment data in analytics/);
 });
+
+test("the shared footer carries a restrained current-year copyright notice", () => {
+  const footer = read("src/components/site-footer.tsx");
+
+  assert.match(footer, /© \{new Date\(\)\.getFullYear\(\)\} Tutor Flow/);
+  assert.doesNotMatch(footer, /All rights reserved/);
+});
