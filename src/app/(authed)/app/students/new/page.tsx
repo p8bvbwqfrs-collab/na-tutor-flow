@@ -1,14 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { FormEvent, useMemo, useRef, useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { trackActivationStep } from "@/lib/product-analytics";
+import { createSubmissionGuard } from "@/lib/submission-guard";
 import { fieldControl, primaryAction, secondaryAction, surfacePanel } from "@/lib/ui-patterns";
 
 export default function NewStudentPage() {
-  const router = useRouter();
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
 
   const [studentName, setStudentName] = useState("");
@@ -19,6 +18,7 @@ export default function NewStudentPage() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const formErrorId = "new-student-form-error";
+  const submissionGuardRef = useRef(createSubmissionGuard());
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -32,26 +32,34 @@ export default function NewStudentPage() {
       return;
     }
 
+    const submissionId = submissionGuardRef.current.acquire();
+    if (!submissionId) return;
+
+    setIsSubmitting(true);
+
     const {
       data: { user },
       error: userError,
     } = await supabase.auth.getUser();
 
     if (userError) {
+      submissionGuardRef.current.release();
+      setIsSubmitting(false);
       setError("We couldn’t confirm your session. Please sign in again and try once more.");
       return;
     }
 
     if (!user) {
+      submissionGuardRef.current.release();
+      setIsSubmitting(false);
       setError("You are not signed in. Please sign in again.");
       return;
     }
 
-    setIsSubmitting(true);
-
     const { data: createdStudent, error: insertError } = await supabase
       .from("students")
       .insert({
+        id: submissionId,
         student_name: trimmedStudentName,
         subject: subject.trim() || null,
         parent_name: parentName.trim() || null,
@@ -61,16 +69,15 @@ export default function NewStudentPage() {
       .select("id")
       .single();
 
-    setIsSubmitting(false);
-
     if (insertError) {
+      submissionGuardRef.current.release();
+      setIsSubmitting(false);
       setError(insertError.message || "We couldn’t save this student. Please try again.");
       return;
     }
 
     trackActivationStep("student_added");
-    router.push(`/app/students/${createdStudent.id}`);
-    router.refresh();
+    window.location.replace(`/app/students/${createdStudent.id}`);
   }
 
   return (

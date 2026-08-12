@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { formatCurrencyFromMinorUnits, getCurrencyLabel, type SupportedCurrencyCode } from "@/lib/currency";
 import { getCompletedLessonUpdateStorageKey } from "@/lib/lesson-completion";
 import {
@@ -13,6 +12,7 @@ import {
 import { formatParentUpdate } from "@/lib/parent-update";
 import type { LessonPaymentStatus } from "@/lib/payments";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { createSubmissionGuard } from "@/lib/submission-guard";
 import { applyAvailableCreditToLesson, payOutstandingLessonAmount } from "../../../payment-actions";
 import { DeleteLessonButton } from "../components/delete-lesson-button";
 import { verifyStudentIsActive } from "../../student-actions";
@@ -86,7 +86,6 @@ export function NewLessonForm({
   timeZone,
   initialLesson,
 }: LessonFormProps) {
-  const router = useRouter();
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const formErrorId = "new-lesson-form-error";
   const isEditMode = mode === "edit";
@@ -137,6 +136,8 @@ export function NewLessonForm({
   const [savedLesson, setSavedLesson] = useState<SavedLessonState | null>(null);
   const [postSaveWarning, setPostSaveWarning] = useState<string | null>(null);
   const errorRef = useRef<HTMLParagraphElement>(null);
+  const submissionGuardRef = useRef(createSubmissionGuard());
+  const nextLessonDraftIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (error) {
@@ -212,11 +213,15 @@ export function NewLessonForm({
       return;
     }
 
+    const submissionId = submissionGuardRef.current.acquire();
+    if (!submissionId) return;
+
     setIsSubmitting(true);
 
     const activeStudent = await verifyStudentIsActive(studentId);
 
     if (!activeStudent.ok) {
+      submissionGuardRef.current.release();
       setIsSubmitting(false);
       setError(activeStudent.error);
       return;
@@ -242,11 +247,12 @@ export function NewLessonForm({
 
     const lessonMutation = isEditMode
       ? await supabase.from("lessons").update(payload).eq("id", lessonId).select("id").single()
-      : await supabase.from("lessons").insert(payload).select("id").single();
+      : await supabase.from("lessons").insert({ id: submissionId, ...payload }).select("id").single();
 
     const submitError = lessonMutation.error;
 
     if (submitError) {
+      submissionGuardRef.current.release();
       setIsSubmitting(false);
       setError(submitError.message || "We couldn’t save this lesson. Please try again.");
       return;
@@ -255,6 +261,7 @@ export function NewLessonForm({
     const savedLessonId = isEditMode ? lessonId : lessonMutation.data?.id;
 
     if (!savedLessonId) {
+      submissionGuardRef.current.release();
       setIsSubmitting(false);
       setError("The lesson was saved, but we couldn’t finish the next step. Please refresh and try again.");
       return;
@@ -264,29 +271,31 @@ export function NewLessonForm({
       trackActivationStep("lesson_logged");
     }
 
+    const postSaveWarnings: string[] = [];
+
     if (markPaidOnSave && feePence > 0) {
       const paymentResult = await payOutstandingLessonAmount(savedLessonId);
 
       if (!paymentResult.ok) {
-        setIsSubmitting(false);
-        setError(paymentResult.error ?? "The lesson was saved, but the payment could not be recorded.");
-        return;
+        postSaveWarnings.push(
+          paymentResult.error ?? "The lesson was saved, but the payment could not be recorded.",
+        );
       }
     } else if (shouldAutoApplyCredit && feePence > 0) {
       const creditResult = await applyAvailableCreditToLesson(savedLessonId);
 
       if (!creditResult.ok) {
-        setIsSubmitting(false);
-        setError(creditResult.error ?? "The lesson was saved, but the credit could not be used.");
-        return;
+        postSaveWarnings.push(
+          creditResult.error ?? "The lesson was saved, but the credit could not be used.",
+        );
       }
     }
 
     let nextLessonScheduled = false;
-    let nextLessonSaveWarning: string | null = null;
 
     if (nextLessonAtIso) {
       const linkedNextLessonId = initialLesson?.nextLesson?.id ?? null;
+      const nextLessonDraftId = (nextLessonDraftIdRef.current ??= crypto.randomUUID());
       const nextLessonPayload = {
         student_id: studentId,
         lesson_at: nextLessonAtIso,
@@ -306,12 +315,16 @@ export function NewLessonForm({
             .eq("status", "planned")
             .select("id")
             .single()
-        : await supabase.from("lessons").insert(nextLessonPayload).select("id").single();
+        : await supabase
+            .from("lessons")
+            .insert({ id: nextLessonDraftId, ...nextLessonPayload })
+            .select("id")
+            .single();
 
       if (nextLessonMutation.error) {
-        nextLessonSaveWarning =
-          "The lesson was saved, but we couldn’t schedule the next lesson. Please try again from the student page.";
-        setPostSaveWarning(nextLessonSaveWarning);
+        postSaveWarnings.push(
+          "The lesson was saved, but we couldn’t schedule the next lesson. Please try again from the student page.",
+        );
       } else {
         const resolvedNextLessonId = linkedNextLessonId ?? nextLessonMutation.data?.id ?? null;
 
@@ -322,9 +335,9 @@ export function NewLessonForm({
             .eq("id", savedLessonId);
 
           if (linkError) {
-            nextLessonSaveWarning =
-              "The lesson was saved, but we couldn’t link the next lesson. Please check it from the student page.";
-            setPostSaveWarning(nextLessonSaveWarning);
+            postSaveWarnings.push(
+              "The lesson was saved, but we couldn’t link the next lesson. Please check it from the student page.",
+            );
           } else {
             nextLessonScheduled = true;
           }
@@ -336,9 +349,9 @@ export function NewLessonForm({
           const nextLessonCreditResult = await applyAvailableCreditToLesson(resolvedNextLessonId);
 
           if (!nextLessonCreditResult.ok) {
-            nextLessonSaveWarning =
-              "Both lessons were saved, but existing credit could not be applied to the next lesson.";
-            setPostSaveWarning(nextLessonSaveWarning);
+            postSaveWarnings.push(
+              "Both lessons were saved, but existing credit could not be applied to the next lesson.",
+            );
           }
         }
       }
@@ -356,19 +369,20 @@ export function NewLessonForm({
       nextLessonAt: nextLessonScheduled ? nextLessonAtIso : null,
     };
 
-    setIsSubmitting(false);
+    const postSaveWarning = postSaveWarnings.join(" ") || null;
+    setPostSaveWarning(postSaveWarning);
 
-    if (completionMode && !nextLessonSaveWarning) {
+    if (completionMode && !postSaveWarning) {
       const parentUpdateMessage = formatParentUpdate(studentName, nextSavedLesson, timeZone);
       window.sessionStorage.setItem(
         getCompletedLessonUpdateStorageKey(studentId),
         parentUpdateMessage,
       );
-      router.push(`/app/students/${studentId}?lessonCompleted=1`);
-      router.refresh();
+      window.location.replace(`/app/students/${studentId}?lessonCompleted=1`);
       return;
     }
 
+    setIsSubmitting(false);
     setSavedLesson(nextSavedLesson);
   }
 
