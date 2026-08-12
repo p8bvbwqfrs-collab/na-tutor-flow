@@ -14,6 +14,14 @@ const footerSource = readFileSync(
   new URL("../components/site-footer.tsx", import.meta.url),
   "utf8",
 );
+const privacySource = readFileSync(
+  new URL("../app/(public)/privacy/page.tsx", import.meta.url),
+  "utf8",
+);
+const termsSource = readFileSync(
+  new URL("../app/(public)/terms/page.tsx", import.meta.url),
+  "utf8",
+);
 
 test("homepage answers core signup trust questions without invented social proof", () => {
   assert.match(homepageSource, /Free to get started/);
@@ -23,7 +31,28 @@ test("homepage answers core signup trust questions without invented social proof
   assert.match(homepageSource, /You retain ownership/);
   assert.match(homepageSource, /download a portable copy/);
   assert.match(homepageSource, /permanently delete your account/);
+  assert.match(homepageSource, /do not sell your data/);
+  assert.match(
+    homepageSource,
+    /do not sell your data or use student and lesson content to train AI/,
+  );
+  assert.match(homepageSource, /free for early adopters/);
+  assert.match(homepageSource, /always be a free option/);
+  assert.match(homepageSource, /never be charged automatically/);
   assert.doesNotMatch(homepageSource, /thousands of tutors|trusted by|five-star software/i);
+});
+
+test("privacy and terms explain data use and sustainable pricing plainly", () => {
+  assert.match(privacySource, /sell your data/);
+  assert.match(privacySource, /Student and lesson content is not used to train AI models/);
+  assert.match(privacySource, /external AI service for generation/);
+
+  assert.match(termsSource, /Free access and future pricing/);
+  assert.match(termsSource, /Anyone who creates an account during this/);
+  assert.match(termsSource, /period is an early adopter/);
+  assert.match(termsSource, /always be a free option/);
+  assert.match(termsSource, /optional paid features or plans/);
+  assert.match(termsSource, /automatically without your active agreement/);
 });
 
 test("homepage trust copy remains readable at narrow mobile widths", () => {

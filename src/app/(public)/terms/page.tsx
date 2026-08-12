@@ -54,6 +54,22 @@ export default function TermsPage() {
         </section>
 
         <section className="rounded-lg border border-zinc-200 bg-white p-4 sm:p-6">
+          <h2 className="text-lg font-medium text-zinc-900">Free access and future pricing</h2>
+          <div className="mt-3 space-y-3 text-sm leading-6 text-zinc-600">
+            <p>
+              Tutor Flow is currently in early access. Anyone who creates an account during this
+              period is an early adopter. Early adopters will keep free access while the service
+              remains available, and there will always be a free option.
+            </p>
+            <p>
+              We may introduce optional paid features or plans to keep the service sustainable as
+              it grows. We will explain any paid option before it applies, and we will never charge
+              you automatically without your active agreement.
+            </p>
+          </div>
+        </section>
+
+        <section className="rounded-lg border border-zinc-200 bg-white p-4 sm:p-6">
           <h2 className="text-lg font-medium text-zinc-900">Limitation of liability</h2>
           <p className="mt-3 text-sm leading-6 text-zinc-600">
             To the fullest extent allowed by law, we are not liable for indirect, incidental, or
