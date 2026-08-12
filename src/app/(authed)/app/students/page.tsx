@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { MobileLogLessonFab } from "./components/mobile-log-lesson-fab";
 import { StudentsList } from "./components/students-list";
 
 export const dynamic = "force-dynamic";
@@ -133,19 +132,17 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
             {requestedLessonAction && !showArchived ? (
               <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
                 <p className="text-sm font-medium text-blue-950">
-                  Choose a student to {requestedLessonAction === "log" ? "log a lesson" : "schedule a lesson"}.
+                  Select a student
                 </p>
                 <p className="mt-1 text-sm text-blue-800">
-                  Use the matching action beside the student below.
+                  Choose who you want to {requestedLessonAction === "log" ? "log a lesson for" : "schedule a lesson for"}.
                 </p>
               </div>
             ) : null}
-            <StudentsList students={students} />
+            <StudentsList students={students} lessonAction={requestedLessonAction} />
           </div>
         )}
       </section>
-
-      {!showArchived ? <MobileLogLessonFab students={students} /> : null}
     </>
   );
 }
