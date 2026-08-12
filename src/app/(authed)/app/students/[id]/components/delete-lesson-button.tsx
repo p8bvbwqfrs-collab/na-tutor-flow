@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
@@ -12,15 +11,9 @@ type DeleteLessonButtonProps = {
 };
 
 export function DeleteLessonButton({ lessonId, studentId, className }: DeleteLessonButtonProps) {
-  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
 
   useEffect(() => {
     if (!isOpen) {
@@ -45,16 +38,14 @@ export function DeleteLessonButton({ lessonId, studentId, className }: DeleteLes
 
     const { error: deleteError } = await supabase.from("lessons").delete().eq("id", lessonId);
 
-    setIsDeleting(false);
-
     if (deleteError) {
+      setIsDeleting(false);
       setError("We couldn’t delete this lesson. Please try again.");
       return;
     }
 
     setIsOpen(false);
-    router.push(`/app/students/${studentId}`);
-    router.refresh();
+    window.location.replace(`/app/students/${studentId}`);
   }
 
   return (
@@ -70,7 +61,7 @@ export function DeleteLessonButton({ lessonId, studentId, className }: DeleteLes
         Delete lesson
       </button>
 
-      {isOpen && isMounted
+      {isOpen
         ? createPortal(
             <div
               className="fixed inset-0 z-[100] flex items-center justify-center bg-zinc-950/40 p-4"

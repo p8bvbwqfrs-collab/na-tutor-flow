@@ -1,12 +1,13 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getCurrencyLabel, type SupportedCurrencyCode } from "@/lib/currency";
 import { getDateKeyLocal } from "@/lib/datetime";
 import { autoApplyPaymentToLessons, type AllocationLike, type LessonFeeLike, type PaymentLike } from "@/lib/payments";
 import { trackActivationStep } from "@/lib/product-analytics";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { createSubmissionGuard } from "@/lib/submission-guard";
 import { verifyStudentIsActive } from "../../student-actions";
 
 type RecordPaymentFormProps = {
@@ -97,12 +98,15 @@ export function RecordPaymentForm({ studentId, currencyCode, timeZone }: RecordP
   const [note, setNote] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [warning, setWarning] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const submissionGuardRef = useRef(createSubmissionGuard());
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
     setMessage(null);
+    setWarning(null);
 
     const amountValue = Number(amount);
     if (!Number.isFinite(amountValue) || amountValue <= 0) {
@@ -112,11 +116,15 @@ export function RecordPaymentForm({ studentId, currencyCode, timeZone }: RecordP
 
     const amountPence = Math.round(amountValue * 100);
 
+    const submissionId = submissionGuardRef.current.acquire();
+    if (!submissionId) return;
+
     setIsSaving(true);
 
     const activeStudent = await verifyStudentIsActive(studentId);
 
     if (!activeStudent.ok) {
+      submissionGuardRef.current.release();
       setIsSaving(false);
       setError(activeStudent.error);
       return;
@@ -125,6 +133,7 @@ export function RecordPaymentForm({ studentId, currencyCode, timeZone }: RecordP
     const { data: payment, error: paymentError } = await supabase
       .from("payments")
       .insert({
+        id: submissionId,
         student_id: studentId,
         amount_pence: amountPence,
         status: "paid",
@@ -136,19 +145,20 @@ export function RecordPaymentForm({ studentId, currencyCode, timeZone }: RecordP
       .single();
 
     if (paymentError || !payment) {
+      submissionGuardRef.current.release();
       setIsSaving(false);
       setError(paymentError?.message || "Could not record payment.");
       return;
     }
 
+    let allocationWarning: string | null = null;
+
     if (amountPence > 0) {
       try {
         await applyPaymentToStudentLessons(supabase, studentId, payment as PaymentRow);
       } catch {
-        setIsSaving(false);
-        setError("Payment was recorded, but could not be applied to lessons.");
-        router.refresh();
-        return;
+        allocationWarning =
+          "Payment was recorded, but could not be applied to lessons automatically. Please review the student balance.";
       }
     }
 
@@ -156,8 +166,10 @@ export function RecordPaymentForm({ studentId, currencyCode, timeZone }: RecordP
     setAmount("");
     setNote("");
     setPaymentDate(getDateKeyLocal(new Date(), timeZone));
-    setMessage("Payment recorded.");
+    setMessage(allocationWarning ? null : "Payment recorded.");
+    setWarning(allocationWarning);
     setIsOpen(false);
+    submissionGuardRef.current.reset();
     trackActivationStep("payment_recorded");
     router.refresh();
   }
@@ -167,12 +179,17 @@ export function RecordPaymentForm({ studentId, currencyCode, timeZone }: RecordP
       <div className="flex flex-col gap-1 sm:items-end">
         <button
           type="button"
-          onClick={() => setIsOpen(true)}
+          onClick={() => {
+            setMessage(null);
+            setWarning(null);
+            setIsOpen(true);
+          }}
           className="inline-flex min-h-10 w-full items-center justify-center rounded-md bg-blue-700 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
         >
           Record upfront payment
         </button>
         {message ? <p role="status" className="text-xs font-medium text-emerald-700">{message}</p> : null}
+        {warning ? <p role="alert" className="text-xs font-medium text-amber-800">{warning}</p> : null}
       </div>
     );
   }

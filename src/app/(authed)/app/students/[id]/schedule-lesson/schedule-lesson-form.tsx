@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useMemo, useRef, useState } from "react";
 import { getCurrencyLabel, type SupportedCurrencyCode } from "@/lib/currency";
 import { getTimeZoneLabel, getZonedDateTimeInputValues } from "@/lib/datetime";
 import { getSubmittedLessonAtIsoFromForm } from "@/lib/lesson-scheduling";
+import { createSubmissionGuard } from "@/lib/submission-guard";
 import { verifyStudentIsActive } from "../../student-actions";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { applyAvailableCreditToLesson } from "../../../payment-actions";
@@ -47,6 +48,7 @@ export function ScheduleLessonForm({
   const [error, setError] = useState<string | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const submissionGuardRef = useRef(createSubmissionGuard());
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -80,11 +82,15 @@ export function ScheduleLessonForm({
       return;
     }
 
+    const submissionId = submissionGuardRef.current.acquire();
+    if (!submissionId) return;
+
     setIsSubmitting(true);
 
     const activeStudent = await verifyStudentIsActive(studentId);
 
     if (!activeStudent.ok) {
+      submissionGuardRef.current.release();
       setIsSubmitting(false);
       setError(activeStudent.error);
       return;
@@ -105,9 +111,10 @@ export function ScheduleLessonForm({
 
     const lessonMutation = isEditMode
       ? await supabase.from("lessons").update(payload).eq("id", lessonId).select("id").single()
-      : await supabase.from("lessons").insert(payload).select("id").single();
+      : await supabase.from("lessons").insert({ id: submissionId, ...payload }).select("id").single();
 
     if (lessonMutation.error || !lessonMutation.data?.id) {
+      submissionGuardRef.current.release();
       setIsSubmitting(false);
       setError(lessonMutation.error?.message || "We couldn’t save this scheduled lesson. Please try again.");
       return;

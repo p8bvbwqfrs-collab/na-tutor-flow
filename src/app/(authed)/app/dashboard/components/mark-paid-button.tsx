@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { createSubmissionGuard } from "@/lib/submission-guard";
 import { payOutstandingLessonAmount } from "../../payment-actions";
 
 type MarkPaidButtonProps = {
@@ -13,8 +14,11 @@ export function MarkPaidButton({ lessonId }: MarkPaidButtonProps) {
   const [isUpdating, setIsUpdating] = useState(false);
   const [marked, setMarked] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const submissionGuardRef = useRef(createSubmissionGuard());
 
   async function onMarkPaid() {
+    if (!submissionGuardRef.current.acquire()) return;
+
     setIsUpdating(true);
     setError(null);
     setMarked(true);
@@ -24,6 +28,7 @@ export function MarkPaidButton({ lessonId }: MarkPaidButtonProps) {
     setIsUpdating(false);
 
     if (!result.ok) {
+      submissionGuardRef.current.release();
       setMarked(false);
       setError(result.error ?? "Could not record payment.");
       return;

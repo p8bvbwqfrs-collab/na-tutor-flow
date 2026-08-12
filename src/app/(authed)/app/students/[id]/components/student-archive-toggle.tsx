@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 type StudentArchiveToggleProps = {
@@ -10,7 +9,6 @@ type StudentArchiveToggleProps = {
 };
 
 export function StudentArchiveToggle({ studentId, isArchived }: StudentArchiveToggleProps) {
-  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,15 +24,13 @@ export function StudentArchiveToggle({ studentId, isArchived }: StudentArchiveTo
       .update({ archived_at: archivedAt })
       .eq("id", studentId);
 
-    setIsSubmitting(false);
-
     if (updateError) {
+      setIsSubmitting(false);
       setError(updateError.message || "Could not update student status.");
       return;
     }
 
-    router.push("/app/students");
-    router.refresh();
+    window.location.replace("/app/students");
   }
 
   return (

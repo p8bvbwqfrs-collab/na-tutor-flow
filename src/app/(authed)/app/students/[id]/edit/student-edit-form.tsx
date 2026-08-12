@@ -1,7 +1,6 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { verifyStudentIsActive } from "../../student-actions";
 
@@ -24,7 +23,6 @@ export function EditStudentForm({
   initialNotes,
   initialDefaultFeeAmount,
 }: EditStudentFormProps) {
-  const router = useRouter();
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
 
   const [studentName, setStudentName] = useState(initialStudentName);
@@ -78,15 +76,13 @@ export function EditStudentForm({
       })
       .eq("id", studentId);
 
-    setIsSubmitting(false);
-
     if (updateError) {
+      setIsSubmitting(false);
       setError(updateError.message);
       return;
     }
 
-    router.push(`/app/students/${studentId}`);
-    router.refresh();
+    window.location.replace(`/app/students/${studentId}`);
   }
 
   return (
