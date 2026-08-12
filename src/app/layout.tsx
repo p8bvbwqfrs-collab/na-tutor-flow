@@ -19,7 +19,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-zinc-50 text-zinc-900">
+      <body className="min-h-screen bg-[var(--tf-canvas)] text-zinc-900 antialiased">
         {children}
         <Analytics />
       </body>

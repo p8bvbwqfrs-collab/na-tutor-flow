@@ -21,7 +21,7 @@ export function AuthedNav() {
 
   return (
     <div className="relative">
-      <nav className="flex flex-wrap items-center gap-2" aria-label="Authenticated navigation">
+      <nav className="grid grid-cols-4 gap-1 sm:flex sm:flex-wrap sm:items-center sm:gap-2" aria-label="Authenticated navigation">
         {navItems.map((item) => {
           const isActive = isActivePath(pathname, item.href);
           const isDestinationPending = Boolean(
@@ -34,10 +34,10 @@ export function AuthedNav() {
               href={item.href}
               aria-current={isActive ? "page" : undefined}
               aria-busy={isDestinationPending || undefined}
-              className={`inline-flex min-h-9 items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 ${
+              className={`inline-flex min-h-10 min-w-0 items-center justify-center gap-2 rounded-lg px-2 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:px-3 ${
                 isActive
                   ? "bg-blue-50 text-blue-900 ring-1 ring-inset ring-blue-200"
-                  : "text-zinc-900 hover:bg-zinc-50 hover:underline"
+                  : "text-zinc-700 hover:bg-zinc-100 hover:text-zinc-950"
               } ${isDestinationPending ? "cursor-wait" : ""}`}
             >
               {showProgress && isDestinationPending ? (

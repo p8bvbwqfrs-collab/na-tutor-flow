@@ -33,6 +33,10 @@ const publicLayoutSource = readFileSync(
   new URL("../app/(public)/layout.tsx", import.meta.url),
   "utf8",
 );
+const brandSource = readFileSync(
+  new URL("../components/tutor-flow-brand.tsx", import.meta.url),
+  "utf8",
+);
 
 test("lesson statuses have consistent text and semantic tones", () => {
   assert.equal(getLessonStatusLabel("planned"), "Scheduled");
@@ -73,6 +77,8 @@ test("archived state stays neutral and the Tutor Flow identity uses one blue acc
   assert.match(studentSource, /Archived student/);
   assert.match(studentSource, /border-zinc-300 bg-zinc-100/);
   assert.doesNotMatch(studentSource, /Archived student[\s\S]{0,180}amber/);
-  assert.match(authedLayoutSource, /rounded-full bg-blue-700/);
-  assert.match(publicLayoutSource, /rounded-full bg-blue-700/);
+  assert.match(authedLayoutSource, /TutorFlowBrand/);
+  assert.match(publicLayoutSource, /TutorFlowBrand/);
+  assert.match(brandSource, /fill-blue-700/);
+  assert.doesNotMatch(brandSource, /fill-(?:violet|purple|pink|orange)-/);
 });

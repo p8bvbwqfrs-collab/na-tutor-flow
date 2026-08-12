@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { TutorFlowBrand } from "@/components/tutor-flow-brand";
 
 type SiteFooterProps = {
   className?: string;
@@ -12,7 +13,10 @@ export function SiteFooter({
   return (
     <footer className={className}>
       <div className={containerClassName}>
-        <p>Tutor Flow</p>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <TutorFlowBrand href="/" label="Tutor Flow home" compact />
+          <p className="text-xs text-zinc-500">© {new Date().getFullYear()} Tutor Flow</p>
+        </div>
         <div className="flex flex-wrap items-center gap-4">
           <Link
             href="/resources"

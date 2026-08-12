@@ -5,6 +5,7 @@ import { FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { trackActivationStep } from "@/lib/product-analytics";
+import { fieldControl, primaryAction, secondaryAction, surfacePanel } from "@/lib/ui-patterns";
 
 export default function NewStudentPage() {
   const router = useRouter();
@@ -78,7 +79,7 @@ export default function NewStudentPage() {
         <h1 className="text-xl font-semibold text-zinc-900">Add student</h1>
       </div>
 
-      <form onSubmit={onSubmit} className="space-y-4 rounded-lg border border-zinc-200 bg-white p-4 sm:p-6">
+      <form onSubmit={onSubmit} className={surfacePanel + " space-y-4 p-4 sm:p-6"}>
         <div>
           <label htmlFor="student_name" className="block text-sm font-medium text-zinc-700">
             Student name
@@ -90,7 +91,7 @@ export default function NewStudentPage() {
             aria-describedby={error ? formErrorId : undefined}
             value={studentName}
             onChange={(event) => setStudentName(event.target.value)}
-            className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-500 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 disabled:bg-zinc-100 disabled:text-zinc-600"
+            className={fieldControl + " mt-1"}
           />
         </div>
 
@@ -104,7 +105,7 @@ export default function NewStudentPage() {
             aria-describedby={error ? formErrorId : "subject-help"}
             value={subject}
             onChange={(event) => setSubject(event.target.value)}
-            className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-500 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 disabled:bg-zinc-100 disabled:text-zinc-600"
+            className={fieldControl + " mt-1"}
           />
           <p id="subject-help" className="mt-1 text-xs text-zinc-500">
             e.g. Maths, French, English, Science
@@ -121,7 +122,7 @@ export default function NewStudentPage() {
             aria-describedby={error ? formErrorId : undefined}
             value={parentName}
             onChange={(event) => setParentName(event.target.value)}
-            className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-500 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 disabled:bg-zinc-100 disabled:text-zinc-600"
+            className={fieldControl + " mt-1"}
           />
         </div>
 
@@ -135,7 +136,7 @@ export default function NewStudentPage() {
             aria-describedby={error ? formErrorId : undefined}
             value={parentContact}
             onChange={(event) => setParentContact(event.target.value)}
-            className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-500 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 disabled:bg-zinc-100 disabled:text-zinc-600"
+            className={fieldControl + " mt-1"}
           />
         </div>
 
@@ -150,7 +151,7 @@ export default function NewStudentPage() {
             aria-describedby={error ? formErrorId : undefined}
             value={notes}
             onChange={(event) => setNotes(event.target.value)}
-            className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-500 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 disabled:bg-zinc-100 disabled:text-zinc-600"
+            className={fieldControl + " mt-1"}
           />
         </div>
 
@@ -168,13 +169,13 @@ export default function NewStudentPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="rounded-md bg-blue-700 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-zinc-400 disabled:text-zinc-100"
+            className={primaryAction + " px-4"}
           >
             {isSubmitting ? "Saving..." : "Save student"}
           </button>
           <Link
             href="/app/students"
-            className="rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm text-zinc-900 transition-colors hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+            className={secondaryAction + " px-4"}
           >
             Cancel
           </Link>
