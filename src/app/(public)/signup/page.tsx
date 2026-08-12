@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { Suspense } from "react";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { LoginClient } from "../login/login-client";
 
 export const metadata: Metadata = {
@@ -17,7 +19,16 @@ function SignupFallback() {
   );
 }
 
-export default function SignupPage() {
+export default async function SignupPage() {
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user) {
+    redirect("/app/dashboard");
+  }
+
   return (
     <Suspense fallback={<SignupFallback />}>
       <LoginClient mode="sign_up" />
