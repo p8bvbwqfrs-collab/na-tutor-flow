@@ -42,11 +42,18 @@ export default function PrivacyPage() {
 
         <section className="rounded-lg border border-zinc-200 bg-white p-4 sm:p-6">
           <h2 className="text-lg font-medium text-zinc-900">How we use data</h2>
-          <p className="mt-3 text-sm leading-6 text-zinc-600">
-            We use your data to provide the service, keep your account working, store your lesson
-            records, and improve the product over time. We do not treat your lesson content as our
-            own.
-          </p>
+          <div className="mt-3 space-y-3 text-sm leading-6 text-zinc-600">
+            <p>
+              We use your data to provide the service, keep your account working, store your
+              lesson records, and improve the product over time. We do not treat your lesson
+              content as our own or sell your data.
+            </p>
+            <p>
+              Student and lesson content is not used to train AI models. Parent updates are
+              assembled within Tutor Flow from the notes you enter; that content is not sent to an
+              external AI service for generation.
+            </p>
+          </div>
         </section>
 
         <section className="rounded-lg border border-zinc-200 bg-white p-4 sm:p-6">

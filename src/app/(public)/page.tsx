@@ -64,7 +64,8 @@ const reassurances = [
   },
   {
     title: "Your data stays yours",
-    copy: "Export your account data or permanently delete it from Settings.",
+    copy:
+      "We do not sell your data or use student and lesson content to train AI. Export or permanently delete it anytime.",
   },
   {
     title: "Simple from day one",
@@ -81,12 +82,12 @@ const faqs = [
   {
     question: "How much does it cost?",
     answer:
-      "Tutor Flow is currently free to get started. It is an early-stage product, so the service and its features will continue to develop.",
+      "Tutor Flow is free for early adopters, and there will always be a free option. If optional paid features are introduced as the service grows, early adopters will keep free access and will never be charged automatically.",
   },
   {
     question: "What happens to the information I add?",
     answer:
-      "You retain ownership of your student and lesson data. You can download a portable copy or permanently delete your account and saved data from Settings.",
+      "You retain ownership of your student and lesson data. We do not sell it or use that content to train AI. You can download a portable copy or permanently delete your account and saved data from Settings.",
   },
 ] as const;
 
@@ -245,8 +246,8 @@ export default function HomePage() {
               A practical tool, without the heavy setup
             </h2>
             <p className="mt-2 text-sm leading-6 text-zinc-600">
-              Create an account and try the core Tutor Flow workflow. The product is still
-              developing, with a focus on keeping everyday tutor admin clear and manageable.
+              Create an account and try the core Tutor Flow workflow. Early adopters keep free
+              access, and there will always be a free option as the product develops.
             </p>
             <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm">
               <Link
