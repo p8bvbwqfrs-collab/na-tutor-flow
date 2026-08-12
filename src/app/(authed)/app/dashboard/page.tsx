@@ -421,7 +421,10 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         )}
       </section>
 
-      <section className="mt-6" aria-labelledby="money-heading">
+      <section
+        className="mt-6 rounded-xl border border-zinc-200 bg-zinc-50/50 p-4 sm:p-5"
+        aria-labelledby="money-heading"
+      >
         <div>
           <SectionHeading
             id="money-heading"
@@ -429,7 +432,10 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             description="Received and completed figures use the selected timeframe. Outstanding is what is owed now."
           />
           <div className="mt-3">
-            <ChartRangeFilter selected={selectedRange} />
+            <ChartRangeFilter
+              selected={selectedRange}
+              description="Updates received income, completed lessons, the student breakdown and the income chart below. Outstanding and active students stay current."
+            />
           </div>
         </div>
 

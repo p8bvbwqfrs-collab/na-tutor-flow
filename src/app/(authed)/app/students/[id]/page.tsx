@@ -732,7 +732,11 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
             description="Received and completed use the selected timeframe. Outstanding is what is owed now."
           />
           <div className="mt-3">
-            <ChartRangeFilter selected={selectedRange} basePath={`/app/students/${student.id}`} />
+            <ChartRangeFilter
+              selected={selectedRange}
+              basePath={`/app/students/${student.id}`}
+              description="Updates received income and completed lessons below. Outstanding, last payment and payment history stay current."
+            />
           </div>
 
           {hasStudentFinancialError ? (
@@ -828,14 +832,6 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
         </Link>
       </div>
 
-      {isArchived ? null : (
-        <Link
-          href={`/app/students/${student.id}/new-lesson`}
-          className="fixed bottom-4 right-4 z-40 inline-flex items-center rounded-full bg-blue-700 px-4 py-3 text-sm font-medium text-white shadow-lg transition-colors hover:bg-blue-600 sm:hidden"
-        >
-          + Lesson
-        </Link>
-      )}
     </section>
   );
 }
