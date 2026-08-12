@@ -1,11 +1,13 @@
 import { headers } from "next/headers";
 import { SectionHeading } from "@/components/section-heading";
 import { canUseCalendarFeeds, generateCalendarFeedToken } from "@/lib/calendar-feed";
+import { TUTOR_FLOW_CONTACT_EMAIL, TUTOR_FLOW_FEEDBACK_EMAIL_HREF } from "@/lib/contact";
 import {
   getUserCalendarFeedVersion,
   getUserCurrencyCode,
   getUserTimeZone,
 } from "@/lib/user-settings";
+import { secondaryAction } from "@/lib/ui-patterns";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { CalendarFeedControls } from "./components/calendar-feed-controls";
 import { AccountSecurityControls } from "./components/account-security-controls";
@@ -142,6 +144,25 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
                 </div>
               </details>
             </div>
+          </div>
+        </section>
+
+        <section className="rounded-lg border border-zinc-200 bg-white p-4">
+          <SectionHeading
+            title="Help improve Tutor Flow"
+            description="Found something confusing, missing or slower than it should be? Share what you were trying to do so it can be considered alongside other tutors' workflows."
+          />
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm leading-6 text-zinc-600">
+              Feedback goes directly to{" "}
+              <span className="font-medium text-zinc-900">{TUTOR_FLOW_CONTACT_EMAIL}</span>.
+            </p>
+            <a
+              href={TUTOR_FLOW_FEEDBACK_EMAIL_HREF}
+              className={secondaryAction + " w-full shrink-0 sm:w-auto"}
+            >
+              Send feedback by email
+            </a>
           </div>
         </section>
 
