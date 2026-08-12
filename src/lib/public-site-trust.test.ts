@@ -22,6 +22,15 @@ const termsSource = readFileSync(
   new URL("../app/(public)/terms/page.tsx", import.meta.url),
   "utf8",
 );
+const aboutSource = readFileSync(
+  new URL("../app/(public)/about/page.tsx", import.meta.url),
+  "utf8",
+);
+const settingsSource = readFileSync(
+  new URL("../app/(authed)/app/settings/page.tsx", import.meta.url),
+  "utf8",
+);
+const contactSource = readFileSync(new URL("./contact.ts", import.meta.url), "utf8");
 
 test("homepage answers core signup trust questions without invented social proof", () => {
   assert.match(homepageSource, /Free to get started/);
@@ -97,4 +106,16 @@ test("the homepage preview reflects the current student workflow without an outd
   assert.match(previewSource, /What we covered/);
   assert.match(previewSource, /Next focus/);
   assert.match(homepageSource, /<h3 className="mt-2 text-sm font-semibold/);
+});
+
+test("early adopters can understand maintenance principles and send contextual feedback", () => {
+  assert.match(aboutSource, /How Tutor Flow is maintained/);
+  assert.match(aboutSource, /Feedback is weighed carefully/);
+  assert.match(aboutSource, /Core workflows are covered by automated checks/);
+  assert.match(aboutSource, /href="\/privacy"/);
+  assert.match(settingsSource, /Help improve Tutor Flow/);
+  assert.match(settingsSource, /Send feedback by email/);
+  assert.match(settingsSource, /w-full shrink-0 sm:w-auto/);
+  assert.match(contactSource, /What%20were%20you%20trying%20to%20do/);
+  assert.match(contactSource, /What%20would%20have%20made%20it%20easier/);
 });
