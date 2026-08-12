@@ -3,6 +3,7 @@ import Link from "next/link";
 import { JsonLd } from "@/components/json-ld";
 import { StudentWorkflowPreview } from "./components/student-workflow-preview";
 import { createPublicMetadata } from "@/lib/seo";
+import { primaryAction, secondaryAction, surfacePanel } from "@/lib/ui-patterns";
 
 const description =
   "Log lessons, track payments, and send updates in one simple tool built for private tutors.";
@@ -164,7 +165,7 @@ export default function HomePage() {
         }}
       />
       <section className="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:py-10">
-      <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white p-6 sm:p-8 lg:p-10">
+      <div className={surfacePanel + " overflow-hidden p-6 sm:p-8 lg:p-10"}>
         <div className="grid gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-center lg:gap-10 xl:gap-12">
           <div className="mx-auto max-w-xl text-center lg:mx-0 lg:text-left">
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500 sm:text-sm sm:tracking-[0.18em]">
@@ -179,13 +180,13 @@ export default function HomePage() {
             <div className="mt-6 flex flex-col items-center justify-center gap-2 sm:flex-row lg:justify-start">
               <Link
                 href="/signup"
-                className="inline-flex min-h-11 w-full items-center justify-center rounded-md bg-blue-700 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
+                className={primaryAction + " w-full sm:w-auto"}
               >
                 Get started free
               </Link>
               <Link
                 href="/how-it-works"
-                className="inline-flex min-h-11 w-full items-center justify-center rounded-md border border-zinc-200 bg-white px-5 py-2.5 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
+                className={secondaryAction + " w-full sm:w-auto"}
               >
                 See how it works
               </Link>

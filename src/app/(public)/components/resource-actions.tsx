@@ -2,6 +2,7 @@
 
 import { track } from "@vercel/analytics";
 import { useEffect, useRef, useState } from "react";
+import { focusRing, primaryAction } from "@/lib/ui-patterns";
 
 type ResourceActionLinkProps = {
   href: string;
@@ -22,8 +23,8 @@ export function ResourceActionLink({
 }: ResourceActionLinkProps) {
   const className =
     variant === "primary"
-      ? "inline-flex min-h-11 w-full items-center justify-center rounded-md bg-blue-700 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
-      : "inline-flex min-h-11 w-full items-center justify-center px-3 py-2.5 text-sm font-medium text-zinc-800 underline decoration-zinc-300 underline-offset-4 transition-colors hover:decoration-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto";
+      ? primaryAction + " w-full sm:w-auto"
+      : "inline-flex min-h-11 w-full items-center justify-center rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-800 underline decoration-zinc-300 underline-offset-4 transition-colors hover:decoration-zinc-700 sm:w-auto " + focusRing;
 
   return (
     <a
@@ -87,7 +88,7 @@ export function CopyResourceButton({
       <button
         type="button"
         onClick={copyResource}
-        className="inline-flex min-h-11 w-full items-center justify-center rounded-md bg-blue-700 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
+        className={primaryAction + " w-full sm:w-auto"}
       >
         {status === "copied" ? "Copied" : label}
       </button>
@@ -119,7 +120,7 @@ export function ResourceCardLink({
   return (
     <a
       href={href}
-      className="group flex h-full flex-col rounded-lg border border-zinc-200 bg-white p-5 transition-colors hover:border-zinc-300 hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:p-6"
+      className={"group flex h-full flex-col rounded-xl border border-zinc-200 bg-white p-5 shadow-[var(--shadow-panel)] transition-all hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md motion-reduce:transform-none motion-reduce:transition-none sm:p-6 " + focusRing}
       onClick={() => {
         try {
           track("resource_action", { resource: "resource-index", action: `open_${resource}` });

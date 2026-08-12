@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { SiteFooter } from "@/components/site-footer";
+import { TutorFlowBrand } from "@/components/tutor-flow-brand";
+import { primaryAction, quietAction } from "@/lib/ui-patterns";
 
 export default function PublicLayout({
   children,
@@ -8,37 +10,35 @@ export default function PublicLayout({
 }>) {
   return (
     <div className="min-h-screen">
-      <header className="border-b border-zinc-200 bg-white text-zinc-900">
+      <header className="sticky top-0 z-40 border-b border-zinc-200 bg-white/95 text-zinc-900 backdrop-blur">
         <div className="mx-auto flex w-full max-w-4xl items-center justify-between px-4 py-3">
-          <Link
+          <TutorFlowBrand
             href="/"
-            className="group inline-flex items-center gap-2 rounded-md px-1 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-            aria-label="NA Tutor Flow home"
-          >
-            <span className="inline-block h-2.5 w-2.5 rounded-full bg-blue-700" aria-hidden="true" />
-            <span className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">NA</span>
-            <span className="text-lg font-semibold tracking-tight text-zinc-900 underline-offset-4 group-hover:underline">
-              Tutor Flow
-            </span>
-          </Link>
+            label="Tutor Flow home"
+            compact
+          />
           <nav className="flex items-center gap-1" aria-label="Primary navigation">
             <Link
               href="/how-it-works"
-              className="hidden rounded-md px-2 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 hover:text-zinc-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:inline-flex sm:px-3"
+              className={quietAction + " max-sm:hidden"}
             >
               How it works
             </Link>
             <Link
               href="/resources"
-              className="hidden rounded-md px-2 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 hover:text-zinc-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:inline-flex sm:px-3"
+              className={quietAction + " max-sm:hidden"}
             >
               Resources
             </Link>
             <Link
               href="/login"
-              className="rounded-md px-2 py-2 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:px-3"
+              className={quietAction}
             >
               Login
+            </Link>
+            <Link href="/signup" className={`${primaryAction} min-h-10 px-3 sm:px-4`}>
+              <span className="sm:hidden">Start free</span>
+              <span className="max-sm:hidden">Get started free</span>
             </Link>
           </nav>
         </div>

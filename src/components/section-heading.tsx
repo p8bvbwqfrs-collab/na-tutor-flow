@@ -17,7 +17,7 @@ export function SectionHeading({
   level = 2,
   id,
   className = "",
-  headingClassName = "text-lg font-medium text-zinc-900",
+  headingClassName = "text-lg font-semibold tracking-tight text-zinc-950",
 }: SectionHeadingProps) {
   const [isOpen, setIsOpen] = useState(false);
   const generatedId = useId();
@@ -34,7 +34,7 @@ export function SectionHeading({
 
   return (
     <div className={className}>
-      <div className="flex min-w-0 items-center gap-1">
+      <div className="flex min-w-0 items-center gap-1.5">
         {heading}
         <button
           type="button"
@@ -42,11 +42,11 @@ export function SectionHeading({
           aria-expanded={isOpen}
           aria-controls={descriptionId}
           onClick={() => setIsOpen((current) => !current)}
-          className="inline-flex min-h-10 min-w-10 shrink-0 items-center justify-center rounded-md text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+          className="inline-flex min-h-10 min-w-10 shrink-0 items-center justify-center rounded-lg text-zinc-500 transition-colors hover:bg-blue-50 hover:text-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
         >
           <span
             aria-hidden="true"
-            className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-zinc-300 text-xs font-semibold"
+            className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-zinc-300 bg-white text-xs font-semibold"
           >
             i
           </span>
@@ -55,7 +55,7 @@ export function SectionHeading({
       {isOpen ? (
         <p
           id={descriptionId}
-          className="mt-1 max-w-2xl rounded-md bg-zinc-50 px-3 py-2 text-sm leading-6 text-zinc-600"
+          className="mt-1 max-w-2xl rounded-lg border border-blue-100 bg-blue-50/60 px-3 py-2 text-sm leading-6 text-zinc-700"
         >
           {description}
         </p>

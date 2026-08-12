@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ReactNode } from "react";
+import { focusRing, surfacePanel } from "@/lib/ui-patterns";
 import { ResourceActionLink } from "./resource-actions";
 
 type PublicContentPageProps = {
@@ -21,7 +22,7 @@ export function PublicContentPage({
 }: PublicContentPageProps) {
   return (
     <section className="mx-auto max-w-3xl space-y-6 py-6 sm:py-10">
-      <div className="rounded-lg border border-zinc-200 bg-white p-6 sm:p-8">
+      <div className={surfacePanel + " p-6 sm:p-8"}>
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-blue-700">{category}</p>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight text-zinc-900 sm:text-4xl">
           {title}
@@ -44,7 +45,7 @@ export function PublicContentPage({
           Built from real private tutoring workflows · <time dateTime="2026-08-10">Reviewed August 2026</time>
         </p>
       </div>
-      <article className="divide-y divide-zinc-200 overflow-hidden rounded-lg border border-zinc-200 bg-white">
+      <article className={surfacePanel + " divide-y divide-zinc-200 overflow-hidden"}>
         {children}
       </article>
     </section>
@@ -78,7 +79,7 @@ export function ResourceLinksSection({ links }: ResourceLinksSectionProps) {
           <Link
             key={link.href}
             href={link.href}
-            className="inline-flex min-h-11 items-center rounded-md border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+            className={"inline-flex min-h-11 items-center rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm font-medium text-zinc-900 transition-colors hover:border-zinc-300 hover:bg-white " + focusRing}
           >
             {link.label}
           </Link>

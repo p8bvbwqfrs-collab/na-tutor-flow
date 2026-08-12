@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { TutorFlowBrand } from "@/components/tutor-flow-brand";
 
 type SiteFooterProps = {
   className?: string;
@@ -12,7 +13,7 @@ export function SiteFooter({
   return (
     <footer className={className}>
       <div className={containerClassName}>
-        <p>Tutor Flow</p>
+        <TutorFlowBrand href="/" label="Tutor Flow home" compact />
         <div className="flex flex-wrap items-center gap-4">
           <Link
             href="/resources"

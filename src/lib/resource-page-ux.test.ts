@@ -27,7 +27,7 @@ const resourceIndexSource = readFileSync("src/app/(public)/resources/page.tsx", 
 test("resource pages use a compact header and one divided article surface", () => {
   assert.match(sharedPageSource, /category: string/);
   assert.match(sharedPageSource, /primaryAction: ReactNode/);
-  assert.match(sharedPageSource, /<article className="divide-y divide-zinc-200/);
+  assert.match(sharedPageSource, /<article className=\{surfacePanel \+ " divide-y divide-zinc-200/);
   assert.match(sharedPageSource, /Built from real private tutoring workflows/);
   assert.match(sharedPageSource, /Reviewed August 2026/);
   assert.doesNotMatch(
