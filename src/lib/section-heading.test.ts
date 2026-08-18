@@ -3,15 +3,34 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 
 const componentSource = readFileSync("src/components/section-heading.tsx", "utf8");
+const disclosureSource = readFileSync("src/components/info-disclosure.tsx", "utf8");
 
 test("optional section guidance works by touch and keyboard rather than hover alone", () => {
-  assert.match(componentSource, /<button/);
-  assert.match(componentSource, /aria-label=\{`About \$\{label\}`\}/);
-  assert.match(componentSource, /aria-expanded=\{isOpen\}/);
-  assert.match(componentSource, /aria-controls=\{descriptionId\}/);
-  assert.match(componentSource, /min-h-10 min-w-10/);
-  assert.match(componentSource, /onClick=\{\(\) => setIsOpen/);
-  assert.doesNotMatch(componentSource, /onMouseEnter|onMouseLeave/);
+  assert.match(componentSource, /<InfoDisclosure/);
+  assert.match(disclosureSource, /<button/);
+  assert.match(disclosureSource, /aria-label=\{`About \$\{label\}`\}/);
+  assert.match(disclosureSource, /aria-expanded=\{isOpen\}/);
+  assert.match(disclosureSource, /aria-controls=\{descriptionId\}/);
+  assert.match(disclosureSource, /min-h-10 min-w-10/);
+  assert.match(disclosureSource, /onClick=\{\(\) => setIsOpen/);
+  assert.doesNotMatch(disclosureSource, /onMouseEnter|onMouseLeave/);
+});
+
+test("section headings and control labels share the same information pattern", () => {
+  const rangeFilter = readFileSync(
+    "src/app/(authed)/app/dashboard/components/chart-range-filter.tsx",
+    "utf8",
+  );
+  const unpaidLessons = readFileSync(
+    "src/app/(authed)/app/dashboard/components/unpaid-lessons-section.tsx",
+    "utf8",
+  );
+  const dashboard = readFileSync("src/app/(authed)/app/dashboard/page.tsx", "utf8");
+
+  assert.match(rangeFilter, /<InfoDisclosure/);
+  assert.doesNotMatch(rangeFilter, /<p className="mt-1 text-xs leading-5 text-blue-900/);
+  assert.match(unpaidLessons, /<SectionHeading/);
+  assert.match(dashboard, /title="Income over time"/);
 });
 
 test("authenticated pages share guidance while redundant page subtitles stay removed", () => {

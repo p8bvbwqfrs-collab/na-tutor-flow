@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useId } from "react";
+import { InfoDisclosure } from "@/components/info-disclosure";
 import type { ReportingRange } from "@/lib/financial-reporting";
 import { useNavigationFeedback } from "../../../components/navigation-feedback-provider";
 
@@ -42,12 +43,16 @@ export function ChartRangeFilter({
 
   return (
     <div className="rounded-lg border border-blue-200 bg-blue-50/60 p-3 sm:p-4">
-      <div>
-        <label htmlFor={selectId} className="text-sm font-semibold text-blue-950">
-          Reporting period
-        </label>
-        <p className="mt-1 text-xs leading-5 text-blue-900 sm:text-sm">{description}</p>
-      </div>
+      <InfoDisclosure
+        trigger={
+          <label htmlFor={selectId} className="text-sm font-semibold text-blue-950">
+            Reporting period
+          </label>
+        }
+        label="Reporting period"
+        description={description}
+        descriptionClassName="mt-1 max-w-2xl rounded-lg border border-blue-200 bg-white/80 px-3 py-2 text-xs leading-5 text-blue-950 sm:text-sm"
+      />
 
       <select
         id={selectId}

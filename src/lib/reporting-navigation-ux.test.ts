@@ -17,6 +17,7 @@ test("reporting periods are explicit and mobile friendly", () => {
   assert.match(rangeFilterSource, /<select/);
   assert.match(rangeFilterSource, /sm:hidden/);
   assert.match(rangeFilterSource, /hidden flex-wrap gap-2 sm:flex/);
+  assert.match(rangeFilterSource, /<InfoDisclosure/);
   assert.match(dashboardSource, /student breakdown and the income chart below/);
   assert.match(studentSource, /payment history stay current/);
 });
