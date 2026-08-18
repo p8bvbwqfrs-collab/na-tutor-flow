@@ -32,7 +32,10 @@ test("student overview separates current status from updates and lesson history"
   assert.match(source, /student-overview-heading/);
   assert.match(source, />Outstanding</);
   assert.match(source, /attentionLessonLabel/);
-  assert.match(source, /href=\{outstandingAmountPence > 0 && !isArchived \? "#payment-history" : "#money"\}/);
+  assert.match(source, /singleOutstandingLesson/);
+  assert.match(source, /paidLabel="Mark lesson as paid"/);
+  assert.match(source, /href=\{outstandingLessons\.length > 1 && !isArchived \? "#unpaid-lessons" : "#money"\}/);
+  assert.match(source, /Choose the lesson that has been paid/);
   assert.match(source, /href="#student-schedule"/);
   assert.match(source, /md:grid-cols-2/);
   assert.match(source, /Updates and lesson history/);
@@ -49,6 +52,30 @@ test("student overview separates current status from updates and lesson history"
   assert.doesNotMatch(source, /sm:grid-cols-\[5\.5rem_minmax\(0,1fr\)\]/);
   assert.match(paymentsSource, /id="payment-history"/);
   assert.match(paymentsSource, /embedded/);
+});
+
+test("student payment actions match the lesson the tutor has been paid for", () => {
+  const pageSource = readFileSync("src/app/(authed)/app/students/[id]/page.tsx", "utf8");
+  const historySource = readFileSync(
+    "src/app/(authed)/app/students/[id]/components/past-lessons-monthly-section.tsx",
+    "utf8",
+  );
+  const paymentFormSource = readFileSync(
+    "src/app/(authed)/app/students/[id]/components/record-payment-form.tsx",
+    "utf8",
+  );
+
+  assert.match(pageSource, /outstandingLessons\.length === 1/);
+  assert.match(pageSource, /<LessonPaidToggle/);
+  assert.match(pageSource, /id="unpaid-lessons"/);
+  assert.match(pageSource, /Record a different payment/);
+  assert.match(historySource, /getOutstandingLessonAmount/);
+  assert.match(historySource, /<LessonPaidToggle/);
+  assert.match(historySource, /readOnly/);
+  assert.match(historySource, /remaining/);
+  assert.doesNotMatch(historySource, /className="group grid/);
+  assert.match(paymentFormSource, /hasOutstandingBalance/);
+  assert.match(paymentFormSource, /Record payment in advance/);
 });
 
 test("lesson history is responsive and shares one month with the parent-update generator", () => {

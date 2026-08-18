@@ -79,7 +79,10 @@ test("the tutor-facing payment workflow hides allocation bookkeeping", () => {
     "utf8",
   );
 
-  assert.match(recordPaymentSource, /Record upfront payment/);
+  assert.match(recordPaymentSource, /Record a different payment/);
+  assert.match(recordPaymentSource, /Record payment in advance/);
+  assert.match(recordPaymentSource, /part-payment or one payment covering several lessons/);
+  assert.match(recordPaymentSource, /money has been paid before a lesson/);
   assert.match(recordPaymentSource, /oldest outstanding lessons first/);
   assert.doesNotMatch(recordPaymentSource, /Sessions covered/);
   assert.doesNotMatch(recordPaymentSource, /Covers from/);

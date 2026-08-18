@@ -32,6 +32,7 @@ import {
 } from "@/lib/payments";
 import { CompletedLessonUpdateBanner } from "./components/completed-lesson-update-banner";
 import { LessonSuccessPanel } from "./components/lesson-success-panel";
+import { LessonPaidToggle } from "./components/lesson-paid-toggle";
 import { PaymentsMonthlySection } from "./components/payments-monthly-section";
 import { PaymentReminderGenerator } from "./components/payment-reminder-generator";
 import { PermanentStudentDeletion } from "./components/permanent-student-deletion";
@@ -236,6 +237,14 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
     (sum, lesson) => sum + getOutstandingLessonAmount(lesson, allocations),
     0,
   );
+  const outstandingLessons = completedLessons
+    .map((lesson) => ({
+      lesson,
+      outstandingPence: getOutstandingLessonAmount(lesson, allocations),
+      paymentStatus: calculateLessonPaymentStatus(lesson, allocations),
+    }))
+    .filter(({ outstandingPence }) => outstandingPence > 0);
+  const singleOutstandingLesson = outstandingLessons.length === 1 ? outstandingLessons[0] : null;
   const paymentReminderMessage = buildPaymentReminder({
     studentName: student.student_name,
     parentName: student.parent_name,
@@ -451,16 +460,31 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
                   {formatCurrencyFromMinorUnits(outstandingAmountPence, currencyCode)}
                 </p>
                 <p className="mt-1 text-sm text-zinc-600">
-                  {outstandingAmountPence > 0 ? "Currently owed" : "Nothing owed now"}
+                  {outstandingAmountPence > 0
+                    ? singleOutstandingLesson
+                      ? `1 unpaid lesson · ${formatShortDateLocal(singleOutstandingLesson.lesson.lesson_at, timeZone)}`
+                      : `${outstandingLessons.length} unpaid lessons`
+                    : "Nothing owed now"}
                 </p>
               </>
             )}
-            <Link
-              href={outstandingAmountPence > 0 && !isArchived ? "#payment-history" : "#money"}
-              className="mt-auto inline-flex min-h-10 w-full items-center justify-center whitespace-nowrap rounded-md border border-amber-300 bg-white px-3 py-2 text-sm font-medium text-amber-900 transition-colors hover:bg-amber-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-            >
-              {outstandingAmountPence > 0 && !isArchived ? "Record payment" : "View money"}
-            </Link>
+            <div className="mt-auto pt-3">
+              {singleOutstandingLesson && !isArchived ? (
+                <LessonPaidToggle
+                  lessonId={singleOutstandingLesson.lesson.id}
+                  status={singleOutstandingLesson.paymentStatus}
+                  compact
+                  paidLabel="Mark lesson as paid"
+                />
+              ) : (
+                <Link
+                  href={outstandingLessons.length > 1 && !isArchived ? "#unpaid-lessons" : "#money"}
+                  className="inline-flex min-h-10 w-full items-center justify-center whitespace-nowrap rounded-md border border-amber-300 bg-white px-3 py-2 text-sm font-medium text-amber-900 transition-colors hover:bg-amber-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                >
+                  {outstandingLessons.length > 1 && !isArchived ? "Review unpaid lessons" : "View money"}
+                </Link>
+              )}
+            </div>
           </article>
 
           <article className="flex min-w-0 flex-col rounded-lg border border-zinc-200 bg-white p-4">
@@ -495,6 +519,45 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
           </article>
         </div>
       </section>
+
+      {!isArchived && outstandingLessons.length > 1 ? (
+        <section
+          id="unpaid-lessons"
+          className="mt-4 scroll-mt-24 rounded-lg border border-amber-200 bg-white p-4"
+          aria-labelledby="unpaid-lessons-heading"
+        >
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
+            <h2 id="unpaid-lessons-heading" className="text-base font-medium text-zinc-900">
+              Unpaid lessons
+            </h2>
+            <p className="text-sm text-zinc-600">Choose the lesson that has been paid.</p>
+          </div>
+          <ul className="mt-3 divide-y divide-zinc-200 border-y border-zinc-200">
+            {outstandingLessons.map(({ lesson, outstandingPence, paymentStatus }) => (
+              <li
+                key={lesson.id}
+                className="grid gap-3 py-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
+              >
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-zinc-900">
+                    {formatDateLocal(lesson.lesson_at, timeZone)}
+                  </p>
+                  <p className="mt-0.5 text-sm text-zinc-600">
+                    {formatCurrencyFromMinorUnits(outstandingPence, currencyCode)} remaining
+                  </p>
+                </div>
+                <LessonPaidToggle lessonId={lesson.id} status={paymentStatus} compact />
+              </li>
+            ))}
+          </ul>
+          <Link
+            href="#payment-history"
+            className="mt-3 inline-flex text-sm font-medium text-zinc-700 underline decoration-zinc-300 underline-offset-4 hover:decoration-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+          >
+            Record a different payment
+          </Link>
+        </section>
+      ) : null}
 
       <section id="latest-parent-update" className="mt-6 scroll-mt-24">
         <div className="rounded-lg border border-zinc-200 bg-white p-4 sm:p-5">
@@ -632,6 +695,8 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
               timeZone={timeZone}
               hasLessonsError={Boolean(lessonsError)}
               nextLessonAt={nextScheduledLesson?.lesson_at}
+              currencyCode={currencyCode}
+              readOnly={isArchived}
             />
           </div>
         </div>
@@ -797,6 +862,7 @@ export default async function StudentDetailPage({ params, searchParams }: Studen
               timeZone={timeZone}
               readOnly={isArchived}
               embedded
+              hasOutstandingBalance={outstandingAmountPence > 0}
             />
           </div>
         </section>

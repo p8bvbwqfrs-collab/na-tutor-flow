@@ -22,6 +22,7 @@ type PaymentsMonthlySectionProps = {
   timeZone: string;
   readOnly?: boolean;
   embedded?: boolean;
+  hasOutstandingBalance?: boolean;
 };
 
 function getPaymentDateValue(payment: Pick<Payment, "payment_date" | "created_at">) {
@@ -53,6 +54,7 @@ export function PaymentsMonthlySection({
   timeZone,
   readOnly = false,
   embedded = false,
+  hasOutstandingBalance = false,
 }: PaymentsMonthlySectionProps) {
   const [selectedMonthKey, setSelectedMonthKey] = useState(initialMonthKey);
   const paymentsForSelectedMonth = payments.filter(
@@ -79,6 +81,7 @@ export function PaymentsMonthlySection({
               studentId={studentId}
               currencyCode={currencyCode}
               timeZone={timeZone}
+              hasOutstandingBalance={hasOutstandingBalance}
             />
           ) : null}
         </div>

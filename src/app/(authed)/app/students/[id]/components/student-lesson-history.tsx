@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { SupportedCurrencyCode } from "@/lib/currency";
 import { getMonthKeyLocal } from "@/lib/datetime";
 import type { MonthlyParentUpdateLesson } from "@/lib/monthly-parent-update";
 import type { AllocationLike } from "@/lib/payments";
@@ -22,6 +23,8 @@ type StudentLessonHistoryProps = {
   timeZone: string;
   hasLessonsError: boolean;
   nextLessonAt?: string | null;
+  currencyCode: SupportedCurrencyCode;
+  readOnly?: boolean;
 };
 
 export function StudentLessonHistory({
@@ -33,6 +36,8 @@ export function StudentLessonHistory({
   timeZone,
   hasLessonsError,
   nextLessonAt,
+  currencyCode,
+  readOnly = false,
 }: StudentLessonHistoryProps) {
   const [selectedMonthKey, setSelectedMonthKey] = useState(initialMonthKey);
   const lessonsForMonth = lessons.filter(
@@ -75,6 +80,8 @@ export function StudentLessonHistory({
             selectedMonthKey={selectedMonthKey}
             timeZone={timeZone}
             hasLessonsError={hasLessonsError}
+            currencyCode={currencyCode}
+            readOnly={readOnly}
           />
         </div>
       </div>

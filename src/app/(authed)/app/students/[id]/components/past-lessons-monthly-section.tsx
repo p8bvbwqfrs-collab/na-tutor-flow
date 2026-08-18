@@ -1,13 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import { formatCurrencyFromMinorUnits, type SupportedCurrencyCode } from "@/lib/currency";
 import { formatDateLocal, formatTimeLocal, getMonthKeyLocal } from "@/lib/datetime";
 import {
   calculateLessonPaymentStatus,
+  getOutstandingLessonAmount,
   getPaymentStatusClassName,
   getPaymentStatusLabel,
   type AllocationLike,
 } from "@/lib/payments";
+import { LessonPaidToggle } from "./lesson-paid-toggle";
 
 type PastLesson = {
   id: string;
@@ -24,6 +27,8 @@ type PastLessonsMonthlySectionProps = {
   selectedMonthKey: string;
   timeZone: string;
   hasLessonsError: boolean;
+  currencyCode: SupportedCurrencyCode;
+  readOnly?: boolean;
 };
 
 function cleanLessonText(value: string) {
@@ -41,6 +46,8 @@ export function PastLessonsMonthlySection({
   selectedMonthKey,
   timeZone,
   hasLessonsError,
+  currencyCode,
+  readOnly = false,
 }: PastLessonsMonthlySectionProps) {
   const lessonsForMonth = lessons.filter(
     (lesson) => getMonthKeyLocal(lesson.lesson_at, timeZone) === selectedMonthKey,
@@ -77,55 +84,73 @@ export function PastLessonsMonthlySection({
     <ol className="space-y-2">
       {lessonsForMonth.map((lesson) => {
         const paymentStatus = calculateLessonPaymentStatus(lesson, allocations);
+        const outstandingPence = getOutstandingLessonAmount(lesson, allocations);
         const tags = lesson.topic_tags ?? [];
 
         return (
-          <li key={lesson.id}>
-            <Link
-              href={`/app/students/${studentId}/lessons/${lesson.id}/view`}
-              className="group grid min-w-0 gap-3 rounded-lg border border-zinc-200 bg-white p-4 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:grid-cols-[8.5rem_minmax(0,1fr)_auto] sm:items-center"
-            >
-              <span className="min-w-0">
-                <span className="block text-sm font-medium text-zinc-900">
-                  {formatDateLocal(lesson.lesson_at, timeZone)}
-                </span>
-                <span className="mt-0.5 block text-xs text-zinc-500">
-                  {formatTimeLocal(lesson.lesson_at, timeZone)}
-                </span>
+          <li
+            key={lesson.id}
+            className="grid min-w-0 gap-3 rounded-lg border border-zinc-200 bg-white p-4 sm:grid-cols-[8.5rem_minmax(0,1fr)_auto] sm:items-center"
+          >
+            <div className="min-w-0">
+              <span className="block text-sm font-medium text-zinc-900">
+                {formatDateLocal(lesson.lesson_at, timeZone)}
               </span>
-
-              <span className="min-w-0">
-                <span className="line-clamp-2 block break-words text-sm font-medium leading-6 text-zinc-900">
-                  {cleanLessonText(lesson.topics) || "No lesson focus recorded"}
-                </span>
-                {tags.length > 0 ? (
-                  <span className="mt-1.5 flex flex-wrap gap-1.5">
-                    {tags.slice(0, 2).map((tag) => (
-                      <span
-                        key={tag}
-                        className="inline-flex max-w-full rounded-full border border-zinc-200 bg-zinc-50 px-2 py-0.5 text-[11px] font-medium text-zinc-600"
-                      >
-                        <span className="truncate">{tag}</span>
-                      </span>
-                    ))}
-                    {tags.length > 2 ? (
-                      <span className="text-xs text-zinc-500">+{tags.length - 2} more</span>
-                    ) : null}
-                  </span>
-                ) : null}
+              <span className="mt-0.5 block text-xs text-zinc-500">
+                {formatTimeLocal(lesson.lesson_at, timeZone)}
               </span>
+            </div>
 
-              <span className="flex flex-wrap items-center justify-between gap-3 sm:flex-col sm:items-end">
+            <div className="min-w-0">
+              <span className="line-clamp-2 block break-words text-sm font-medium leading-6 text-zinc-900">
+                {cleanLessonText(lesson.topics) || "No lesson focus recorded"}
+              </span>
+              {tags.length > 0 ? (
+                <span className="mt-1.5 flex flex-wrap gap-1.5">
+                  {tags.slice(0, 2).map((tag) => (
+                    <span
+                      key={tag}
+                      className="inline-flex max-w-full rounded-full border border-zinc-200 bg-zinc-50 px-2 py-0.5 text-[11px] font-medium text-zinc-600"
+                    >
+                      <span className="truncate">{tag}</span>
+                    </span>
+                  ))}
+                  {tags.length > 2 ? (
+                    <span className="text-xs text-zinc-500">+{tags.length - 2} more</span>
+                  ) : null}
+                </span>
+              ) : null}
+            </div>
+
+            <div className="grid gap-2 sm:justify-items-end">
+              <div className="flex flex-wrap items-center justify-between gap-2 sm:justify-end">
                 <span
                   className={`inline-flex rounded-full border px-2 py-1 text-xs font-medium ${getPaymentStatusClassName(paymentStatus)}`}
                 >
                   {getPaymentStatusLabel(paymentStatus)}
                 </span>
-                <span className="text-sm font-medium text-zinc-900 underline decoration-zinc-300 underline-offset-4 group-hover:decoration-zinc-700">
+                {outstandingPence > 0 ? (
+                  <span className="text-xs font-medium text-amber-900">
+                    {formatCurrencyFromMinorUnits(outstandingPence, currencyCode)} remaining
+                  </span>
+                ) : null}
+              </div>
+              <div className="grid gap-2 sm:flex sm:flex-wrap sm:justify-end">
+                {!readOnly && outstandingPence > 0 ? (
+                  <LessonPaidToggle
+                    lessonId={lesson.id}
+                    status={paymentStatus}
+                    compact
+                  />
+                ) : null}
+                <Link
+                  href={`/app/students/${studentId}/lessons/${lesson.id}/view`}
+                  className="inline-flex min-h-9 w-full items-center justify-center whitespace-nowrap rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
+                >
                   View notes
-                </span>
-              </span>
-            </Link>
+                </Link>
+              </div>
+            </div>
           </li>
         );
       })}
