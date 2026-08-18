@@ -13,12 +13,14 @@ type LessonPaidToggleProps = {
   lessonId: string;
   status: "paid" | "part-paid" | "unpaid";
   compact?: boolean;
+  paidLabel?: string;
 };
 
 export function LessonPaidToggle({
   lessonId,
   status,
   compact = false,
+  paidLabel = "Mark as paid",
 }: LessonPaidToggleProps) {
   const router = useRouter();
   const [isUpdating, setIsUpdating] = useState(false);
@@ -91,7 +93,7 @@ export function LessonPaidToggle({
             : "border-emerald-200 bg-emerald-50 text-emerald-900 hover:bg-emerald-100"
         }`}
       >
-        {isUpdating ? "Saving..." : status === "paid" ? "Undo payment" : "Mark as paid"}
+        {isUpdating ? "Saving..." : status === "paid" ? "Undo payment" : paidLabel}
       </button>
       {compact ? (
         error ? <p className="text-xs text-rose-700">{error}</p> : null

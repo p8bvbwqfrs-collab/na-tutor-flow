@@ -14,6 +14,7 @@ type RecordPaymentFormProps = {
   studentId: string;
   currencyCode: SupportedCurrencyCode;
   timeZone: string;
+  hasOutstandingBalance?: boolean;
 };
 
 type PaymentRow = PaymentLike & {
@@ -89,7 +90,12 @@ async function applyPaymentToStudentLessons(
   }
 }
 
-export function RecordPaymentForm({ studentId, currencyCode, timeZone }: RecordPaymentFormProps) {
+export function RecordPaymentForm({
+  studentId,
+  currencyCode,
+  timeZone,
+  hasOutstandingBalance = false,
+}: RecordPaymentFormProps) {
   const router = useRouter();
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const [isOpen, setIsOpen] = useState(false);
@@ -186,8 +192,13 @@ export function RecordPaymentForm({ studentId, currencyCode, timeZone }: RecordP
           }}
           className="inline-flex min-h-10 w-full items-center justify-center rounded-md bg-blue-700 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
         >
-          Record upfront payment
+          {hasOutstandingBalance ? "Record a different payment" : "Record payment in advance"}
         </button>
+        <p className="max-w-xs text-xs text-zinc-500 sm:text-right">
+          {hasOutstandingBalance
+            ? "Use this for a part-payment or one payment covering several lessons."
+            : "Use this when money has been paid before a lesson."}
+        </p>
         {message ? <p role="status" className="text-xs font-medium text-emerald-700">{message}</p> : null}
         {warning ? <p role="alert" className="text-xs font-medium text-amber-800">{warning}</p> : null}
       </div>
