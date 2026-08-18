@@ -113,23 +113,31 @@ test("marking a lesson paid uses existing credit before recording new money", ()
 
 test("the dashboard groups timeframe reporting and payment actions under Money", () => {
   const dashboardSource = readFileSync("src/app/(authed)/app/dashboard/page.tsx", "utf8");
+  const unpaidLessonsSource = readFileSync(
+    "src/app/(authed)/app/dashboard/components/unpaid-lessons-section.tsx",
+    "utf8",
+  );
 
   const moneyHeading = dashboardSource.indexOf('id="money-heading"');
+  const atAGlanceHeading = dashboardSource.indexOf("At a glance");
+  const unpaidSection = dashboardSource.indexOf("<UnpaidLessonsSection");
   const studentHeading = dashboardSource.indexOf('id="student-income-heading"');
   const incomeHeading = dashboardSource.indexOf('id="income-trend-heading"');
-  const unpaidHeading = dashboardSource.indexOf('id="unpaid-lessons-heading"');
   const recentHeading = dashboardSource.indexOf('id="recent-activity-heading"');
 
   assert.ok(moneyHeading >= 0);
-  assert.ok(studentHeading > moneyHeading);
+  assert.ok(atAGlanceHeading > moneyHeading);
+  assert.ok(unpaidSection > atAGlanceHeading);
+  assert.ok(studentHeading > unpaidSection);
   assert.ok(incomeHeading > studentHeading);
-  assert.ok(unpaidHeading > incomeHeading);
-  assert.ok(recentHeading > unpaidHeading);
+  assert.ok(recentHeading > incomeHeading);
   assert.match(dashboardSource, /Outstanding now/);
+  assert.match(dashboardSource, /Active students/);
   assert.match(dashboardSource, /By student/);
   assert.match(dashboardSource, /Income over time/);
   assert.match(dashboardSource, /buildIncomeTrendSeries/);
-  assert.match(dashboardSource, /Unpaid lessons/);
+  assert.match(unpaidLessonsSource, /Unpaid lessons/);
+  assert.match(unpaidLessonsSource, /MarkPaidButton/);
   assert.match(dashboardSource, /Recent activity/);
   assert.match(dashboardSource, /Received and completed figures use the selected timeframe/);
   assert.doesNotMatch(dashboardSource, /Paid vs unpaid/);

@@ -23,10 +23,10 @@ import {
 } from "@/lib/payments";
 import { getUserCurrencyCode, getUserTimeZone } from "@/lib/user-settings";
 import { PlannedLessonStatusButton } from "../students/[id]/components/planned-lesson-status-button";
-import { MarkPaidButton } from "./components/mark-paid-button";
 import { IncomeTrendChart } from "./components/income-trend-chart";
 import { ChartRangeFilter } from "./components/chart-range-filter";
 import { ShareUpdateButton } from "./components/copy-update-button";
+import { UnpaidLessonsSection } from "./components/unpaid-lessons-section";
 import { deriveDashboardExperience, getDashboardActions } from "./dashboard-onboarding";
 
 type LessonRow = {
@@ -215,6 +215,16 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       return lesson.fee_pence - getPaidAllocatedAmountForLesson(lesson.id, paymentAllocations) > 0;
     })
     .slice(0, 20);
+  const unpaidLessonItems = unpaidLessons.map((lesson) => ({
+    id: lesson.id,
+    studentId: lesson.student_id,
+    studentName: getStudentName(lesson.student) ?? "Unknown student",
+    lessonAt: lesson.lesson_at,
+    remainingPence: Math.max(
+      0,
+      lesson.fee_pence - getPaidAllocatedAmountForLesson(lesson.id, paymentAllocations),
+    ),
+  }));
   const unpaidTotalPence = derivedLessons.reduce((sum, lesson) => {
     return sum + Math.max(0, lesson.fee_pence - getPaidAllocatedAmountForLesson(lesson.id, paymentAllocations));
   }, 0);
@@ -431,6 +441,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             title="Money"
             description="Received and completed figures use the selected timeframe. Outstanding is what is owed now."
           />
+          <h3 className="mt-3 text-sm font-semibold text-zinc-900">At a glance</h3>
           <div className="mt-3">
             <ChartRangeFilter
               selected={selectedRange}
@@ -473,7 +484,16 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             </div>
           </div>
         )}
-        <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+
+        <UnpaidLessonsSection
+          lessons={unpaidLessonItems}
+          currencyCode={currencyCode}
+          timeZone={timeZone}
+          hasDataError={hasDashboardDataError}
+          hasAnyLessons={hasAnyLessons}
+        />
+
+        <div className="mt-5 grid gap-4 border-t border-zinc-200 pt-5 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
           <section
             className="min-w-0 rounded-lg border border-zinc-200 bg-white p-4 sm:p-5"
             aria-labelledby="student-income-heading"
@@ -545,9 +565,13 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             className="min-w-0 rounded-lg border border-zinc-200 bg-white p-4 sm:p-5"
             aria-labelledby="income-trend-heading"
           >
-            <h3 id="income-trend-heading" className="text-lg font-medium text-zinc-900">
-              Income over time
-            </h3>
+            <SectionHeading
+              id="income-trend-heading"
+              level={3}
+              title="Income over time"
+              description="Shows payments received across the selected reporting period. The chart adapts to weeks, months or quarters."
+              headingClassName="text-lg font-medium text-zinc-900"
+            />
             <p className="mt-1 text-sm text-zinc-600">
               {rangeLabel} · {incomeTrendSeries.viewLabel}
             </p>
@@ -576,141 +600,6 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           </section>
         </div>
 
-        <section
-          className="mt-4 rounded-lg border border-zinc-200 bg-white p-4 sm:p-5"
-          aria-labelledby="unpaid-lessons-heading"
-        >
-          <h3 id="unpaid-lessons-heading" className="text-lg font-medium text-zinc-900">
-            Unpaid lessons
-          </h3>
-
-          {hasDashboardDataError ? (
-            <p
-              role="alert"
-              className="mt-3 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-900"
-            >
-              Could not load dashboard data.
-            </p>
-          ) : unpaidLessons.length === 0 ? (
-            hasAnyLessons ? (
-              <p className="mt-3 rounded-md border border-dashed border-zinc-300 bg-zinc-50 px-3 py-2 text-sm text-zinc-600">
-                No unpaid lessons.
-              </p>
-            ) : (
-              <div className="mt-3 rounded-lg border border-dashed border-zinc-300 bg-zinc-50 p-4">
-                <p className="text-sm font-medium text-zinc-900">Your dashboard will fill in as you go.</p>
-                <p className="mt-2 text-sm text-zinc-600">
-                  Log your first lesson and we&apos;ll start showing payment tracking, recent activity, and earnings
-                  insights here.
-                </p>
-              </div>
-            )
-          ) : (
-            <>
-              <div className="mt-4 space-y-3 md:hidden">
-                {unpaidLessons.map((lesson) => {
-                  const remainingPence = Math.max(
-                    0,
-                    lesson.fee_pence - getPaidAllocatedAmountForLesson(lesson.id, paymentAllocations),
-                  );
-
-                  return (
-                    <article key={lesson.id} className="rounded-lg border border-amber-200 bg-amber-50/50 p-3">
-                      <Link
-                        href={`/app/students/${lesson.student_id}`}
-                        className="font-medium text-zinc-900 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-                      >
-                        {getStudentName(lesson.student) ?? "Unknown student"}
-                      </Link>
-                      <dl className="mt-3 grid grid-cols-2 gap-3">
-                        <div>
-                          <dt className="text-xs text-zinc-500">Lesson</dt>
-                          <dd className="mt-1 text-sm text-zinc-700">{formatDateTimeLocal(lesson.lesson_at, timeZone)}</dd>
-                        </div>
-                        <div>
-                          <dt className="text-xs text-zinc-500">Remaining</dt>
-                          <dd className="mt-1 text-sm font-semibold text-amber-900">
-                            {formatCurrencyFromMinorUnits(remainingPence, currencyCode)}
-                          </dd>
-                        </div>
-                      </dl>
-                      <div className="mt-3 grid gap-2">
-                        <Link
-                          href={`/app/students/${lesson.student_id}/lessons/${lesson.id}/view`}
-                          className="inline-flex min-h-10 w-full items-center justify-center rounded-md bg-blue-700 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-                        >
-                          View notes
-                        </Link>
-                        <MarkPaidButton lessonId={lesson.id} />
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-              <div className="mt-4 hidden overflow-x-auto rounded-lg border border-zinc-200 bg-white md:block">
-                <table className="min-w-full text-left text-sm">
-                  <thead className="bg-zinc-100 text-zinc-700">
-                    <tr>
-                      <th className="whitespace-nowrap px-3 py-2 text-xs font-medium uppercase tracking-wide text-zinc-500">
-                        Student
-                      </th>
-                      <th className="whitespace-nowrap px-3 py-2 text-xs font-medium uppercase tracking-wide text-zinc-500">
-                        Date
-                      </th>
-                      <th className="whitespace-nowrap px-3 py-2 text-xs font-medium uppercase tracking-wide text-zinc-500">
-                        Remaining
-                      </th>
-                      <th className="whitespace-nowrap px-3 py-2 text-xs font-medium uppercase tracking-wide text-zinc-500">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {unpaidLessons.map((lesson, index) => {
-                      const remainingPence = Math.max(
-                        0,
-                        lesson.fee_pence - getPaidAllocatedAmountForLesson(lesson.id, paymentAllocations),
-                      );
-
-                      return (
-                        <tr
-                          key={lesson.id}
-                          className={`${index % 2 === 0 ? "bg-white" : "bg-zinc-50"} border-t border-zinc-200 text-zinc-900 hover:bg-zinc-50`}
-                        >
-                          <td className="px-3 py-2.5 align-middle font-medium text-zinc-900">
-                            <Link
-                              href={`/app/students/${lesson.student_id}`}
-                              className="underline-offset-4 hover:underline"
-                            >
-                              {getStudentName(lesson.student) ?? "Unknown student"}
-                            </Link>
-                          </td>
-                          <td className="whitespace-nowrap px-3 py-2.5 align-middle text-zinc-700">
-                            {formatDateTimeLocal(lesson.lesson_at, timeZone)}
-                          </td>
-                          <td className="whitespace-nowrap px-3 py-2.5 align-middle font-semibold text-zinc-900">
-                            {formatCurrencyFromMinorUnits(remainingPence, currencyCode)}
-                          </td>
-                          <td className="px-3 py-2.5 align-middle">
-                            <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-start">
-                              <Link
-                                href={`/app/students/${lesson.student_id}/lessons/${lesson.id}/view`}
-                                className="inline-flex min-h-9 w-full items-center justify-center whitespace-nowrap rounded-md bg-blue-700 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto"
-                              >
-                                View notes
-                              </Link>
-                              <MarkPaidButton lessonId={lesson.id} />
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </>
-          )}
-        </section>
       </section>
 
       <section className="mt-8 border-t border-zinc-200 pt-8" aria-labelledby="recent-activity-heading">
