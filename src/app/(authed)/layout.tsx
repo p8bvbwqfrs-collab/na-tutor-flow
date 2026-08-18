@@ -4,6 +4,7 @@ import { TutorFlowBrand } from "@/components/tutor-flow-brand";
 import { AuthedNav } from "./components/authed-nav";
 import { LogoutButton } from "./components/logout-button";
 import { NavigationFeedbackProvider } from "./components/navigation-feedback-provider";
+import { SessionTimeoutGuard } from "./components/session-timeout-guard";
 
 export const metadata: Metadata = {
   robots: {
@@ -19,6 +20,7 @@ export default function AuthedLayout({
 }>) {
   return (
     <NavigationFeedbackProvider>
+      <SessionTimeoutGuard />
       <div className="flex min-h-screen flex-col">
         <header className="sticky top-0 z-40 border-b border-zinc-200 bg-white/95 text-zinc-900 backdrop-blur">
           <div className="mx-auto max-w-4xl px-4 py-3">
