@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { LATEST_PRODUCT_UPDATE_DATE } from "@/lib/product-updates";
 
 const baseUrl = "https://www.natutorflow.com";
 const lastModified = new Date("2026-08-10");
@@ -28,6 +29,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified,
       changeFrequency: "monthly",
       priority: 0.7,
+    },
+    {
+      url: `${baseUrl}/updates`,
+      lastModified: new Date(LATEST_PRODUCT_UPDATE_DATE),
+      changeFrequency: "weekly",
+      priority: 0.6,
     },
     {
       url: `${baseUrl}/maths-tutor`,
