@@ -15,6 +15,7 @@ import { AccountDeletionControls } from "./components/account-deletion-controls"
 import { AccountDataExportControls } from "./components/account-data-export-controls";
 import { CurrencySettingsForm } from "./components/currency-settings-form";
 import { TimeZoneSettingsForm } from "./components/time-zone-settings-form";
+import { ShareTutorFlow } from "./components/share-tutor-flow";
 
 type SettingsPageProps = {
   searchParams: Promise<{ calendar_reset?: string; email_changed?: string }>;
@@ -150,19 +151,25 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
         <section className="rounded-lg border border-zinc-200 bg-white p-4">
           <SectionHeading
             title="Help improve Tutor Flow"
-            description="Found something confusing, missing or slower than it should be? Share what you were trying to do so it can be considered alongside other tutors' workflows."
+            description="Share Tutor Flow with another independent tutor, or tell me what feels confusing, missing or slower than it should be."
           />
-          <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm leading-6 text-zinc-600">
-              Feedback goes directly to{" "}
-              <span className="font-medium text-zinc-900">{TUTOR_FLOW_CONTACT_EMAIL}</span>.
-            </p>
-            <a
-              href={TUTOR_FLOW_FEEDBACK_EMAIL_HREF}
-              className={secondaryAction + " w-full shrink-0 sm:w-auto"}
-            >
-              Send feedback by email
-            </a>
+          <div className="mt-4 space-y-4">
+            <ShareTutorFlow />
+            <div className="flex flex-col gap-3 border-t border-zinc-200 pt-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h3 className="text-sm font-medium text-zinc-900">Have feedback?</h3>
+                <p className="mt-1 text-sm leading-6 text-zinc-600">
+                  Feedback goes directly to{" "}
+                  <span className="font-medium text-zinc-900">{TUTOR_FLOW_CONTACT_EMAIL}</span>.
+                </p>
+              </div>
+              <a
+                href={TUTOR_FLOW_FEEDBACK_EMAIL_HREF}
+                className={secondaryAction + " w-full shrink-0 sm:w-auto"}
+              >
+                Send feedback by email
+              </a>
+            </div>
           </div>
         </section>
 
