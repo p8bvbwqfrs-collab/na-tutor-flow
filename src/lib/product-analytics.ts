@@ -8,7 +8,8 @@ export type ActivationStep =
   | "lesson_logged"
   | "parent_update_shared"
   | "payment_recorded"
-  | "payment_reminder_shared";
+  | "payment_reminder_shared"
+  | "tutor_flow_shared";
 
 export function trackActivationStep(step: ActivationStep) {
   try {
