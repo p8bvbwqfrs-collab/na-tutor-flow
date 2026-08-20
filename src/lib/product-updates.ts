@@ -8,6 +8,16 @@ export type ProductUpdate = {
 export const PRODUCT_UPDATES = [
   {
     date: "2026-08-20",
+    title: "A clearer maths tuition profile",
+    summary:
+      "Families can now understand the tuition approach, course fit and next step more quickly.",
+    changes: [
+      "Refined the maths tutoring page around verified experience, lesson approach and parent feedback.",
+      "Made course choices, pricing, common questions and the enquiry route easier to scan on mobile.",
+    ],
+  },
+  {
+    date: "2026-08-20",
     title: "Share Tutor Flow more easily",
     summary:
       "Early adopters can now introduce Tutor Flow to another independent tutor without leaving Settings.",
