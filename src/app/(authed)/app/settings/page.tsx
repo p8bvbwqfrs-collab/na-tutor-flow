@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { headers } from "next/headers";
 import { SectionHeading } from "@/components/section-heading";
 import { canUseCalendarFeeds, generateCalendarFeedToken } from "@/lib/calendar-feed";
@@ -155,6 +156,17 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
           />
           <div className="mt-4 space-y-4">
             <ShareTutorFlow />
+            <div className="flex flex-col gap-3 border-t border-zinc-200 pt-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h3 className="text-sm font-medium text-zinc-900">Recent improvements</h3>
+                <p className="mt-1 text-sm leading-6 text-zinc-600">
+                  See a short, tutor-facing record of meaningful changes as Tutor Flow develops.
+                </p>
+              </div>
+              <Link href="/updates" className={secondaryAction + " w-full shrink-0 sm:w-auto"}>
+                See what&apos;s new
+              </Link>
+            </div>
             <div className="flex flex-col gap-3 border-t border-zinc-200 pt-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h3 className="text-sm font-medium text-zinc-900">Have feedback?</h3>
