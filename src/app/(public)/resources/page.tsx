@@ -1,5 +1,6 @@
 import { createPublicMetadata } from "@/lib/seo";
 import { ResourceActionLink, ResourceCardLink } from "../components/resource-actions";
+import { NewsletterSignup } from "../newsletter/newsletter-signup";
 
 const description =
   "Free, practical resources for private tutors covering lesson notes, parent updates, and payment tracking.";
@@ -75,6 +76,8 @@ export default function ResourcesPage() {
           ))}
         </div>
       </section>
+
+      <NewsletterSignup compact />
 
       <section className="rounded-lg bg-blue-50 p-6 sm:p-8">
         <h2 className="text-xl font-semibold text-zinc-900">Keep everything together</h2>

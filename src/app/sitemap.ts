@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { LATEST_PRODUCT_UPDATE_DATE } from "@/lib/product-updates";
+import { LATEST_NEWSLETTER_DATE, NEWSLETTER_ISSUES } from "@/lib/newsletter";
 
 const baseUrl = "https://www.natutorflow.com";
 const lastModified = new Date("2026-08-10");
@@ -36,6 +37,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "weekly",
       priority: 0.6,
     },
+    {
+      url: `${baseUrl}/newsletter`,
+      lastModified: new Date(LATEST_NEWSLETTER_DATE),
+      changeFrequency: "monthly",
+      priority: 0.7,
+    },
+    ...NEWSLETTER_ISSUES.map((issue) => ({
+      url: `${baseUrl}/newsletter/${issue.slug}`,
+      lastModified: new Date(issue.publishedAt),
+      changeFrequency: "yearly" as const,
+      priority: 0.6,
+    })),
     {
       url: `${baseUrl}/maths-tutor`,
       lastModified,
