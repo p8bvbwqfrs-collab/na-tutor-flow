@@ -35,6 +35,12 @@ export function SiteFooter({
             What&apos;s new
           </Link>
           <Link
+            href="/newsletter"
+            className="underline-offset-4 transition-colors hover:text-zinc-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+          >
+            Newsletter
+          </Link>
+          <Link
             href="/maths-tutor"
             className="underline-offset-4 transition-colors hover:text-zinc-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
           >

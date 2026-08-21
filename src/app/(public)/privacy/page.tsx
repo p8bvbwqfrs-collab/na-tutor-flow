@@ -37,6 +37,11 @@ export default function PrivacyPage() {
               <span className="font-medium text-zinc-900">Usage data:</span> basic information
               about how the app is used so we can keep it working and improve it over time.
             </p>
+            <p>
+              <span className="font-medium text-zinc-900">Newsletter information:</span> your
+              email address if you separately choose to join Tutor Flow Notes. Joining the
+              newsletter is not required to use Tutor Flow.
+            </p>
           </div>
         </section>
 
@@ -52,6 +57,11 @@ export default function PrivacyPage() {
               Student and lesson content is not used to train AI models. Parent updates are
               assembled within Tutor Flow from the notes you enter; that content is not sent to an
               external AI service for generation.
+            </p>
+            <p>
+              A newsletter email address is used only to send the Tutor Flow Notes you requested.
+              Subscription confirmation, delivery and unsubscribe requests are handled by our
+              email provider. You can unsubscribe using the link in any newsletter email.
             </p>
           </div>
         </section>

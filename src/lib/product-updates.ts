@@ -7,6 +7,17 @@ export type ProductUpdate = {
 
 export const PRODUCT_UPDATES = [
   {
+    date: "2026-08-21",
+    title: "Practical notes for independent tutors",
+    summary:
+      "Tutor Flow Notes brings short, useful tutoring-workflow ideas together in a free public archive.",
+    changes: [
+      "Added a newsletter archive with a practical first edition on the five-minute after-lesson routine.",
+      "Made each edition free to read and easy to find from Resources and the site footer.",
+      "Prepared a separate, consent-led email signup without using tutoring or account data.",
+    ],
+  },
+  {
     date: "2026-08-20",
     title: "A clearer maths tuition profile",
     summary:

@@ -7,3 +7,11 @@
 - Describe the benefit in tutor-facing language. Do not include commit hashes, internal infrastructure, security-sensitive implementation details, customer information or speculative future features.
 - Purely internal maintenance does not need a public update entry.
 - Confirm `/updates`, Settings and the sitemap still pass their focused checks before deployment.
+
+## Newsletter
+
+- Keep public editions in `NEWSLETTER_ISSUES` in `src/lib/newsletter.ts`, newest first, with a matching public page under `/newsletter`.
+- Every edition must offer a useful, original tutoring workflow or example on the page itself; do not publish thin search-targeted posts or invented expertise.
+- Add each edition to the sitemap through the shared newsletter collection and check internal links from relevant resources.
+- Keep newsletter subscription separate from Tutor Flow account and student data. Use explicit consent, double opt-in and an unsubscribe route provided by the approved email service.
+- Do not add intrusive pop-ups or send newsletters automatically from application account emails.
