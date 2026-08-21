@@ -4,6 +4,7 @@ import { TutorFlowBrand } from "@/components/tutor-flow-brand";
 import { AuthedNav } from "./components/authed-nav";
 import { LogoutButton } from "./components/logout-button";
 import { NavigationFeedbackProvider } from "./components/navigation-feedback-provider";
+import { NewsletterInvitation } from "./components/newsletter-invitation";
 import { SessionTimeoutGuard } from "./components/session-timeout-guard";
 
 export const metadata: Metadata = {
@@ -38,6 +39,7 @@ export default function AuthedLayout({
           </div>
         </header>
         <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-6">{children}</main>
+        <NewsletterInvitation />
         <SiteFooter brandHref="/app/dashboard" brandLabel="Tutor Flow dashboard" />
       </div>
     </NavigationFeedbackProvider>
