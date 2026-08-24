@@ -151,6 +151,28 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
 
         <section className="rounded-lg border border-zinc-200 bg-white p-4">
           <SectionHeading
+            title="Tutor Flow Notes"
+            description="Choose separately whether you want the occasional Tutor Flow newsletter. Your account email is never added automatically."
+          />
+          <div className="mt-4 flex flex-col gap-3 rounded-lg border border-zinc-200 bg-zinc-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h3 className="text-sm font-medium text-zinc-900">Newsletter preference</h3>
+              <p className="mt-1 max-w-2xl text-sm leading-6 text-zinc-600">
+                Join using the separate form, or use the unsubscribe link in any newsletter email
+                to leave at any time.
+              </p>
+            </div>
+            <Link
+              href="/newsletter#newsletter-signup"
+              className={secondaryAction + " w-full shrink-0 sm:w-auto"}
+            >
+              Join or manage newsletter
+            </Link>
+          </div>
+        </section>
+
+        <section className="rounded-lg border border-zinc-200 bg-white p-4">
+          <SectionHeading
             title="Help improve Tutor Flow"
             description="Share Tutor Flow with another independent tutor, or tell me what feels confusing, missing or slower than it should be."
           />

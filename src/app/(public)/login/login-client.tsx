@@ -32,6 +32,7 @@ export function LoginClient({ mode: authMode }: LoginClientProps) {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(initialError);
   const [confirmationEmail, setConfirmationEmail] = useState<string | null>(null);
+  const [newsletterInterest, setNewsletterInterest] = useState(false);
   const formErrorId = "login-form-error";
   const errorRef = useRef<HTMLParagraphElement>(null);
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
@@ -45,6 +46,7 @@ export function LoginClient({ mode: authMode }: LoginClientProps) {
     setMessage(cleared.message);
     setShowOtpFallback(false);
     setIsCodeSent(false);
+    setNewsletterInterest(false);
   }
 
   useEffect(() => {
@@ -79,6 +81,7 @@ export function LoginClient({ mode: authMode }: LoginClientProps) {
       setMessage(cleared.message);
       setShowOtpFallback(false);
       setIsCodeSent(false);
+      setNewsletterInterest(false);
     }
 
     window.addEventListener("pagehide", clearOnHistoryNavigation);
@@ -209,9 +212,20 @@ export function LoginClient({ mode: authMode }: LoginClientProps) {
           return;
         }
       } else {
+        const confirmationUrl = new URL("/auth/callback", window.location.origin);
+        confirmationUrl.searchParams.set(
+          "next",
+          newsletterInterest
+            ? "/newsletter?from=signup#newsletter-signup"
+            : "/app/dashboard",
+        );
+
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email: trimmedEmail,
           password,
+          options: {
+            emailRedirectTo: confirmationUrl.toString(),
+          },
         });
 
         if (signUpError) {
@@ -229,7 +243,11 @@ export function LoginClient({ mode: authMode }: LoginClientProps) {
       }
 
       shouldRestoreForm = false;
-      router.push("/app/dashboard");
+      router.push(
+        authMode === "sign_up" && newsletterInterest
+          ? "/newsletter?from=signup#newsletter-signup"
+          : "/app/dashboard",
+      );
       router.refresh();
     } catch {
       setError("Unable to complete authentication. Please try again.");
@@ -375,6 +393,12 @@ export function LoginClient({ mode: authMode }: LoginClientProps) {
           <p className="mt-2 text-sm text-zinc-600">
             Once confirmed, you can sign in and get started straight away.
           </p>
+          {newsletterInterest ? (
+            <p className="mt-2 text-sm text-zinc-600">
+              We&apos;ll then take you to the separate Tutor Flow Notes signup. Your account email
+              is never added automatically.
+            </p>
+          ) : null}
           {message ? (
             <p className="mt-4 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
               {message}
@@ -481,6 +505,27 @@ export function LoginClient({ mode: authMode }: LoginClientProps) {
             placeholder="Minimum 8 characters"
           />
         </div>
+
+        {authMode === "sign_up" ? (
+          <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-3">
+            <label className="flex cursor-pointer items-start gap-3" htmlFor="newsletter-interest">
+              <input
+                id="newsletter-interest"
+                type="checkbox"
+                checked={newsletterInterest}
+                onChange={(event) => setNewsletterInterest(event.target.checked)}
+                disabled={isAuthSubmitting}
+                className="mt-0.5 h-4 w-4 shrink-0 rounded border-zinc-300 text-blue-700 focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+              />
+              <span className="text-sm leading-5 text-zinc-700">
+                After creating my account, take me to the separate Tutor Flow Notes signup.
+                <span className="mt-1 block text-xs text-zinc-500">
+                  Optional. This does not add your account email automatically.
+                </span>
+              </span>
+            </label>
+          </div>
+        ) : null}
 
         <button
           type="submit"

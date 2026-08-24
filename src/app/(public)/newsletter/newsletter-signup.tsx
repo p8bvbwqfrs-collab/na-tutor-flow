@@ -40,7 +40,8 @@ export function NewsletterSignup({ compact = false }: NewsletterSignupProps) {
             Join Tutor Flow Notes
           </a>
           <p className="mt-3 text-xs leading-5 text-zinc-600">
-            You&apos;ll confirm by email and can unsubscribe at any time. See the{" "}
+            By submitting the separate form, you&apos;re choosing to join Tutor Flow Notes. You can
+            unsubscribe at any time. See the{" "}
             <Link
               href="/privacy"
               className="font-medium text-zinc-800 underline decoration-zinc-300 underline-offset-4 hover:decoration-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"

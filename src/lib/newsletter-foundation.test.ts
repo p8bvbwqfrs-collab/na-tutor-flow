@@ -22,6 +22,8 @@ const authedInvitation = readFileSync(
   "src/app/(authed)/components/newsletter-invitation.tsx",
   "utf8",
 );
+const authForm = readFileSync("src/app/(public)/login/login-client.tsx", "utf8");
+const settings = readFileSync("src/app/(authed)/app/settings/page.tsx", "utf8");
 
 test("newsletter issues are complete, unique and newest first", () => {
   assert.ok(NEWSLETTER_ISSUES.length > 0);
@@ -66,9 +68,30 @@ test("signed-in tutors receive a dismissible consent-first newsletter invitation
   assert.doesNotMatch(authedInvitation, /supabase|user\.email|service_role/i);
 });
 
-test("signup copy explains consent and remains safe before provider connection", () => {
+test("account signup offers a separate, optional newsletter route without reusing the account email", () => {
+  assert.match(authForm, /id="newsletter-interest"/);
+  assert.match(authForm, /separate Tutor Flow Notes signup/);
+  assert.match(authForm, /does not add your account email automatically/);
+  assert.match(authForm, /newsletterInterest/);
+  assert.match(authForm, /emailRedirectTo/);
+  assert.match(authForm, /\/newsletter\?from=signup#newsletter-signup/);
+  assert.doesNotMatch(authForm, /MAILERLITE_API|newsletter_consent/);
+});
+
+test("Settings keeps newsletter management separate and points to the consent form", () => {
+  assert.match(settings, /title="Tutor Flow Notes"/);
+  assert.match(settings, /Your account email is never added automatically/);
+  assert.match(settings, /href="\/newsletter#newsletter-signup"/);
+  assert.match(settings, /Join or manage newsletter/);
+  assert.doesNotMatch(settings, /user\.email.*newsletter/i);
+  assert.doesNotMatch(settings, /newsletter.*user\.email/i);
+});
+
+test("signup copy explains single opt-in consent and remains safe before provider connection", () => {
   assert.match(signup, /NEXT_PUBLIC_NEWSLETTER_SIGNUP_URL/);
-  assert.match(signup, /confirm by email/);
+  assert.match(signup, /submitting the separate form/);
+  assert.match(signup, /choosing to join Tutor Flow Notes/);
+  assert.doesNotMatch(signup, /confirm by email/);
   assert.match(signup, /unsubscribe at any time/);
   assert.match(signup, /href="\/privacy"/);
   assert.match(signup, /Email sign-up is opening soon/);
@@ -80,4 +103,7 @@ test("newsletter publishing has a documented maintenance path", () => {
   assert.match(repositoryGuidance, /## Newsletter/);
   assert.match(repositoryGuidance, /NEWSLETTER_ISSUES/);
   assert.match(repositoryGuidance, /sitemap/);
+  assert.match(repositoryGuidance, /genuinely new or meaningfully different practical idea/);
+  assert.match(repositoryGuidance, /personal, informal voice/);
+  assert.match(repositoryGuidance, /lightly humorous/);
 });

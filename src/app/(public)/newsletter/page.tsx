@@ -14,9 +14,25 @@ export const metadata: Metadata = createPublicMetadata({
   path: "/newsletter",
 });
 
-export default function NewsletterPage() {
+type NewsletterPageProps = {
+  searchParams: Promise<{ from?: string }>;
+};
+
+export default async function NewsletterPage({ searchParams }: NewsletterPageProps) {
+  const { from } = await searchParams;
+
   return (
     <section className="mx-auto max-w-4xl space-y-8 py-6 sm:py-10">
+      {from === "signup" ? (
+        <p
+          role="status"
+          className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm leading-6 text-emerald-900"
+        >
+          Your Tutor Flow account is ready. Newsletter signup is separate and optional—join below
+          if you&apos;d like the monthly notes.
+        </p>
+      ) : null}
+
       <header className="rounded-xl border border-zinc-200 bg-white p-6 shadow-[var(--shadow-panel)] sm:p-8">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-blue-700">
           A practical monthly note

@@ -7,6 +7,17 @@ export type ProductUpdate = {
 
 export const PRODUCT_UPDATES = [
   {
+    date: "2026-08-24",
+    title: "A clearer newsletter choice",
+    summary:
+      "Tutors can now choose whether to join Tutor Flow Notes without linking newsletter consent to their account.",
+    changes: [
+      "Added an optional route to the separate newsletter signup when creating a Tutor Flow account.",
+      "Added a clear newsletter link in Settings while keeping account email addresses unsubscribed by default.",
+      "Kept signup simple with one explicit consent step and an unsubscribe link in every email.",
+    ],
+  },
+  {
     date: "2026-08-21",
     title: "Practical notes for independent tutors",
     summary:
