@@ -17,6 +17,11 @@ const resources = readFileSync("src/app/(public)/resources/page.tsx", "utf8");
 const privacy = readFileSync("src/app/(public)/privacy/page.tsx", "utf8");
 const sitemap = readFileSync("src/app/sitemap.ts", "utf8");
 const repositoryGuidance = readFileSync("AGENTS.md", "utf8");
+const authedLayout = readFileSync("src/app/(authed)/layout.tsx", "utf8");
+const authedInvitation = readFileSync(
+  "src/app/(authed)/components/newsletter-invitation.tsx",
+  "utf8",
+);
 
 test("newsletter issues are complete, unique and newest first", () => {
   assert.ok(NEWSLETTER_ISSUES.length > 0);
@@ -49,6 +54,16 @@ test("newsletter discovery is consistent without cluttering primary navigation",
   assert.match(resources, /<NewsletterSignup compact/);
   assert.match(sitemap, /NEWSLETTER_ISSUES/);
   assert.match(sitemap, /\/newsletter/);
+});
+
+test("signed-in tutors receive a dismissible consent-first newsletter invitation", () => {
+  assert.match(authedLayout, /<NewsletterInvitation \/>/);
+  assert.match(authedInvitation, /href="\/newsletter#newsletter-signup"/);
+  assert.match(authedInvitation, /Join the newsletter/);
+  assert.match(authedInvitation, /Not now/);
+  assert.match(authedInvitation, /localStorage\.setItem/);
+  assert.match(authedInvitation, /aria-labelledby="newsletter-invitation-heading"/);
+  assert.doesNotMatch(authedInvitation, /supabase|user\.email|service_role/i);
 });
 
 test("signup copy explains consent and remains safe before provider connection", () => {

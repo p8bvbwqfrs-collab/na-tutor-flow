@@ -15,6 +15,7 @@ export const PRODUCT_UPDATES = [
       "Added a newsletter archive with a practical first edition on the five-minute after-lesson routine.",
       "Made each edition free to read and easy to find from Resources and the site footer.",
       "Prepared a separate, consent-led email signup without using tutoring or account data.",
+      "Added a dismissible invitation for signed-in tutors who choose to join the monthly notes.",
     ],
   },
   {
