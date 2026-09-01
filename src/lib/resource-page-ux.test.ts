@@ -42,7 +42,7 @@ test("each resource puts its most useful action above the article", () => {
   assert.match(lessonNotesSource, /action="copy_template"/);
   assert.match(lessonNotesSource, /copyText=\{lessonNotesTemplate\}/);
   assert.match(parentUpdatesSource, /action="copy_example"/);
-  assert.match(parentUpdatesSource, /copyText=\{parentUpdateExample\}/);
+  assert.match(parentUpdatesSource, /copyText=\{parentUpdateTemplate\}/);
 });
 
 test("resource actions are measured without making analytics a dependency", () => {
@@ -65,7 +65,7 @@ test("the resources index uses the shared brand and workflow-led cards", () => {
   assert.match(resourceIndexSource, /Start with what you need/);
   assert.match(resourceIndexSource, /<ResourceCardLink/);
   assert.match(resourceIndexSource, /Copyable template/);
-  assert.match(resourceIndexSource, /Copyable example/);
+  assert.match(resourceIndexSource, /Free tutor parent update template/);
   assert.match(resourceIndexSource, /Free CSV template/);
   assert.match(resourceIndexSource, /md:grid-cols-3/);
   assert.match(resourceIndexSource, /resource="resource-index"/);

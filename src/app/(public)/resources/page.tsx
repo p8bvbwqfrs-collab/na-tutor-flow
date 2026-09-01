@@ -23,11 +23,11 @@ const resources = [
   },
   {
     href: "/how-to-write-parent-updates-after-tutoring",
-    title: "How to write parent updates after tutoring",
+    title: "Free tutor parent update template",
     description:
-      "A straightforward format and realistic example for sending useful updates after each lesson.",
+      "A copy-and-paste WhatsApp or email structure with a realistic after-lesson example.",
     category: "Parent communication",
-    format: "Copyable example",
+    format: "Copyable template",
     resource: "parent-updates",
   },
   {
