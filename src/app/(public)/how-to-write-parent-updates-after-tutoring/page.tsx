@@ -10,63 +10,63 @@ import {
 import { CopyResourceButton } from "../components/resource-actions";
 
 export const metadata: Metadata = createPublicMetadata({
-  title: "How to Write Parent Updates After Tutoring",
+  title: "Free Tutor Parent Update Template & Example",
   description:
-    "A simple way to write clear parent updates after tutoring, with examples of what to include after each lesson.",
+    "Copy a free tutor parent update template for WhatsApp or email, with a realistic after-lesson example, clear structure, progress and next steps.",
   path: "/how-to-write-parent-updates-after-tutoring",
   type: "article",
 });
 
-const parentUpdateExample = `Harris – lesson update (31 Mar)
+const parentUpdateTemplate = `Hi [Parent or guardian name],
 
-Harris was much more confident today which was great to see.
+A quick update after [Student name]’s lesson today. We worked on [topic or skill].
 
-Today we worked on
-• Equations of motion
-• Exam questions involving force
-• Connected particles – trickier questions
+[Student name] did well with [specific success]. We’ll keep working on [area to improve or next focus].
 
-What went well
-• Strong understanding of mechanics
-• Better simplification of complex equations
+[Homework or useful next step, if there is one.]
 
-Next focus
-• Continued practice simplifying equations
-• Checking all parts are resolved when angles are involved
+Next lesson: [date and time, if arranged]
 
-Homework
-• Practise further exam questions
-
-Effort: 5/5
-Confidence: 4/5
-Next lesson scheduled: 7 Apr at 16:00`;
+Best,
+[Your name]`;
 
 export default function HowToWriteParentUpdatesAfterTutoringPage() {
   return (
     <PublicContentPage
       category="Parent communication"
-      title="How to Write Parent Updates After Tutoring"
+      title="Free Parent Update Template for Tutors"
       resource="parent-updates"
       primaryAction={
         <CopyResourceButton
-          copyText={parentUpdateExample}
+          copyText={parentUpdateTemplate}
           resource="parent-updates"
           action="copy_example"
-          label="Copy the parent update example"
+          label="Copy the free parent update template"
         />
       }
       intro={
         <>
           <p>
-            After a tutoring session, writing an update for parents can feel repetitive.
+            Copy and adapt this free parent update template after a tutoring lesson. It works as a
+            short WhatsApp message or email and does not require an account.
           </p>
           <p>
-            You know what you covered, but turning that into something clear and useful takes time,
-            especially if you’re doing it after multiple lessons.
+            Use it to tell a parent what you covered, what their child did well, what needs more
+            work, and what happens next—without turning every lesson into a long report.
           </p>
         </>
       }
     >
+      <PublicSection title="Free copy-and-paste parent update template">
+        <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 text-sm leading-6 text-zinc-800 whitespace-pre-line">
+          {parentUpdateTemplate}
+        </div>
+        <p className="text-xs leading-5 text-zinc-500">
+          Replace the square-bracketed prompts, remove anything that is not useful, and check the
+          message before sending it to the parent or guardian.
+        </p>
+      </PublicSection>
+
       <PublicSection title="What a good parent update should include">
         <p>A useful parent update usually covers:</p>
         <ul className="space-y-1">
@@ -78,7 +78,7 @@ export default function HowToWriteParentUpdatesAfterTutoringPage() {
         </ul>
       </PublicSection>
 
-      <PublicSection title="Example parent update">
+      <PublicSection title="A realistic tutor parent update example">
         <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 text-sm leading-6 text-zinc-800">
           <p className="font-medium text-zinc-900">Harris – lesson update (31 Mar)</p>
           <p className="mt-4">
@@ -128,6 +128,17 @@ export default function HowToWriteParentUpdatesAfterTutoringPage() {
           covered, how things went, and what happens next.
         </p>
         <p>A simple structure makes this much easier to do well every time.</p>
+      </PublicSection>
+
+      <PublicSection title="When to use a lesson update or a progress report">
+        <p>
+          Use a short parent update for the useful details from one lesson. A monthly or termly
+          progress report is better for recurring themes, changes over time, and wider goals.
+        </p>
+        <p>
+          Keeping the lesson messages brief gives parents timely information without repeating the
+          same detail when you later write a broader progress summary.
+        </p>
       </PublicSection>
 
       <PublicCtaSection

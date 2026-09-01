@@ -308,7 +308,7 @@ export default function HomePage() {
             href="/how-to-write-parent-updates-after-tutoring"
             className="inline-flex min-h-11 items-center rounded-md border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
           >
-            How to write parent updates after tutoring
+            Free tutor parent update template
           </Link>
         </div>
       </section>

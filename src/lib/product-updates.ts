@@ -8,13 +8,15 @@ export type ProductUpdate = {
 export const PRODUCT_UPDATES = [
   {
     date: "2026-09-01",
-    title: "A clearer free payment tracker",
+    title: "Clearer free tutor templates",
     summary:
-      "The free tutor payment tracker is now easier to understand and start using in a spreadsheet.",
+      "The free payment and parent-update templates are now easier to understand and use straight away.",
     changes: [
       "Made the free CSV download and its Excel and Google Sheets compatibility clearer.",
       "Added a short setup guide for recording lessons, payments, outstanding balances and prepaid credit.",
       "Confirmed that downloading the template does not require an email address or Tutor Flow account.",
+      "Added a copy-and-paste parent update for WhatsApp or email alongside a realistic lesson example.",
+      "Clarified when a short lesson update is more useful than a broader progress report.",
     ],
   },
   {
