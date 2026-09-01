@@ -10,9 +10,9 @@ import {
 import { ResourceActionLink } from "../components/resource-actions";
 
 export const metadata: Metadata = createPublicMetadata({
-  title: "Tutor Payment Tracker Template",
+  title: "Free Tutor Payment Tracker Template",
   description:
-    "A free tutor payment tracker template for lesson fees, payments received, outstanding sessions, and prepaid lesson credit.",
+    "Download a free tutor payment tracker CSV for Excel or Google Sheets. Track lesson fees, payments received, outstanding balances, and prepaid lesson credit.",
   path: "/tutor-payment-tracker",
   type: "article",
 });
@@ -45,7 +45,7 @@ export default function TutorPaymentTrackerPage() {
   return (
     <PublicContentPage
       category="Payment tracking"
-      title="Tutor Payment Tracker Template"
+      title="Free Tutor Payment Tracker Template"
       resource="payment-tracker"
       primaryAction={
         <ResourceActionLink
@@ -60,12 +60,12 @@ export default function TutorPaymentTrackerPage() {
       intro={
         <>
           <p>
-            A tutor payment tracker should answer three questions quickly: what has been received,
-            what is still outstanding, and whether a student has paid for lessons in advance.
+            Download a simple tutor payment tracker CSV for Excel or Google Sheets. It is free to
+            use and does not require an email address or Tutor Flow account.
           </p>
           <p>
-            This free template gives you a simple starting point. You can use it in Excel, Google
-            Sheets, or as a checklist for whichever system already runs your tutoring.
+            Keep lesson fees and payments received separate so you can see what is paid, what is
+            outstanding, and how much prepaid lesson credit remains.
           </p>
         </>
       }
@@ -108,6 +108,29 @@ export default function TutorPaymentTrackerPage() {
         </p>
       </PublicSection>
 
+      <PublicSection title="Use the template in Excel or Google Sheets">
+        <ol className="space-y-3">
+          <li>
+            <span className="font-medium text-zinc-900">1. Download and open it.</span>{" "}
+            The CSV works in Excel, Google Sheets, Numbers, and most spreadsheet apps.
+          </li>
+          <li>
+            <span className="font-medium text-zinc-900">2. Replace the examples.</span>{" "}
+            Remove the three clearly labelled example rows, then add one row for each lesson.
+          </li>
+          <li>
+            <span className="font-medium text-zinc-900">3. Review it each week.</span>{" "}
+            Filter by status to find outstanding lessons, then add the payment date and amount when
+            money arrives.
+          </li>
+        </ol>
+        <p>
+          The template is deliberately simple: it keeps the source information visible rather than
+          hiding it behind formulas. You can add totals or formatting in your spreadsheet if they
+          help your own workflow.
+        </p>
+      </PublicSection>
+
       <PublicSection title="What to include for each lesson">
         <ul className="space-y-2">
           <li>• Student name</li>
@@ -119,7 +142,8 @@ export default function TutorPaymentTrackerPage() {
         </ul>
         <p>
           A separate payment date matters because the date you teach and the date a parent pays
-          are not always the same.
+          are not always the same. Your outstanding balance is made up of lesson fees not yet
+          covered by a payment; prepaid credit is money received before it is used for a lesson.
         </p>
       </PublicSection>
 

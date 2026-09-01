@@ -32,9 +32,9 @@ const resources = [
   },
   {
     href: "/tutor-payment-tracker",
-    title: "Tutor payment tracker",
+    title: "Free tutor payment tracker template",
     description:
-      "What to record so lesson fees, received payments, and outstanding sessions stay clear.",
+      "A CSV for Excel or Google Sheets that keeps lesson fees, received payments, and outstanding balances clear.",
     category: "Payment tracking",
     format: "Free CSV template",
     resource: "payment-tracker",

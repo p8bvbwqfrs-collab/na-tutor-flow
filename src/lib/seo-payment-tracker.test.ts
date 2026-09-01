@@ -14,7 +14,11 @@ const csvTemplate = readFileSync(
 );
 
 test("the payment resource provides a useful tutor workflow rather than thin SEO copy", () => {
+  assert.match(pageSource, /title: "Free Tutor Payment Tracker Template"/);
   assert.match(pageSource, /Free tutor payment tracker template/);
+  assert.match(pageSource, /Use the template in Excel or Google Sheets/);
+  assert.match(pageSource, /does not require an email address or Tutor Flow account/);
+  assert.match(pageSource, /outstanding balance is made up of lesson fees not yet/);
   assert.match(pageSource, /A simple weekly payment workflow/);
   assert.match(pageSource, /How to handle advance payments/);
   assert.match(pageSource, /Paid, outstanding, or covered by credit/);
